@@ -1,6 +1,10 @@
-# Welcome to CRITs
+# Welcome to CRIPTs
 
-![Image](https://github.com/crits/crits/raw/master/extras/www/new_images/crits_logo.png)
+## Important! I just forked the code and updated the README. No actual work has been done on this project so far. In fact, I probably won't get around to this for a while. The reason I forked it was simply to kick myself in the butt to get around to developing this since dealing with multiple large password datasets is a pain
+
+## What Is CRIPTs?
+
+CRIPTs is a fork of the CRITS toolset specifically altered to keep track of password datasets. The target audience for this is security researchers along with professional penitration testers.
 
 ## What Is CRITs?
 
@@ -10,15 +14,13 @@ Visit our [website](https://crits.github.io) for more information, documentation
 
 # Installation
 
-CRITs is designed to work on a 64-bit architecture of Ubuntu or RHEL6 using Python 2.7. Installation has beta support for OSX using Homebrew. It is also possible to install CRITs on CentOS.
+CRIPTs is designed to work on a 64-bit architecture of Ubuntu or RHEL6 using Python 2.7. 
 
-If you require the use of a 32-bit OS, you will need to download 32-bit versions of the pre-compiled dependencies.
-
-The following instructions assume you are running Ubuntu or RHEL6 64-bit with Python 2.7. If you are on RHEL which does not come with Python 2.7, you will need to install it. If you do, ensure all python library dependencies are installed using Python 2.7. Also, make sure you install mod_wsgi against the Python 2.7 install if you are looking to use Apache. More information on this can be found in the Github wiki at https://github.com/crits/crits/wiki/Common-Questions.
+The following instructions assume you are running Ubuntu or RHEL6 64-bit with Python 2.7. If you are on RHEL which does not come with Python 2.7, you will need to install it. If you do, ensure all python library dependencies are installed using Python 2.7. Also, make sure you install mod_wsgi against the Python 2.7 install if you are looking to use Apache. 
 
 ## Quick install using bootstrap
 
-CRITs comes with a bootstrap script which will help you:
+CRIPTs comes with a bootstrap script which will help you:
 
 * Install all of the dependencies.
 * Configure CRITs for database connectivity and your first admin user.
@@ -39,12 +41,4 @@ Once you've run bootstrap once, do not use it again to get the runserver going, 
     sh script/server
 ```
 
-## Production CRITs install
-
-If you are looking for a more permanent and performant CRITs installation or just interested in tweaking things, read more about setting up CRITs for [production](https://github.com/crits/crits/wiki/Production-grade-CRITs-install).
-
-## What's next?
-
-We recommend adding services to your CRITs install. Services extend the features and functionality of the core project allowing you to enhance CRITs based on your needs. You can find more information about how to do this [here](https://github.com/crits/crits/wiki/Adding-services-to-CRITs).
-
-**Thanks for using CRITs!**
+**Thanks for using CRIPTs!**
