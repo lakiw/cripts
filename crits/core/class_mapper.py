@@ -16,6 +16,7 @@ __obj_type_to_key_descriptor__ = {
     'PCAP': 'md5',
     'RawData': 'title',
     'Sample': 'md5',
+    'Signature': 'title',
     'Target': 'email_address',
 }
 
@@ -31,28 +32,31 @@ def class_from_id(type_, _id):
               :class:`crits.core.crits_mongoengine.CritsBaseAttributes`
     """
 
+    #Quick fail
+    if not _id or not type_:
+        return None
+
     # doing this to avoid circular imports
     from crits.actors.actor import ActorThreatIdentifier, Actor
     from crits.backdoors.backdoor import Backdoor
     from crits.campaigns.campaign import Campaign
     from crits.certificates.certificate import Certificate
     from crits.comments.comment import Comment
+    from crits.core.crits_mongoengine import Action
     from crits.core.source_access import SourceAccess
     from crits.core.user_role import UserRole
     from crits.domains.domain import Domain
     from crits.emails.email import Email
     from crits.events.event import Event
     from crits.exploits.exploit import Exploit
-    from crits.indicators.indicator import Indicator, IndicatorAction
+    from crits.indicators.indicator import Indicator
     from crits.ips.ip import IP
     from crits.pcaps.pcap import PCAP
     from crits.raw_data.raw_data import RawData, RawDataType
     from crits.samples.sample import Sample
     from crits.screenshots.screenshot import Screenshot
+    from crits.signatures.signature import Signature, SignatureType, SignatureDependency
     from crits.targets.target import Target
-
-    if not _id:
-        return None
 
     # make sure it's a string
     _id = str(_id)
@@ -84,8 +88,8 @@ def class_from_id(type_, _id):
         return Exploit.objects(id=_id).first()
     elif type_ == 'Indicator':
         return Indicator.objects(id=_id).first()
-    elif type_ == 'IndicatorAction':
-        return IndicatorAction.objects(id=_id).first()
+    elif type_ == 'Action':
+        return Action.objects(id=_id).first()
     elif type_ == 'IP':
         return IP.objects(id=_id).first()
     elif type_ == 'PCAP':
@@ -96,6 +100,12 @@ def class_from_id(type_, _id):
         return RawDataType.objects(id=_id).first()
     elif type_ == 'Sample':
         return Sample.objects(id=_id).first()
+    elif type_ == 'Signature':
+        return Signature.objects(id=_id).first()
+    elif type_ == 'SignatureType':
+        return SignatureType.objects(id=_id).first()
+    elif type_ == 'SignatureDependency':
+        return SignatureDependency.objects(id=_id).first()
     elif type_ == 'SourceAccess':
         return SourceAccess.objects(id=_id).first()
     elif type_ == 'Screenshot':
@@ -122,6 +132,10 @@ def class_from_value(type_, value):
               :class:`crits.core.crits_mongoengine.CritsBaseAttributes`
     """
 
+    #Quick fail
+    if not type_ or not value:
+        return None
+
     # doing this to avoid circular imports
     from crits.actors.actor import ActorThreatIdentifier, Actor
     from crits.backdoors.backdoor import Backdoor
@@ -138,6 +152,7 @@ def class_from_value(type_, value):
     from crits.raw_data.raw_data import RawData
     from crits.samples.sample import Sample
     from crits.screenshots.screenshot import Screenshot
+    from crits.signatures.signature import Signature
     from crits.targets.target import Target
 
     # Make sure value is a string...
@@ -182,6 +197,8 @@ def class_from_value(type_, value):
         return Sample.objects(md5=value).first()
     elif type_ == 'Screenshot':
         return Screenshot.objects(id=value).first()
+    elif type_ == 'Signature':
+        return Signature.objects(md5=value).first()
     elif type_ == 'Target':
         target = Target.objects(email_address=value).first()
         if target:
@@ -201,24 +218,30 @@ def class_from_type(type_):
               :class:`crits.core.crits_mongoengine.CritsBaseAttributes`
     """
 
+    #Quick fail
+    if not type_:
+        return None
+
     # doing this to avoid circular imports
     from crits.actors.actor import ActorThreatIdentifier, Actor
     from crits.backdoors.backdoor import Backdoor
     from crits.campaigns.campaign import Campaign
     from crits.certificates.certificate import Certificate
     from crits.comments.comment import Comment
+    from crits.core.crits_mongoengine import Action
     from crits.core.source_access import SourceAccess
     from crits.core.user_role import UserRole
     from crits.domains.domain import Domain
     from crits.emails.email import Email
     from crits.events.event import Event
     from crits.exploits.exploit import Exploit
-    from crits.indicators.indicator import Indicator, IndicatorAction
+    from crits.indicators.indicator import Indicator
     from crits.ips.ip import IP
     from crits.pcaps.pcap import PCAP
     from crits.raw_data.raw_data import RawData, RawDataType
     from crits.samples.sample import Sample
     from crits.screenshots.screenshot import Screenshot
+    from crits.signatures.signature import Signature, SignatureType, SignatureDependency
     from crits.targets.target import Target
 
     if type_ == 'Actor':
@@ -243,8 +266,8 @@ def class_from_type(type_):
         return Exploit
     elif type_ == 'Indicator':
         return Indicator
-    elif type_ == 'IndicatorAction':
-        return IndicatorAction
+    elif type_ == 'Action':
+        return Action
     elif type_ == 'IP':
         return IP
     elif type_ == 'PCAP':
@@ -259,6 +282,12 @@ def class_from_type(type_):
         return SourceAccess
     elif type_ == 'Screenshot':
         return Screenshot
+    elif type_ == 'Signature':
+        return Signature
+    elif type_ == 'SignatureType':
+        return SignatureType
+    elif type_ == 'SignatureDependency':
+        return SignatureDependency
     elif type_ == 'Target':
         return Target
     elif type_ == 'UserRole':

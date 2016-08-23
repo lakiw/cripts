@@ -3,6 +3,7 @@ from django.test import SimpleTestCase
 from crits.relationships.handlers import forge_relationship, update_relationship_reasons, update_relationship_confidences
 from crits.core.user import CRITsUser
 from crits.campaigns.campaign import Campaign
+from crits.vocabulary.relationships import RelationshipTypes
 
 TUSER_NAME = "test_user"
 TUSER_PASS = "!@#j54kfeimn?>S<D"
@@ -12,7 +13,7 @@ TUSER2_PASS = "!@#saasdfasfwefwe?>S<Dd"
 TUSER2_EMAIL = "asdfsaser@example.com"
 TCAMPAIGN1 = "Test_Campain1"
 TCAMPAIGN2 = "Test_Campain2"
-TRELATIONSHIP_TYPE = "Allocated"
+TRELATIONSHIP_TYPE = RelationshipTypes.RELATED_TO
 TRELATIONSHIP_CONFIDENCE = 'high'
 TRELATIONSHIP_NEW_CONFIDENCE = 'medium'
 TRELATIONSHIP_NEW_REASON = "Because I Said So"
@@ -70,6 +71,11 @@ class RelationshipConfidenceAndReasonTests(SimpleTestCase):
                            rel_type=TRELATIONSHIP_TYPE,
                            user=self.user.username,
                            rel_confidence=TRELATIONSHIP_CONFIDENCE)
+        forge_relationship(class_=self.campaign2,
+                           right_class=self.campaign1,
+                           rel_type=TRELATIONSHIP_TYPE,
+                           user=self.user.username,
+                           rel_confidence=TRELATIONSHIP_CONFIDENCE)
     def tearDown(self):
         clean_db()
     def testCreateRelationship(self):
@@ -82,8 +88,8 @@ class RelationshipConfidenceAndReasonTests(SimpleTestCase):
     def testChangingReason(self):
         relationship1 = self.campaign1.relationships[0]
         relationship2 = self.campaign2.relationships[0]
-        self.assertEqual(relationship1.rel_reason, "N/A")
-        self.assertEqual(relationship2.rel_reason, "N/A")
+        self.assertEqual(relationship1.rel_reason, "")
+        self.assertEqual(relationship2.rel_reason, "")
         update_relationship_reasons(left_class=self.campaign1,
                                     right_class=self.campaign2,
                                     rel_type=TRELATIONSHIP_TYPE,

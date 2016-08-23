@@ -40,10 +40,6 @@ class ConfigGeneralForm(forms.Form):
                    'performance but will consume more memory to do so!'),
         initial=False,
         required=False)
-    rar_path = forms.CharField(
-        widget=forms.TextInput,
-        help_text='*Requires a web server restart.',
-        required=True)
     rt_url = forms.CharField(
         widget=forms.TextInput,
         label='Ticketing URL',
@@ -91,6 +87,14 @@ class ConfigLDAPForm(forms.Form):
         widget=forms.TextInput,
         help_text='Include :port if not 389.',
         required=False)
+    ldap_bind_dn = forms.CharField(
+        widget=forms.TextInput,
+        required=False,
+        help_text=('bind_dn for binding to LDAP'))
+    ldap_bind_password = forms.CharField(
+        widget=forms.TextInput,
+        required=False,
+        help_text=('bind_password for binding to LDAP'))
     ldap_usercn = forms.CharField(
         widget=forms.TextInput,
         help_text='Optional cn for user lookup.<br />E.g. "uid=" or "cn="',

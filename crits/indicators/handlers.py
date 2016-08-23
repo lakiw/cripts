@@ -12,7 +12,10 @@ from django.core.validators import validate_ipv4_address, validate_ipv46_address
 from django.http import HttpResponse
 from django.shortcuts import render_to_response
 from django.template import RequestContext
-from mongoengine.base import ValidationError
+try:
+    from mongoengine.base import ValidationError
+except ImportError:
+    from mongoengine.errors import ValidationError
 
 from crits.campaigns.forms import CampaignForm
 from crits.campaigns.campaign import Campaign
@@ -20,18 +23,17 @@ from crits.config.config import CRITsConfig
 from crits.core import form_consts
 from crits.core.class_mapper import class_from_id
 from crits.core.crits_mongoengine import EmbeddedSource, EmbeddedCampaign
-from crits.core.crits_mongoengine import json_handler
+from crits.core.crits_mongoengine import json_handler, Action
 from crits.core.forms import SourceForm, DownloadFileForm
-from crits.core.handlers import build_jtable, csv_export
+from crits.core.handlers import build_jtable, csv_export, action_add
 from crits.core.handlers import jtable_ajax_list, jtable_ajax_delete
+from crits.core.handlers import datetime_parser
 from crits.core.user_tools import is_admin, user_sources
 from crits.core.user_tools import is_user_subscribed, is_user_favorite
 from crits.domains.domain import Domain
 from crits.domains.handlers import upsert_domain, get_valid_root_domain
 from crits.events.event import Event
-from crits.indicators.forms import IndicatorActionsForm
 from crits.indicators.forms import IndicatorActivityForm
-from crits.indicators.indicator import IndicatorAction
 from crits.indicators.indicator import Indicator
 from crits.indicators.indicator import EmbeddedConfidence, EmbeddedImpact
 from crits.ips.handlers import ip_add_update, validate_and_normalize_ip
@@ -47,6 +49,7 @@ from crits.vocabulary.indicators import (
 
 from crits.vocabulary.ips import IPTypes
 from crits.vocabulary.relationships import RelationshipTypes
+from crits.vocabulary.status import Status
 
 logger = logging.getLogger(__name__)
 
@@ -194,9 +197,6 @@ def get_indicator_details(indicator_id, analyst):
         args = {'error': error}
         return template, args
     forms = {}
-    forms['new_action'] = IndicatorActionsForm(initial={'analyst': analyst,
-                                                        'active': "off",
-                                                        'date': datetime.datetime.now()})
     forms['new_activity'] = IndicatorActivityForm(initial={'analyst': analyst,
                                                            'date': datetime.datetime.now()})
     forms['new_campaign'] = CampaignForm()#'date': datetime.datetime.now(),
@@ -281,16 +281,8 @@ def get_indicator_type_value_pair(field):
     """
 
     # this is an object
-    if field.get("name") != None and field.get("type") != None and field.get("value") != None:
-        name = field.get("name")
-        type = field.get("type")
-        value = field.get("value").lower().strip()
-        full_type = type
-
-        if type != name:
-            full_type = type + " - " + name
-
-        return (full_type, value)
+    if field.get("type") != None and field.get("value") != None:
+        return (field.get("type"), field.get("value").lower().strip())
 
     # this is an email field
     if field.get("field_type") != None and field.get("field_value") != None:
@@ -338,7 +330,7 @@ def get_verified_field(data, valid_values, field=None, default=None):
         return value_list[0]
 
 def handle_indicator_csv(csv_data, source, method, reference, ctype, username,
-                         add_domain=False):
+                         add_domain=False, related_id=None, related_type=None, relationship_type=None):
     """
     Handle adding Indicators in CSV format (file or blob).
 
@@ -357,6 +349,12 @@ def handle_indicator_csv(csv_data, source, method, reference, ctype, username,
     :param add_domain: If the indicators being added are also other top-level
                        objects, add those too.
     :type add_domain: boolean
+    :param related_id: ID for object to create relationship with
+    :type related_id: str
+    :param related_type: Type of object to create relationship with
+    :type related_type: str
+    :param relationship_type: Type of relationship to create
+    :type relationship_type: str
     :returns: dict with keys "success" (boolean) and "message" (str)
     """
 
@@ -382,20 +380,41 @@ def handle_indicator_csv(csv_data, source, method, reference, ctype, username,
     for c in Campaign.objects(active='on'):
         valid_campaigns[c['name'].lower().replace(' - ', '-')] = c['name']
     valid_actions = {}
-    for a in IndicatorAction.objects(active='on'):
+    for a in Action.objects(active='on'):
         valid_actions[a['name'].lower().replace(' - ', '-')] = a['name']
     valid_ind_types = {}
     for obj in IndicatorTypes.values(sort=True):
         valid_ind_types[obj.lower().replace(' - ', '-')] = obj
 
     # Start line-by-line import
+    msg = "Cannot process row %s: %s<br />"
     added = 0
     for processed, d in enumerate(data, 1):
         ind = {}
-        ind['value'] = d.get('Indicator', '').lower().strip()
+        ind['value'] = (d.get('Indicator') or '').strip()
+        ind['lower'] = (d.get('Indicator') or '').lower().strip()
+        ind['description'] = (d.get('Description') or '').strip()
         ind['type'] = get_verified_field(d, valid_ind_types, 'Type')
-        ind['threat_type'] = d.get('Threat Type', IndicatorThreatTypes.UNKNOWN)
-        ind['attack_type'] = d.get('Attack Type', IndicatorAttackTypes.UNKNOWN)
+        ind['threat_types'] = d.get('Threat Types', '').split(',')
+        ind['attack_types'] = d.get('Attack Types', '').split(',')
+
+        if not ind['threat_types']:
+            ind['threat_types'] = [IndicatorThreatTypes.UNKNOWN]
+        for t in ind['threat_types']:
+            if t not in IndicatorThreatTypes.values():
+                result['success'] = False
+                result_message += msg % (processed + 1, "Invalid Threat Type: %s" % t)
+                continue
+
+        if not ind['attack_types']:
+            ind['attack_types'] = [IndicatorAttackTypes.UNKNOWN]
+        for a in ind['attack_types']:
+            if a not in IndicatorAttackTypes.values():
+                result['success'] = False
+                result_message += msg % (processed + 1, "Invalid Attack Type:%s" % a)
+                continue
+
+        ind['status'] = d.get('Status', Status.NEW)
         if not ind['value'] or not ind['type']:
             # Mandatory value missing or malformed, cannot process csv row
             i = ""
@@ -404,7 +423,7 @@ def handle_indicator_csv(csv_data, source, method, reference, ctype, username,
                 i += "No valid Indicator value "
             if not ind['type']:
                 i += "No valid Indicator type "
-            result_message += "Cannot process row %s: %s<br />" % (processed, i)
+            result_message += msg % (processed + 1, i)
             continue
         campaign = get_verified_field(d, valid_campaigns, 'Campaign')
         if campaign:
@@ -417,7 +436,7 @@ def handle_indicator_csv(csv_data, source, method, reference, ctype, username,
             actions = get_verified_field(actions.split(','), valid_actions)
             if not actions:
                 result['success'] = False
-                result_message += "Cannot process row %s: Invalid Action<br />" % processed
+                result_message += msg % (processed + 1, "Invalid Action")
                 continue
         ind['confidence'] = get_verified_field(d, valid_ratings, 'Confidence',
                                                default='unknown')
@@ -426,11 +445,13 @@ def handle_indicator_csv(csv_data, source, method, reference, ctype, username,
         ind[form_consts.Common.BUCKET_LIST_VARIABLE_NAME] = d.get(form_consts.Common.BUCKET_LIST, '')
         ind[form_consts.Common.TICKET_VARIABLE_NAME] = d.get(form_consts.Common.TICKET, '')
         try:
-            response = handle_indicator_insert(ind, source, reference, analyst=username,
-                                               method=method, add_domain=add_domain)
+            response = handle_indicator_insert(ind, source, reference,
+                                               analyst=username, method=method,
+                                               add_domain=add_domain, related_id=related_id,
+                                               related_type=related_type, relationship_type=relationship_type)
         except Exception, e:
             result['success'] = False
-            result_message += "Failure processing row %s: %s<br />" % (processed, str(e))
+            result_message += msg % (processed + 1, e)
             continue
         if response['success']:
             if actions:
@@ -443,10 +464,11 @@ def handle_indicator_csv(csv_data, source, method, reference, ctype, username,
                           'date': datetime.datetime.now()}
                 for action_type in actions:
                     action['action_type'] = action_type
-                    action_add(response.get('objectid'), action)
+                    action_add('Indicator', response.get('objectid'), action,
+                               user=username)
         else:
             result['success'] = False
-            result_message += "Failure processing row %s: %s<br />" % (processed, response['message'])
+            result_message += msg % (processed + 1, response['message'])
             continue
         added += 1
     if processed < 1:
@@ -458,8 +480,10 @@ def handle_indicator_csv(csv_data, source, method, reference, ctype, username,
 def handle_indicator_ind(value, source, ctype, threat_type, attack_type,
                          analyst, method='', reference='',
                          add_domain=False, add_relationship=False, campaign=None,
-                         campaign_confidence=None, confidence=None, impact=None,
-                         bucket_list=None, ticket=None, cache={}):
+                         campaign_confidence=None, confidence=None,
+                         description=None, impact=None,
+                         bucket_list=None, ticket=None, cache={},
+                         related_id=None, related_type=None, relationship_type=None):
     """
     Handle adding an individual indicator.
 
@@ -490,6 +514,8 @@ def handle_indicator_ind(value, source, ctype, threat_type, attack_type,
     :type campaign_confidence: str
     :param confidence: Indicator confidence.
     :type confidence: str
+    :param description: The description of this data.
+    :type description: str
     :param impact: Indicator impact.
     :type impact: str
     :param bucket_list: The bucket(s) to assign to this indicator.
@@ -499,6 +525,12 @@ def handle_indicator_ind(value, source, ctype, threat_type, attack_type,
     :param cache: Cached data, typically for performance enhancements
                   during bulk uperations.
     :type cache: dict
+    :param related_id: ID for object to create relationship with
+    :type cache: str
+    :param related_type: Type of object to create relationship with
+    :type cache: str
+    :param relationship_type: Type of relationship to create
+    :type cache: str
     :returns: dict with keys "success" (boolean) and "message" (str)
     """
 
@@ -511,6 +543,8 @@ def handle_indicator_ind(value, source, ctype, threat_type, attack_type,
         threat_type = IndicatorThreatTypes.UNKNOWN
     if attack_type is None:
         attack_type = IndicatorAttackTypes.UNKNOWN
+    if description is None:
+        description = ''
 
     if value == None or value.strip() == "":
         result = {'success': False,
@@ -521,9 +555,11 @@ def handle_indicator_ind(value, source, ctype, threat_type, attack_type,
     else:
         ind = {}
         ind['type'] = ctype.strip()
-        ind['threat_type'] = threat_type.strip()
-        ind['attack_type'] = attack_type.strip()
-        ind['value'] = value.lower().strip()
+        ind['threat_types'] = [threat_type.strip()]
+        ind['attack_types'] = [attack_type.strip()]
+        ind['value'] = value.strip()
+        ind['lower'] = value.lower().strip()
+        ind['description'] = description.strip()
 
         if campaign:
             ind['campaign'] = campaign
@@ -541,14 +577,17 @@ def handle_indicator_ind(value, source, ctype, threat_type, attack_type,
 
         try:
             return handle_indicator_insert(ind, source, reference, analyst,
-                                           method, add_domain, add_relationship, cache=cache)
+                                           method, add_domain, add_relationship, cache=cache,
+                                        related_id=related_id, related_type=related_type,
+                                        relationship_type=relationship_type)
         except Exception, e:
             return {'success': False, 'message': repr(e)}
 
     return result
 
 def handle_indicator_insert(ind, source, reference='', analyst='', method='',
-                            add_domain=False, add_relationship=False, cache={}):
+                            add_domain=False, add_relationship=False, cache={},
+                            related_id=None, related_type=None, relationship_type=None):
     """
     Insert an individual indicator into the database.
 
@@ -577,12 +616,30 @@ def handle_indicator_insert(ind, source, reference='', analyst='', method='',
     :param cache: Cached data, typically for performance enhancements
                   during bulk uperations.
     :type cache: dict
+    :param related_id: ID for object to create relationship with
+    :type cache: str
+    :param related_type: Type of object to create relationship with
+    :type cache: str
+    :param relationship_type: Type of relationship to create
+    :type cache: str
     :returns: dict with keys:
               "success" (boolean),
               "message" (str) if failed,
               "objectid" (str) if successful,
               "is_new_indicator" (boolean) if successful.
     """
+
+    if ind['type'] not in IndicatorTypes.values():
+        return {'success': False,
+                'message': "Not a valid Indicator Type: %s" % ind['type']}
+    for t in ind['threat_types']:
+        if t not in IndicatorThreatTypes.values():
+            return {'success': False,
+                    'message': "Not a valid Indicator Threat Type: %s" % t}
+    for a in ind['attack_types']:
+        if a not in IndicatorAttackTypes.values():
+            return {'success': False,
+                    'message': "Not a valid Indicator Attack Type: " % a}
 
     (ind['value'], error) = validate_indicator_value(ind['value'], ind['type'])
     if error:
@@ -599,18 +656,46 @@ def handle_indicator_insert(ind, source, reference='', analyst='', method='',
         'high': 4,
     }
 
+    if ind.get('status', None) is None or len(ind.get('status', '')) < 1:
+        ind['status'] = Status.NEW
+
     indicator = Indicator.objects(ind_type=ind['type'],
-                                  value=ind['value']).first()
+                                  lower=ind['lower']).first()
+
     if not indicator:
         indicator = Indicator()
-        indicator.ind_type = ind['type']
-        indicator.threat_type = ind['threat_type']
-        indicator.attack_type = ind['attack_type']
-        indicator.value = ind['value']
+        indicator.ind_type = ind.get('type')
+        indicator.threat_types = ind.get('threat_types',
+                                         IndicatorThreatTypes.UNKNOWN)
+        indicator.attack_types = ind.get('attack_types',
+                                         IndicatorAttackTypes.UNKNOWN)
+        indicator.value = ind.get('value')
+        indicator.lower = ind.get('lower')
+        indicator.description = ind.get('description', '')
         indicator.created = datetime.datetime.now()
         indicator.confidence = EmbeddedConfidence(analyst=analyst)
         indicator.impact = EmbeddedImpact(analyst=analyst)
+        indicator.status = ind.get('status')
         is_new_indicator = True
+    else:
+        if ind['status'] != Status.NEW:
+            indicator.status = ind['status']
+        add_desc = "\nSeen on %s as: %s" % (str(datetime.datetime.now()),
+                                          ind['value'])
+        if not indicator.description:
+            indicator.description = ind.get('description', '') + add_desc
+        elif indicator.description != ind['description']:
+            indicator.description += "\n" + ind.get('description', '') + add_desc
+        else:
+            indicator.description += add_desc
+        indicator.add_threat_type_list(ind.get('threat_types',
+                                               IndicatorThreatTypes.UNKNOWN),
+                                       analyst,
+                                       append=True)
+        indicator.add_attack_type_list(ind.get('attack_types',
+                                               IndicatorAttackTypes.UNKNOWN),
+                                       analyst,
+                                       append=True)
 
     if 'campaign' in ind:
         if isinstance(ind['campaign'], basestring) and len(ind['campaign']) > 0:
@@ -647,25 +732,22 @@ def handle_indicator_insert(ind, source, reference='', analyst='', method='',
         if ticket:
             indicator.add_ticket(ticket, analyst)
 
-    if isinstance(source, list):
-        for s in source:
-            indicator.add_source(source_item=s, method=method, reference=reference)
+    # generate new source information and add to indicator
+    if isinstance(source, basestring) and source:
+        indicator.add_source(source=source, method=method,
+                             reference=reference, analyst=analyst)
     elif isinstance(source, EmbeddedSource):
-        indicator.add_source(source_item=source, method=method, reference=reference)
-    elif isinstance(source, basestring):
-        s = EmbeddedSource()
-        s.name = source
-        instance = EmbeddedSource.SourceInstance()
-        instance.reference = reference
-        instance.method = method
-        instance.analyst = analyst
-        instance.date = datetime.datetime.now()
-        s.instances = [instance]
-        indicator.add_source(s)
+        indicator.add_source(source_item=source, method=method,
+                             reference=reference)
+    elif isinstance(source, list):
+        for s in source:
+            if isinstance(s, EmbeddedSource):
+                indicator.add_source(source_item=s, method=method,
+                                     reference=reference)
 
     if add_domain or add_relationship:
         ind_type = indicator.ind_type
-        ind_value = indicator.value
+        ind_value = indicator.lower
         url_contains_ip = False
         if ind_type in (IndicatorTypes.DOMAIN,
                         IndicatorTypes.URI):
@@ -674,15 +756,19 @@ def handle_indicator_insert(ind, source, reference='', analyst='', method='',
                 try:
                     validate_ipv46_address(domain_or_ip)
                     url_contains_ip = True
-                except DjangoValidationError:
+                except (DjangoValidationError, TypeError):
                     pass
             else:
                 domain_or_ip = ind_value
-            if not url_contains_ip:
+            if not url_contains_ip and domain_or_ip:
                 success = None
                 if add_domain:
-                    success = upsert_domain(domain_or_ip, indicator.source, '%s' % analyst,
-                                            None, bucket_list=bucket_list, cache=cache)
+                    success = upsert_domain(domain_or_ip,
+                                            indicator.source,
+                                            username='%s' % analyst,
+                                            campaign=indicator.campaign,
+                                            bucket_list=bucket_list,
+                                            cache=cache)
                     if not success['success']:
                         return {'success': False, 'message': success['message']}
 
@@ -732,6 +818,25 @@ def handle_indicator_insert(ind, source, reference='', analyst='', method='',
                             analyst="%s" % analyst,
                             get_rels=False)
         ip.save(username=analyst)
+
+
+    # Code for the "Add Related " Dropdown
+    related_obj = None
+    if related_id:
+        related_obj = class_from_id(related_type, related_id)
+        if not related_obj:
+            return {'success': False,
+                    'message': 'Related Object not found.'}
+
+    indicator.save(username=analyst)
+
+    if related_obj and indicator and relationship_type:
+        relationship_type=RelationshipTypes.inverse(relationship=relationship_type)
+        indicator.add_relationship(related_obj,
+                              relationship_type,
+                              analyst=analyst,
+                              get_rels=False)
+        indicator.save(username=analyst)
 
     # run indicator triage
     if is_new_indicator:
@@ -841,83 +946,59 @@ def set_indicator_type(indicator_id, itype, username):
         except ValidationError:
             return {'success': False}
 
-def set_indicator_threat_type(id_, threat_type, user):
+def modify_threat_types(id_, threat_types, user, **kwargs):
     """
-    Set the Indicator threat type.
+    Set the Indicator threat types.
 
     :param indicator_id: The ObjectId of the indicator to update.
     :type indicator_id: str
-    :param threat_type: The new indicator threat type.
-    :type threat_type: str
+    :param threat_types: The new indicator threat types.
+    :type threat_types: list,str
     :param user: The user updating the indicator.
     :type user: str
     :returns: dict with key "success" (boolean)
     """
 
-    # check to ensure we're not duping an existing indicator
     indicator = Indicator.objects(id=id_).first()
-    value = indicator.value
-    ind_check = Indicator.objects(threat_type=threat_type, value=value).first()
-    if ind_check:
-        # we found a dupe
+    if isinstance(threat_types, basestring):
+        threat_types = threat_types.split(',')
+    for t in threat_types:
+        if t not in IndicatorThreatTypes.values():
+            return {'success': False,
+                    'message': "Not a valid Threat Type: %s" % t}
+    try:
+        indicator.add_threat_type_list(threat_types, user, append=False)
+        indicator.save(username=user)
+        return {'success': True}
+    except ValidationError:
         return {'success': False}
-    else:
-        try:
-            indicator.threat_type = threat_type
-            indicator.save(username=user)
-            return {'success': True}
-        except ValidationError:
-            return {'success': False}
 
-def set_indicator_attack_type(id_, attack_type, user):
+def modify_attack_types(id_, attack_types, user, **kwargs):
     """
     Set the Indicator attack type.
 
     :param indicator_id: The ObjectId of the indicator to update.
     :type indicator_id: str
-    :param attack_type: The new indicator attack type.
-    :type attack_type: str
+    :param attack_types: The new indicator attack types.
+    :type attack_type: list,str
     :param user: The user updating the indicator.
     :type user: str
     :returns: dict with key "success" (boolean)
     """
 
-    # check to ensure we're not duping an existing indicator
     indicator = Indicator.objects(id=id_).first()
-    value = indicator.value
-    ind_check = Indicator.objects(attack_type=attack_type, value=value).first()
-    if ind_check:
-        # we found a dupe
-        return {'success': False}
-    else:
-        try:
-            indicator.attack_type = attack_type
-            indicator.save(username=user)
-            return {'success': True}
-        except ValidationError:
-            return {'success': False}
-
-def add_new_indicator_action(action, analyst):
-    """
-    Add a new indicator action to CRITs.
-
-    :param action: The action to add to CRITs.
-    :type action: str
-    :param analyst: The user adding this action.
-    :returns: True, False
-    """
-
-    action = action.strip()
+    if isinstance(attack_types, basestring):
+        attack_types = attack_types.split(',')
+    for a in attack_types:
+        if a not in IndicatorAttackTypes.values():
+            return {'success': False,
+                    'message': "Not a valid Attack Type: %s" % a}
     try:
-        idb_action = IndicatorAction.objects(name=action).first()
-        if idb_action:
-            return False
-        idb_action = IndicatorAction()
-        idb_action.name = action
-        idb_action.save(username=analyst)
-        return True
+        indicator.add_attack_type_list(attack_types, user, append=False)
+        indicator.save(username=user)
+        return {'success': True}
     except ValidationError:
-        return False
+        return {'success': False}
 
 def indicator_remove(_id, username):
     """
@@ -940,212 +1021,130 @@ def indicator_remove(_id, username):
     else:
         return {'success': False, 'message': ['Must be an admin to delete']}
 
-def action_add(indicator_id, action):
-    """
-    Add an action to an indicator.
-
-    :param indicator_id: The ObjectId of the indicator to update.
-    :type indicator_id: str
-    :param action: The information about the action.
-    :type action: dict
-    :returns: dict with keys:
-              "success" (boolean),
-              "message" (str) if failed,
-              "object" (dict) if successful.
-    """
-
-    sources = user_sources(action['analyst'])
-    indicator = Indicator.objects(id=indicator_id,
-                                  source__name__in=sources).first()
-    if not indicator:
-        return {'success': False,
-                'message': 'Could not find Indicator'}
-    try:
-        indicator.add_action(action['action_type'],
-                             action['active'],
-                             action['analyst'],
-                             action['begin_date'],
-                             action['end_date'],
-                             action['performed_date'],
-                             action['reason'],
-                             action['date'])
-        indicator.save(username=action['analyst'])
-        return {'success': True, 'object': action}
-    except ValidationError, e:
-        return {'success': False, 'message': e}
-
-def action_update(indicator_id, action):
-    """
-    Update an action for an indicator.
-
-    :param indicator_id: The ObjectId of the indicator to update.
-    :type indicator_id: str
-    :param action: The information about the action.
-    :type action: dict
-    :returns: dict with keys:
-              "success" (boolean),
-              "message" (str) if failed,
-              "object" (dict) if successful.
-    """
-
-    sources = user_sources(action['analyst'])
-    indicator = Indicator.objects(id=indicator_id,
-                                  source__name__in=sources).first()
-    if not indicator:
-        return {'success': False,
-                'message': 'Could not find Indicator'}
-    try:
-        indicator.edit_action(action['action_type'],
-                              action['active'],
-                              action['analyst'],
-                              action['begin_date'],
-                              action['end_date'],
-                              action['performed_date'],
-                              action['reason'],
-                              action['date'])
-        indicator.save(username=action['analyst'])
-        return {'success': True, 'object': action}
-    except ValidationError, e:
-        return {'success': False, 'message': e}
-
-def action_remove(indicator_id, date, analyst):
-    """
-    Remove an action from an indicator.
-
-    :param indicator_id: The ObjectId of the indicator to update.
-    :type indicator_id: str
-    :param date: The date of the action to remove.
-    :type date: datetime.datetime
-    :param analyst: The user removing the action.
-    :type analyst: str
-    :returns: dict with keys "success" (boolean) and "message" (str) if failed.
-    """
-
-    indicator = Indicator.objects(id=indicator_id).first()
-    if not indicator:
-        return {'success': False,
-                'message': 'Could not find Indicator'}
-    try:
-        indicator.delete_action(date)
-        indicator.save(username=analyst)
-        return {'success': True}
-    except ValidationError, e:
-        return {'success': False, 'message': e}
-
-def activity_add(indicator_id, activity):
+def activity_add(id_, activity, user, **kwargs):
     """
     Add activity to an Indicator.
 
-    :param indicator_id: The ObjectId of the indicator to update.
-    :type indicator_id: str
+    :param id_: The ObjectId of the indicator to update.
+    :type id_: str
     :param activity: The activity information.
     :type activity: dict
+    :param user: The user adding the activitty.
+    :type user: str
     :returns: dict with keys:
               "success" (boolean),
               "message" (str) if failed,
               "object" (dict) if successful.
     """
 
-    sources = user_sources(activity['analyst'])
-    indicator = Indicator.objects(id=indicator_id,
+    sources = user_sources(user)
+    indicator = Indicator.objects(id=id_,
                                   source__name__in=sources).first()
     if not indicator:
         return {'success': False,
                 'message': 'Could not find Indicator'}
     try:
+
+        activity['analyst'] = user
         indicator.add_activity(activity['analyst'],
                                activity['start_date'],
                                activity['end_date'],
                                activity['description'],
                                activity['date'])
-        indicator.save(username=activity['analyst'])
+        indicator.save(username=user)
         return {'success': True, 'object': activity,
                 'id': str(indicator.id)}
     except ValidationError, e:
         return {'success': False, 'message': e,
                 'id': str(indicator.id)}
 
-def activity_update(indicator_id, activity):
+def activity_update(id_, activity, user=None, **kwargs):
     """
     Update activity for an Indicator.
 
-    :param indicator_id: The ObjectId of the indicator to update.
-    :type indicator_id: str
+    :param id_: The ObjectId of the indicator to update.
+    :type id_: str
     :param activity: The activity information.
     :type activity: dict
+    :param user: The user updating the activity.
+    :type user: str
     :returns: dict with keys:
               "success" (boolean),
               "message" (str) if failed,
               "object" (dict) if successful.
     """
 
-    sources = user_sources(activity['analyst'])
-    indicator = Indicator.objects(id=indicator_id,
+    sources = user_sources(user)
+    indicator = Indicator.objects(id=id_,
                                   source__name__in=sources).first()
     if not indicator:
         return {'success': False,
                 'message': 'Could not find Indicator'}
     try:
+        activity = datetime_parser(activity)
+        activity['analyst'] = user
         indicator.edit_activity(activity['analyst'],
                                 activity['start_date'],
                                 activity['end_date'],
                                 activity['description'],
                                 activity['date'])
-        indicator.save(username=activity['analyst'])
+        indicator.save(username=user)
         return {'success': True, 'object': activity}
     except ValidationError, e:
         return {'success': False, 'message': e}
 
-def activity_remove(indicator_id, date, analyst):
+def activity_remove(id_, date, user, **kwargs):
     """
     Remove activity from an Indicator.
 
-    :param indicator_id: The ObjectId of the indicator to update.
-    :type indicator_id: str
+    :param id_: The ObjectId of the indicator to update.
+    :type id_: str
     :param date: The date of the activity to remove.
     :type date: datetime.datetime
-    :param analyst: The user removing this activity.
-    :type analyst: str
+    :param user: The user removing this activity.
+    :type user: str
     :returns: dict with keys "success" (boolean) and "message" (str) if failed.
     """
 
-    indicator = Indicator.objects(id=indicator_id).first()
+    indicator = Indicator.objects(id=id_).first()
     if not indicator:
         return {'success': False,
                 'message': 'Could not find Indicator'}
     try:
+
+        date = datetime_parser(date)
         indicator.delete_activity(date)
-        indicator.save(username=analyst)
+        indicator.save(username=user)
         return {'success': True}
     except ValidationError, e:
         return {'success': False, 'message': e}
 
-def ci_update(indicator_id, ci_type, value, analyst):
+def ci_update(id_, ci_type, value, user, **kwargs):
     """
     Update confidence or impact for an indicator.
 
-    :param indicator_id: The ObjectId of the indicator to update.
-    :type indicator_id: str
+    :param id_: The ObjectId of the indicator to update.
+    :type id_: str
     :param ci_type: What we are updating.
     :type ci_type: str ("confidence" or "impact")
     :param value: The value to set.
     :type value: str ("unknown", "benign", "low", "medium", "high")
-    :param analyst: The user updating this indicator.
+    :param user: The user updating this indicator.
     :type analyst: str
     :returns: dict with keys "success" (boolean) and "message" (str) if failed.
     """
 
-    indicator = Indicator.objects(id=indicator_id).first()
+    indicator = Indicator.objects(id=id_).first()
     if not indicator:
         return {'success': False,
                 'message': 'Could not find Indicator'}
     if ci_type == "confidence" or ci_type == "impact":
         try:
             if ci_type == "confidence":
-                indicator.set_confidence(analyst, value)
+                indicator.set_confidence(user, value)
             else:
-                indicator.set_impact(analyst, value)
-            indicator.save(username=analyst)
+                indicator.set_impact(user, value)
+            indicator.save(username=user)
             return {'success': True}
         except ValidationError, e:
             return {'success': False, "message": e}
@@ -1354,10 +1353,7 @@ def validate_indicator_value(value, ind_type):
     domain = ""
 
     # URL
-    if ind_type == IndicatorTypes.URI:
-        if "://" not in value.split('.')[0]:
-            return ("", "URI must contain protocol "
-                        "prefix (e.g. http://, https://, ftp://) ")
+    if ind_type == IndicatorTypes.URI and "://" in value.split('.')[0]:
         domain_or_ip = urlparse.urlparse(value).hostname
         try:
             validate_ipv46_address(domain_or_ip)
@@ -1391,8 +1387,7 @@ def validate_indicator_value(value, ind_type):
             return (ip_address, "")
 
     # Domains
-    if ind_type in (IndicatorTypes.DOMAIN,
-                    IndicatorTypes.URI) or domain:
+    if ind_type == IndicatorTypes.DOMAIN or domain:
         (root, domain, error) = get_valid_root_domain(domain or value)
         if error:
             return ("", error)

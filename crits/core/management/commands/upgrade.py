@@ -1,4 +1,5 @@
 import sys
+import traceback
 
 from django.core.management.base import BaseCommand
 from django.conf import settings
@@ -9,6 +10,7 @@ from crits.backdoors.backdoor import Backdoor
 from crits.campaigns.campaign import Campaign
 from crits.certificates.certificate import Certificate
 from crits.config.config import CRITsConfig
+from crits.core.mongo_tools import mongo_find_one
 from crits.domains.domain import Domain
 from crits.emails.email import Email
 from crits.events.event import Event
@@ -17,6 +19,7 @@ from crits.indicators.indicator import Indicator
 from crits.ips.ip import IP
 from crits.pcaps.pcap import PCAP
 from crits.raw_data.raw_data import RawData
+from crits.signatures.signature import Signature
 from crits.samples.sample import Sample
 from crits.targets.target import Target
 
@@ -78,6 +81,10 @@ class Command(BaseCommand):
                     dest="raw_data",
                     default=False,
                     help="Migrate raw data."),
+        make_option("-g", "--migrate_signatures", action="store_true",
+                    dest="signatures",
+                    default=False,
+                    help="Migrate signatures."),
         make_option("-s", "--skip_prep", action="store_true", dest="skip",
                     default=False,
                     help="Skip prepping the database"),
@@ -115,6 +122,7 @@ class Command(BaseCommand):
         pcaps = options.get('pcaps')
         raw_data = options.get('raw_data')
         samples = options.get('samples')
+        signatures = options.get('signatures')
         targets = options.get('targets')
 
         if (not mall and
@@ -130,6 +138,7 @@ class Command(BaseCommand):
             not pcaps and
             not raw_data and
             not samples and
+            not signatures and
             not targets):
             print "You must select something to upgrade. See '-h' for options."
             sys.exit(1)
@@ -152,6 +161,8 @@ def migrate_collection(class_obj, sort_ids):
     # find all documents that don't have the latest schema version
     # and migrate those.
     version = class_obj._meta['latest_schema_version']
+
+    print "\nMigrating %ss" % class_obj._meta['crits_type']
     if sort_ids:
         docs = (
             class_obj.objects(schema_version__lt=version)
@@ -160,24 +171,37 @@ def migrate_collection(class_obj, sort_ids):
         )
     else:
         docs = class_obj.objects(schema_version__lt=version).timeout(False)
-    print "Migrating %ss...%d" % (class_obj._meta['crits_type'], len(docs))
+        total = docs.count()
+
+    if not total:
+        print "\tNo %ss to migrate!" % class_obj._meta['crits_type']
+        return
+
+    print "\tMigrated 0 of %d" % total,
     count = 0
     doc = None
     try:
         for doc in docs:
-            print >> sys.stdout, "\r\t%d" % (count + 1),
-            sys.stdout.flush()
             if 'migrated' in doc._meta and doc._meta['migrated']:
                 count += 1
-    except Exception, e:
+            print "\r\tMigrated %d of %d" % (count, total),
+        print ""
+    except Exception as e:
         # Provide some basic info so admin can query their db and figure out
         # what bad data is blowing up the migration.
-        print "\n\tMigrated: %d" % count
-        print "\tError: %s" % e
+        print "\n\n\tAn error occurred during migration!"
+        print "\tMigrated: %d" % count
+        formatted_lines = traceback.format_exc().splitlines()
+        print "\tError: %s" % formatted_lines[-1]
+        if hasattr(e, 'tlo'):
+            print "\tDocument ID: %s" % e.tlo
+        else:
+            doc_id = mongo_find_one(class_obj._meta.get('collection'),
+                                    {'schema_version': {'$lt': version}}, '_id')
+            print "\tDocument ID: %s" % doc_id.get('_id')
         if doc:
             print "\tLast ID: %s" % doc.id
         sys.exit(1)
-    print "\n\t%d %ss migrated!" % (count, class_obj._meta['crits_type'])
 
 def upgrade(lv, options):
     """
@@ -207,6 +231,7 @@ def upgrade(lv, options):
     pcaps = options.get('pcaps')
     raw_data = options.get('raw_data')
     samples = options.get('samples')
+    signatures = options.get('signatures')
     targets = options.get('targets')
     skip = options.get('skip')
     sort_ids = options.get('sort_ids')
@@ -240,6 +265,8 @@ def upgrade(lv, options):
         migrate_collection(RawData, sort_ids)
     if mall or samples:
         migrate_collection(Sample, sort_ids)
+    if mall or signatures:
+        migrate_collection(Signature, sort_ids)
     if mall or targets:
         migrate_collection(Target, sort_ids)
     if mall or exploits:

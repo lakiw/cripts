@@ -61,14 +61,19 @@ def add_event(request):
                                    date=data['occurrence_date'],
                                    bucket_list=data[form_consts.Common.BUCKET_LIST_VARIABLE_NAME],
                                    ticket=data[form_consts.Common.TICKET_VARIABLE_NAME],
-                                   analyst=request.user.username)
+                                   campaign=data['campaign'],
+                                   campaign_confidence=data['campaign_confidence'],
+                                   analyst=request.user.username,
+                                   related_id=data['related_id'],
+                                   related_type=data['related_type'],
+                                   relationship_type=data['relationship_type'])
             if 'object' in result:
                 del result['object']
-            return HttpResponse(json.dumps(result), mimetype="application/json")
+            return HttpResponse(json.dumps(result), content_type="application/json")
         else:
             return HttpResponse(json.dumps({'form': event_form.as_table(),
                                             'success': False}),
-                                mimetype="application/json")
+                                content_type="application/json")
     else:
         return render_to_response("error.html",
                                   {"error": "Expected AJAX POST"},
@@ -113,49 +118,6 @@ def view_event(request, eventid):
                               RequestContext(request))
 
 
-@user_passes_test(user_can_view_data)
-def upload_sample(request, event_id):
-    """
-    Upload a sample to associate with this event.
-
-    :param request: Django request object (Required)
-    :type request: :class:`django.http.HttpRequest`
-    :param event_id: The ObjectId of the event to associate with this sample.
-    :type event_id: str
-    :returns: :class:`django.http.HttpResponse`, :class:`django.http.HttpResponse`
-    """
-
-    if request.method == 'POST':    # and request.is_ajax():
-        form = UploadFileForm(request.user, request.POST, request.FILES)
-        if form.is_valid():
-            email = None
-            if request.POST.get('email'):
-                email = request.user.email
-
-            result = add_sample_for_event(event_id,
-                                          form.cleaned_data,
-                                          request.user.username,
-                                          request.FILES.get('filedata', None),
-                                          request.POST.get('filename', None),
-                                          request.POST.get('md5', None),
-                                          email,
-                                          form.cleaned_data['inherit_sources'])
-            if result['success']:
-                result['redirect_url'] = reverse('crits.events.views.view_event', args=[event_id])
-            return render_to_response('file_upload_response.html',
-                                      {'response': json.dumps(result)},
-                                      RequestContext(request))
-        else:
-            form.fields['related_md5'].widget = forms.HiddenInput() #hide field so it doesn't reappear
-            return render_to_response('file_upload_response.html',
-                                      {'response': json.dumps({'success': False,
-                                                               'form': form.as_table()})},
-                                      RequestContext(request))
-    else:
-        return HttpResponseRedirect(reverse('crits.events.views.view_event',
-                                            args=[event_id]))
-
-
 @user_passes_test(user_is_admin)
 def remove_event(request, _id):
     """
@@ -197,7 +159,7 @@ def set_event_title(request, event_id):
         return HttpResponse(json.dumps(update_event_title(event_id,
                                                           title,
                                                           analyst)),
-                            mimetype="application/json")
+                            content_type="application/json")
     else:
         error = "Expected POST"
         return render_to_response("error.html",
@@ -223,7 +185,7 @@ def set_event_type(request, event_id):
         return HttpResponse(json.dumps(update_event_type(event_id,
                                                          event_type,
                                                          analyst)),
-                            mimetype="application/json")
+                            content_type="application/json")
     else:
         error = "Expected POST"
         return render_to_response("error.html",
@@ -245,7 +207,7 @@ def get_event_type_dropdown(request):
         e_types = EventTypes.values(sort=True)
         result = {'types': e_types}
         return HttpResponse(json.dumps(result),
-                            mimetype="application/json")
+                            content_type="application/json")
     else:
         error = "Expected AJAX"
         return render_to_response("error.html",

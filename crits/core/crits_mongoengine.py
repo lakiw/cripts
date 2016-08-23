@@ -9,16 +9,13 @@ from django.conf import settings
 from django.core.urlresolvers import reverse
 from django.template.loader import render_to_string
 
-from mongoengine import EmbeddedDocument, DynamicEmbeddedDocument
+from mongoengine import Document, EmbeddedDocument, DynamicEmbeddedDocument
 from mongoengine import StringField, ListField, EmbeddedDocumentField
 from mongoengine import IntField, DateTimeField, ObjectIdField
 from mongoengine.base import BaseDocument, ValidationError
 
 # Determine if we should be caching queries or not.
-if settings.QUERY_CACHING:
-    from mongoengine import QuerySet as QS
-else:
-    from mongoengine import QuerySetNoCache as QS
+from mongoengine import QuerySet as QS
 
 from pprint import pformat
 
@@ -68,10 +65,9 @@ class CritsQuerySet(QS):
 
         if self._len is not None:
             return self._len
-        if settings.QUERY_CACHING:
-            if self._has_more:
-                # populate the cache
-                list(self._iter_results())
+        if self._has_more:
+            # populate the cache
+            list(self._iter_results())
             self._len = len(self._result_cache)
         else:
             self._len = self.count()
@@ -147,7 +143,7 @@ class CritsQuerySet(QS):
         csvout += "".join(obj.to_csv(fields) for obj in self)
         return csvout
 
-    def to_json(self, exclude=None):
+    def to_json(self, exclude=[]):
         """
         Converts a CritsQuerySet to JSON.
 
@@ -170,7 +166,7 @@ class CritsQuerySet(QS):
 
         return [self._document.from_yaml(doc) for doc in yaml_data]
 
-    def to_yaml(self, exclude=None):
+    def to_yaml(self, exclude=[]):
         """
         Converts a CritsQuerySet to a list of YAML docs.
 
@@ -306,6 +302,7 @@ class CritsDocument(BaseDocument):
     meta = {
         'duplicate_attrs':[],
         'migrated': False,
+        'migrating': False,
         'needs_migration': False,
         'queryset_class': CritsQuerySet
     }
@@ -421,7 +418,7 @@ class CritsDocument(BaseDocument):
             return False
 
     @classmethod
-    def _from_son(cls, son, _auto_dereference=True):
+    def _from_son(cls, son, _auto_dereference=True, only_fields=None, created=False):
         """
         Override the default _from_son(). Allows us to move attributes in the
         database to unsupported_attrs if needed, validate the schema_version,
@@ -456,17 +453,24 @@ class CritsDocument(BaseDocument):
 
         # perform migration, if needed
         if hasattr(doc, '_meta'):
-            doc._meta['migrated'] = False
-            if doc._meta.get('needs_migration', False):
-                doc.migrate()
-                doc._meta['migrated'] = True
             if ('schema_version' in doc and
                 'latest_schema_version' in doc._meta and
                 doc.schema_version < doc._meta['latest_schema_version']):
                 # mark for migration
                 doc._meta['needs_migration'] = True
                 # reload doc to get full document from database
+            if (doc._meta.get('needs_migration', False) and
+                not doc._meta.get('migrating', False)):
+                doc._meta['migrating'] = True
                 doc.reload()
+                try:
+                    doc.migrate()
+                    doc._meta['migrated'] = True
+                    doc._meta['needs_migration'] = False
+                    doc._meta['migrating'] = False
+                except Exception as e:
+                    e.tlo = doc.id
+                    raise e
 
         return doc
 
@@ -580,7 +584,7 @@ class CritsDocument(BaseDocument):
             return result
         return data
 
-    def _json_yaml_convert(self, exclude=None):
+    def _json_yaml_convert(self, exclude=[]):
         """
         Helper to convert to a dict before converting to JSON.
 
@@ -606,7 +610,7 @@ class CritsDocument(BaseDocument):
 
         return cls._from_son(json_util.loads(json_data))
 
-    def to_json(self, exclude=None):
+    def to_json(self, exclude=[]):
         """
         Convert to JSON.
 
@@ -628,7 +632,7 @@ class CritsDocument(BaseDocument):
 
         return cls._from_son(yaml.load(yaml_data))
 
-    def to_yaml(self, exclude=None):
+    def to_yaml(self, exclude=[]):
         """
         Convert to JSON.
 
@@ -649,6 +653,149 @@ class CritsDocument(BaseDocument):
 
         return pformat(self.to_dict())
 
+
+class EmbeddedPreferredAction(EmbeddedDocument, CritsDocumentFormatter):
+    """
+    Embedded Preferred Action
+    """
+
+    object_type = StringField()
+    object_field = StringField()
+    object_value = StringField()
+
+
+class Action(CritsDocument, CritsSchemaDocument, Document):
+    """
+    Action type class.
+    """
+
+    meta = {
+        "collection": settings.COL_IDB_ACTIONS,
+        "crits_type": 'Action',
+        "latest_schema_version": 1,
+        "schema_doc": {
+            'name': 'The name of this Action',
+            'active': 'Enabled in the UI (on/off)',
+            'object_types': 'List of TLOs this is for',
+            'preferred': 'List of dictionaries defining where this is preferred'
+        },
+    }
+
+    name = StringField()
+    active = StringField(default="on")
+    object_types = ListField(StringField())
+    preferred = ListField(EmbeddedDocumentField(EmbeddedPreferredAction))
+
+class EmbeddedAction(EmbeddedDocument, CritsDocumentFormatter):
+    """
+    Embedded action class.
+    """
+
+    action_type = StringField()
+    active = StringField()
+    analyst = StringField()
+    begin_date = CritsDateTimeField(default=datetime.datetime.now)
+    date = CritsDateTimeField(default=datetime.datetime.now)
+    end_date = CritsDateTimeField()
+    performed_date = CritsDateTimeField(default=datetime.datetime.now)
+    reason = StringField()
+
+class CritsActionsDocument(BaseDocument):
+    """
+    Inherit if you want to track actions information on a top-level object.
+    """
+
+    actions = ListField(EmbeddedDocumentField(EmbeddedAction))
+
+    def add_action(self, type_, active, analyst, begin_date,
+                   end_date, performed_date, reason, date=None):
+        """
+        Add an action to an Indicator.
+
+        :param type_: The type of action.
+        :type type_: str
+        :param active: Whether this action is active or not.
+        :param active: str ("on", "off")
+        :param analyst: The user adding this action.
+        :type analyst: str
+        :param begin_date: The date this action begins.
+        :type begin_date: datetime.datetime
+        :param end_date: The date this action ends.
+        :type end_date: datetime.datetime
+        :param performed_date: The date this action was performed.
+        :type performed_date: datetime.datetime
+        :param reason: The reason for this action.
+        :type reason: str
+        :param date: The date this action was added to CRITs.
+        :type date: datetime.datetime
+        """
+
+        ea = EmbeddedAction()
+        ea.action_type = type_
+        ea.active = active
+        ea.analyst = analyst
+        ea.begin_date = begin_date
+        ea.end_date = end_date
+        ea.performed_date = performed_date
+        ea.reason = reason
+        if date:
+            ea.date = date
+        self.actions.append(ea)
+
+    def delete_action(self, date=None):
+        """
+        Delete an action.
+
+        :param date: The date of the action to delete.
+        :type date: datetime.datetime
+        """
+
+        if not date:
+            return
+        for t in self.actions:
+            if t.date == date:
+                self.actions.remove(t)
+                break
+
+    def edit_action(self, type_, active, analyst, begin_date,
+                    end_date, performed_date, reason, date=None):
+        """
+        Edit an action for an Indicator.
+
+        :param type_: The type of action.
+        :type type_: str
+        :param active: Whether this action is active or not.
+        :param active: str ("on", "off")
+        :param analyst: The user editing this action.
+        :type analyst: str
+        :param begin_date: The date this action begins.
+        :type begin_date: datetime.datetime
+        :param end_date: The date this action ends.
+        :type end_date: datetime.datetime
+        :param performed_date: The date this action was performed.
+        :type performed_date: datetime.datetime
+        :param reason: The reason for this action.
+        :type reason: str
+        :param date: The date this action was added to CRITs.
+        :type date: datetime.datetime
+        """
+
+        if not date:
+            return
+        for t in self.actions:
+            if t.date == date:
+                self.actions.remove(t)
+                ea = EmbeddedAction()
+                ea.action_type = type_
+                ea.active = active
+                ea.analyst = analyst
+                ea.begin_date = begin_date
+                ea.end_date = end_date
+                ea.performed_date = performed_date
+                ea.reason = reason
+                ea.date = date
+                self.actions.append(ea)
+                break
 
 # Embedded Documents common to most classes
 class EmbeddedSource(EmbeddedDocument, CritsDocumentFormatter):
@@ -1008,6 +1155,7 @@ class Releasability(EmbeddedDocument, CritsDocumentFormatter):
 
         analyst = StringField()
         date = DateTimeField()
+        note = StringField()
 
 
     name = StringField()
@@ -1373,22 +1521,30 @@ class CritsBaseAttributes(CritsDocument, CritsBaseDocument,
         :type analyst: str
         :param object_item: An entire object ready to be added.
         :type object_item: :class:`crits.core.crits_mongoengine.EmbeddedObject`
+        :returns: dict with keys:
+                  "success" (boolean)
+                  "message" (str)
+                  "object"  (EmbeddedObject)
         """
 
         if not isinstance(object_item, EmbeddedObject):
             object_item = EmbeddedObject()
             object_item.analyst = analyst
-            object_item.source = [create_embedded_source(source,
-                                                         method=method,
-                                                         reference=reference,
-                                                         analyst=analyst)]
+            src = create_embedded_source(source, method=method,
+                                         reference=reference, analyst=analyst)
+            if not src:
+                return {'success': False, 'message': 'Invalid Source'}
+            object_item.source = [src]
             object_item.object_type = object_type
             object_item.value = value
         for o in self.obj:
-            if o.object_type == object_type and o.value == value:
-                break
-        else:
-            self.obj.append(object_item)
+            if (o.object_type == object_item.object_type
+                and o.value == object_item.value):
+                return {'success': False, 'object': o,
+                        'message': 'Object already exists'}
+
+        self.obj.append(object_item)
+        return {'success': True, 'object': object_item}
 
     def remove_object(self, object_type, value):
         """
@@ -1546,7 +1702,7 @@ class CritsBaseAttributes(CritsDocument, CritsBaseDocument,
 
     def add_relationship(self, rel_item, rel_type, rel_date=None,
                          analyst=None, rel_confidence='unknown',
-                         rel_reason='N/A', get_rels=False):
+                         rel_reason='', get_rels=False):
         """
         Add a relationship to this top-level object. The rel_item will be
         saved. It is up to the caller to save "self".
@@ -1564,17 +1720,25 @@ class CritsBaseAttributes(CritsDocument, CritsBaseDocument,
         :type rel_confidence: str
         :param rel_reason: The reason for the relationship.
         :type rel_reason: str
-        :param get_rels: Return the relationships after forging.
+        :param get_rels: If True, return all relationships after forging.
+                         If False, return the new EmbeddedRelationship object
         :type get_rels: boolean
-        :returns: dict with keys "success" (boolean) and "message" (str if
-                  failed, dict if successful)
+        :returns: dict with keys:
+                  "success" (boolean)
+                  "message" (str if failed, else dict or EmbeddedRelationship)
         """
+
+        # Prevent class from having a relationship to itself
+        if self == rel_item:
+            return {'success': False,
+                    'message': 'Cannot forge relationship to oneself'}
 
         # get reverse relationship
         rev_type = RelationshipTypes.inverse(rel_type)
         if rev_type is None:
             return {'success': False,
                     'message': 'Could not find relationship type'}
+
         date = datetime.datetime.now()
 
         # setup the relationship for me
@@ -1599,48 +1763,58 @@ class CritsBaseAttributes(CritsDocument, CritsBaseDocument,
         their_rel.rel_confidence = rel_confidence
         their_rel.rel_reason = rel_reason
 
-        # check for existing relationship before
-        # blindly adding them
+        # variables for detecting if an existing relationship exists
+        my_existing_rel = None
+        their_existing_rel = None
+
+        # check for existing relationship before blindly adding
         for r in self.relationships:
-            if rel_date:
-                if (r.object_id == my_rel.object_id
-                    and r.relationship == my_rel.relationship
-                    and r.relationship_date == my_rel.relationship_date
-                    and r.rel_type == my_rel.rel_type):
-                    return {'success': False,
-                            'message': 'Left relationship already exists'}
-            else:
-                if (r.object_id == my_rel.object_id
-                    and r.relationship == my_rel.relationship
-                    and r.rel_type == my_rel.rel_type):
-                    return {'success': False,
-                            'message': 'Left relationship already exists'}
-        self.relationships.append(my_rel)
-
+            if (r.object_id == my_rel.object_id
+                and r.relationship == my_rel.relationship
+                and (not rel_date or r.relationship_date == rel_date)
+                and r.rel_type == my_rel.rel_type):
+                my_existing_rel = r
+                break # If relationship already exists then exit loop
         for r in rel_item.relationships:
-            if rel_date:
-                if (r.object_id == their_rel.object_id
-                    and r.relationship == their_rel.relationship
-                    and r.relationship_date == their_rel.relationship_date
-                    and r.rel_type == their_rel.rel_type):
-                    return {'success': False,
-                            'message': 'Right relationship already exists'}
-            else:
-                if (r.object_id == their_rel.object_id
-                    and r.relationship == their_rel.relationship
-                    and r.rel_type == their_rel.rel_type):
-                    return {'success': False,
-                            'message': 'Right relationship already exists'}
+            if (r.object_id == their_rel.object_id
+                and r.relationship == their_rel.relationship
+                and (not rel_date or r.relationship_date == rel_date)
+                and r.rel_type == their_rel.rel_type):
+                their_existing_rel = r
+                break # If relationship already exists then exit loop
 
-        rel_item.relationships.append(their_rel)
-        rel_item.save(username=analyst)
+        # If the relationship already exists on both sides then do nothing
+        if my_existing_rel and their_existing_rel:
+            return {'success': False,
+                    'message': 'Relationship already exists'}
+
+        # Repair unreciprocated relationships
+        if not my_existing_rel: # If my rel does not exist then add it
+            if their_existing_rel: # If their rel exists then use its data
+                my_rel.analyst = their_existing_rel.analyst
+                my_rel.date = their_existing_rel.date
+                my_rel.relationship_date = their_existing_rel.relationship_date
+                my_rel.rel_confidence = their_existing_rel.rel_confidence
+                my_rel.rel_reason = their_existing_rel.rel_reason
+            self.relationships.append(my_rel) # add my new relationship
+        if not their_existing_rel: # If their rel does not exist then add it
+            if my_existing_rel: # If my rel exists then use its data
+                their_rel.analyst = my_existing_rel.analyst
+                their_rel.date = my_existing_rel.date
+                their_rel.relationship_date = my_existing_rel.relationship_date
+                their_rel.rel_confidence = my_existing_rel.rel_confidence
+                their_rel.rel_reason = my_existing_rel.rel_reason
+            rel_item.relationships.append(their_rel) # add to passed rel_item
+
+            # updating DB this way can be much faster than saving entire TLO
+            rel_item.update(add_to_set__relationships=their_rel)
 
         if get_rels:
             results = {'success': True,
                        'message': self.sort_relationships(analyst, meta=True)}
         else:
             results = {'success': True,
-                       'message': 'Relationship forged'}
+                       'message': my_rel}
 
         # In case of relating to a versioned backdoor we also want to relate to
         # the family backdoor.
@@ -2007,7 +2181,7 @@ class CritsBaseAttributes(CritsDocument, CritsBaseDocument,
             'Email': ('id', 'from_address', 'sender', 'subject', 'campaign'),
             'Event': ('id', 'title', 'event_type', 'description', 'campaign'),
             'Exploit': ('id', 'name', 'cve', 'campaign'),
-            'Indicator': ('id', 'ind_type', 'value', 'campaign'),
+            'Indicator': ('id', 'ind_type', 'value', 'campaign', 'actions'),
             'IP': ('id', 'ip', 'campaign'),
             'PCAP': ('id', 'md5', 'filename', 'description', 'campaign'),
             'RawData': ('id', 'title', 'data_type', 'tool', 'description',
@@ -2018,6 +2192,8 @@ class CritsBaseAttributes(CritsDocument, CritsBaseDocument,
                        'mimetype',
                        'size',
                        'campaign'),
+            'Signature': ('id', 'title', 'data_type', 'description',
+                        'version', 'campaign'),
             'Target': ('id', 'firstname', 'lastname', 'email_address', 'email_count'),
         }
         rel_dict['Other'] = 0

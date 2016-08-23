@@ -1,4 +1,4 @@
-{% load url from future %}
+
 <tr>
     <td colspan="2" class="relationship_spacer"></td>
 </tr>
@@ -41,6 +41,10 @@
                     {% elif rel_type == 'Indicator' %}
                         <th>Value</th>
                         <th>Type</th>
+                        <th>Actions</th>
+                        {% if relationship.type in 'EventEmail' %}
+                            <th>Event Count</th>
+                        {% endif %}
                     {% elif rel_type == 'Certificate' %}
                         <th>Filename</th>
                         <th>Filetype</th>
@@ -54,6 +58,11 @@
                         <th>Tool</th>
                         <th>Description</th>
                         <th>Version</th>
+                    {% elif rel_type == 'Signature' %}
+                        <th>Title</th>
+                        <th>Data Type</th>
+                        <th>Description</th>
+                        <th>Version</th>
                     {% elif rel_type == 'IP' %}
                         <th>IP Address</th>
                     {% elif rel_type == 'Domain' %}
@@ -63,7 +72,7 @@
                     {% else %}
                         <th>Details</th>
                     {% endif %}
-                    {% if rel_type in "RawDataPCAPCertificateIndicatorEvent" %}
+                    {% if rel_type in "RawDataSignaturePCAPCertificateIndicatorEvent" %}
                       <th>Campaign</th>
                     {% endif %}
                     <th>Analyst</th>
@@ -110,6 +119,23 @@
                                 {% endif%}
                             </td>
                             <td><a href="{% url 'crits.indicators.views.indicators_listing' %}?type={{ rel.ind_type }}">{{ rel.ind_type }}</a></td>
+                            <td>
+                                {% for action in rel.actions %}
+                                    {% if action.active == 'off' %}
+                                        <s>
+                                    {% endif %}
+                                    {{ action.action_type }}
+                                    {% if action.active == 'off' %}
+                                        </s>
+                                    {% endif %}
+                                    <br />
+                                {% endfor %}
+                            </td>
+                            {% if relationship.type in 'EventEmail' %}
+                                <td class='eventCountWidth'>
+                                    <a href="{% url 'crits.events.views.events_listing' %}?related={{ rel.id }}">{{ rel.rel_ind_events }}</a>
+                                </td>
+                            {% endif %}
                         {% elif rel_type == 'IP' %}
                             <td>{{ rel.ip }}</td>
                         {% elif rel_type == 'Certificate' %}
@@ -125,8 +151,13 @@
                             <td>{{ rel.tool.name }}</td>
                             <td>{{ rel.description|truncatechars:100 }}</td>
                             <td>{{ rel.version }}</td>
+                        {% elif rel_type == 'Signature' %}
+                            <td>{{ rel.title }}</td>
+                            <td>{{ rel.data_type }}</td>
+                            <td>{{ rel.description|truncatechars:100 }}</td>
+                            <td>{{ rel.version }}</td>
                         {% endif %}
-                        {% if rel_type in "RawDataPCAPCertificateIndicatorEventActorExploitBackdoor" %}
+                        {% if rel_type in "RawDataSignaturePCAPCertificateIndicatorEventActorExploitBackdoor" %}
                             <td class='campaignWidth'>
                                 {% for campaign in rel.campaign %}
                                     <a href="{% url 'crits.campaigns.views.campaign_details' campaign.name %}">

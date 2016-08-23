@@ -9,10 +9,11 @@ from django.contrib.auth.decorators import user_passes_test
 from django.core.urlresolvers import reverse
 
 from crits.core import form_consts
-from crits.core.user_tools import user_can_view_data, user_sources, user_is_admin
+from crits.core.user_tools import user_can_view_data
+from crits.core.user_tools import user_sources, user_is_admin
 from crits.emails.email import Email
-from crits.emails.forms import EmailYAMLForm, EmailOutlookForm
-from crits.emails.forms import EmailEMLForm, EmailUploadForm, EmailRawUploadForm
+from crits.emails.forms import EmailYAMLForm, EmailOutlookForm, EmailEMLForm
+from crits.emails.forms import EmailUploadForm, EmailRawUploadForm
 from crits.emails.handlers import handle_email_fields, handle_yaml
 from crits.emails.handlers import handle_eml, handle_msg
 from crits.emails.handlers import update_email_header_value, handle_pasted_eml
@@ -30,7 +31,7 @@ def emails_listing(request,option=None):
 
     :param request: Django request object (Required)
     :type request: :class:`django.http.HttpRequest`
-    :param option: Whether or not we should generate a CSV (yes if option is "csv")
+    :param option: Whether we should generate a CSV (yes if option is "csv")
     :type option: str
     :returns: :class:`django.http.HttpResponse`
     """
@@ -38,6 +39,7 @@ def emails_listing(request,option=None):
     if option == "csv":
         return generate_email_csv(request)
     return generate_email_jtable(request, option)
+
 
 @user_passes_test(user_can_view_data)
 def email_search(request):
@@ -56,6 +58,7 @@ def email_search(request):
     return HttpResponseRedirect(reverse('crits.emails.views.emails_listing')
                                 + "?%s" % urllib.urlencode(query))
 
+
 @user_passes_test(user_is_admin)
 def email_del(request, email_id):
     """
@@ -69,13 +72,14 @@ def email_del(request, email_id):
     """
 
     email = Email.objects(id=email_id).first()
-    if email:
-        email.delete(username=request.user.username)
-        return HttpResponseRedirect(reverse('crits.emails.views.emails_listing'))
-    else:
+    if not email:
         return render_to_response('error.html',
                                   {'error': "Could not delete email."},
                                   RequestContext(request))
+
+    email.delete(username=request.user.username)
+    return HttpResponseRedirect(reverse('crits.emails.views.emails_listing'))
+
 
 @user_passes_test(user_can_view_data)
 def upload_attach(request, email_id):
@@ -89,55 +93,60 @@ def upload_attach(request, email_id):
     :returns: :class:`django.http.HttpResponse`
     """
 
-    if request.method == 'POST':
-        form = UploadFileForm(request.user, request.POST, request.FILES)
-        if form.is_valid():
-            cleaned_data = form.cleaned_data
-            analyst = request.user.username
-            users_sources = user_sources(analyst)
-            method = cleaned_data['method'] or "Add to Email"
-            bucket_list = cleaned_data.get(form_consts.Common.BUCKET_LIST_VARIABLE_NAME)
-            ticket = cleaned_data.get(form_consts.Common.TICKET_VARIABLE_NAME)
-            email_addr = None
-            if request.POST.get('email'):
-                email_addr = request.user.email
-            email = Email.objects(id=email_id, source__name__in=users_sources).first()
-            if not email:
-                return render_to_response('file_upload_response.html',
-                                          {'response': json.dumps({'success': False,
-                                                                   'message': "Could not find email."})},
-                                          RequestContext(request))
-            result = create_email_attachment(email,
-                                             cleaned_data,
-                                             analyst,
-                                             cleaned_data['source'],
-                                             method,
-                                             cleaned_data['reference'],
-                                             cleaned_data['campaign'],
-                                             cleaned_data['confidence'],
-                                             bucket_list,
-                                             ticket,
-                                             request.FILES.get('filedata',None),
-                                             request.POST.get('filename', None),
-                                             request.POST.get('md5', None),
-                                             email_addr,
-                                             cleaned_data['inherit_sources'])
+    redirect = reverse('crits.emails.views.email_detail', args=[email_id])
+    if request.method != 'POST':
+        return HttpResponseRedirect(redirect)
 
-            # If successful, tell the browser to redirect back to this email.
-            if result['success']:
-                result['redirect_url'] = reverse('crits.emails.views.email_detail', args=[email_id])
-            return render_to_response('file_upload_response.html',
-                                      {'response': json.dumps(result)},
-                                      RequestContext(request))
-        else:
-            form.fields['related_md5'].widget = forms.HiddenInput() #hide field so it doesn't reappear
-            return render_to_response('file_upload_response.html',
-                                      {'response': json.dumps({'success': False,
-                                                               'form': form.as_table()})},
-                                      RequestContext(request))
-    else:
-        return HttpResponseRedirect(reverse('crits.emails.views.email_detail',
-                                            args=[email_id]))
+    file_form = UploadFileForm(request.user, request.POST, request.FILES)
+    json_reply = {'success': False}
+
+    if not file_form.is_valid:
+        file_form.fields['related_md5_event'].widget = forms.HiddenInput() #hide field so it doesn't reappear
+        json_reply['form'] = file_form.as_table()
+        return render_to_response('file_upload_response.html',
+                                  {'response': json.dumps(json_reply)},
+                                  RequestContext(request))
+
+    form_data = file_form.cleaned_data
+    analyst = request.user.username
+    users_sources = user_sources(analyst)
+    method = form_data['method'] or "Add to Email"
+    bucket_list = form_data.get(form_consts.Common.BUCKET_LIST_VARIABLE_NAME)
+    ticket = form_data.get(form_consts.Common.TICKET_VARIABLE_NAME)
+    email_addr = None
+    if request.POST.get('email'):
+        email_addr = request.user.email
+    email = Email.objects(id=email_id,
+                          source__name__in=users_sources).first()
+    if not email:
+        json_reply['message'] = "Could not find email."
+        return render_to_response('file_upload_response.html',
+                                  {'response': json.dumps(json_reply)},
+                                  RequestContext(request))
+
+    result = create_email_attachment(email,
+                                     form_data,
+                                     analyst,
+                                     form_data['source'],
+                                     method,
+                                     form_data['reference'],
+                                     form_data['campaign'],
+                                     form_data['confidence'],
+                                     bucket_list,
+                                     ticket,
+                                     request.FILES.get('filedata'),
+                                     request.POST.get('filename'),
+                                     request.POST.get('md5'),
+                                     email_addr,
+                                     form_data['inherit_sources'])
+
+    # If successful, tell the browser to redirect back to this email.
+    if result['success']:
+        result['redirect_url'] = redirect
+    return render_to_response('file_upload_response.html',
+                              {'response': json.dumps(result)},
+                              RequestContext(request))
+
 
 @user_passes_test(user_can_view_data)
 def email_fields_add(request):
@@ -152,54 +161,46 @@ def email_fields_add(request):
     fields_form = EmailUploadForm(request.user, request.POST)
     json_reply = {
                    'form': fields_form.as_table(),
-                   'success': False,
-                   'message': ""
+                   'success': False
                  }
 
     if request.method != "POST":
         message = "Must submit via POST"
-        if request.is_ajax():
-            json_reply['message'] = message
-            return HttpResponse(json.dumps(json_reply),
-                                mimetype="application/json")
+    else:
+        if not fields_form.is_valid():
+            message = "Form is invalid."
         else:
-            return render_to_response('error.html',
-                                      {'error': message},
-                                      RequestContext(request))
+            form_data = fields_form.cleaned_data
+            result = handle_email_fields(form_data,
+                                         request.user.username,
+                                         "Fields Upload",
+                                         form_data['related_id'],
+                                         form_data['related_type'],
+                                         form_data['relationship_type'])
 
-    if not fields_form.is_valid():
-        message = "Form is invalid."
-        if request.is_ajax():
-            json_reply['message'] = message
-            return HttpResponse(json.dumps(json_reply),
-                                mimetype="application/json")
-        else:
-            return render_to_response('error.html',
-                                      {'error': message},
-                                      RequestContext(request))
-
-    obj = handle_email_fields(fields_form.cleaned_data,
-                              request.user.username,
-                              "Fields Upload")
-    if not obj['status']:
-        if request.is_ajax():
-            json_reply['message'] = obj['reason']
-            return HttpResponse(json.dumps(json_reply),
-                                mimetype="application/json")
-        else:
-            return render_to_response('error.html',
-                                      {'error': obj['reason']},
-                                      RequestContext(request))
+            if result['status']:
+                redirect = reverse('crits.emails.views.email_detail',
+                                   args=[result['object'].id])
+                if not request.is_ajax():
+                    return HttpResponseRedirect(redirect)
+                json_reply['success'] = True
+                del json_reply['form']
+                message = 'Email uploaded successfully'
+                if result.get('reason'):
+                    message += ', but %s' % result['reason']
+                message += ('. <a href="%s">View email.</a>' % redirect)
+            else:
+                message = result['reason']
 
     if request.is_ajax():
-        json_reply['success'] = True
-        del json_reply['form']
-        json_reply['message'] = 'Email uploaded successfully. <a href="%s">View email.</a>' % reverse('crits.emails.views.email_detail', args=[obj['object'].id])
+        json_reply['message'] = message
         return HttpResponse(json.dumps(json_reply),
-                            mimetype="application/json")
+                            content_type="application/json")
     else:
-        return HttpResponseRedirect(reverse('crits.emails.views.email_detail',
-                                            args=[obj['object'].id]))
+        return render_to_response('error.html',
+                                  {'error': message},
+                                  RequestContext(request))
+
 
 @user_passes_test(user_can_view_data)
 def email_yaml_add(request, email_id=None):
@@ -216,63 +217,57 @@ def email_yaml_add(request, email_id=None):
     yaml_form = EmailYAMLForm(request.user, request.POST)
     json_reply = {
                    'form': yaml_form.as_table(),
-                   'success': False,
-                   'message': ""
+                   'success': False
                  }
 
     if request.method != "POST":
         message = "Must submit via POST"
-        if request.is_ajax():
-            json_reply['message'] = message
-            return HttpResponse(json.dumps(json_reply),
-                                mimetype="application/json")
+    else:
+        if not yaml_form.is_valid():
+            message = "Form is invalid."
         else:
-            return render_to_response('error.html',
-                                      {'error': message},
-                                      RequestContext(request))
+            form_data = yaml_form.cleaned_data
+            method = "YAML Upload"
+            if form_data['source_method']:
+                method = method + " - " + form_data['source_method']
 
-    if not yaml_form.is_valid():
-        message = "Form is invalid."
-        if request.is_ajax():
-            json_reply['message'] = message
-            return HttpResponse(json.dumps(json_reply),
-                                mimetype="application/json")
-        else:
-            return render_to_response('error.html',
-                                      {'error': message},
-                                      RequestContext(request))
+            result = handle_yaml(form_data['yaml_data'],
+                                 form_data['source'],
+                                 form_data['source_reference'],
+                                 request.user.username,
+                                 method,
+                                 email_id,
+                                 form_data['save_unsupported'],
+                                 form_data['campaign'],
+                                 form_data['campaign_confidence'],
+                                 form_data['bucket_list'],
+                                 form_data['ticket'],
+                                 form_data['related_id'],
+                                 form_data['related_type'],
+                                 form_data['relationship_type'])
 
-    method = "YAML Upload"
-    if yaml_form.cleaned_data['source_method']:
-        method = method + " - " + yaml_form.cleaned_data['source_method']
-
-    obj = handle_yaml(yaml_form.cleaned_data['yaml_data'],
-                      yaml_form.cleaned_data['source'],
-                      yaml_form.cleaned_data['source_reference'],
-                      request.user.username,
-                      method,
-                      email_id=email_id,
-                      save_unsupported=yaml_form.cleaned_data['save_unsupported'],
-                      campaign=yaml_form.cleaned_data['campaign'],
-                      confidence=yaml_form.cleaned_data['campaign_confidence'])
-    if not obj['status']:
-        if request.is_ajax():
-            json_reply['message'] = obj['reason']
-            return HttpResponse(json.dumps(json_reply),
-                                mimetype="application/json")
-        else:
-            return render_to_response('error.html',
-                                      {'error': obj['reason']},
-                                      RequestContext(request))
+            if result['status']:
+                redirect = reverse('crits.emails.views.email_detail',
+                                   args=[result['object'].id])
+                if not request.is_ajax():
+                    return HttpResponseRedirect(redirect)
+                json_reply['success'] = True
+                message = 'Email uploaded successfully'
+                if result.get('reason'):
+                    message += ', but %s' % result['reason']
+                message += ('. <a href="%s">View email.</a>' % redirect)
+            else:
+                message = result['reason']
 
     if request.is_ajax():
-        json_reply['success'] = True
-        json_reply['message'] = 'Email uploaded successfully. <a href="%s">View email.</a>' % reverse('crits.emails.views.email_detail', args=[obj['object'].id])
+        json_reply['message'] = message
         return HttpResponse(json.dumps(json_reply),
-                            mimetype="application/json")
+                            content_type="application/json")
     else:
-        return HttpResponseRedirect(reverse('crits.emails.views.email_detail',
-                                            args=[obj['object'].id]))
+        return render_to_response('error.html',
+                                  {'error': message},
+                                  RequestContext(request))
+
 
 @user_passes_test(user_can_view_data)
 def email_raw_add(request):
@@ -284,53 +279,60 @@ def email_raw_add(request):
     :returns: :class:`django.http.HttpResponse`
     """
 
-    fields_form = EmailRawUploadForm(request.user, request.POST)
+    raw_form = EmailRawUploadForm(request.user, request.POST)
     json_reply = {
-                   'form': fields_form.as_table(),
-                   'success': False,
-                   'message': ""
+                   'form': raw_form.as_table(),
+                   'success': False
                  }
+
     if request.method != "POST":
         message = "Must submit via POST"
-        if request.is_ajax():
-            json_reply['message'] = message
-            return HttpResponse(json.dumps(json_reply), mimetype="application/json")
+    else:
+        if not raw_form.is_valid():
+            message = "Form is invalid."
         else:
-            return render_to_response('error.html', {'error': message}, RequestContext(request))
+            form_data = raw_form.cleaned_data
+            method = "Raw Upload"
+            if form_data['source_method']:
+                method = method + " - " + form_data['source_method']
 
-    if not fields_form.is_valid():
-        message = "Form is invalid."
-        if request.is_ajax():
-            json_reply['message'] = message
-            return HttpResponse(json.dumps(json_reply), mimetype="application/json")
-        else:
-            return render_to_response('error.html', {'error': message}, RequestContext(request))
+            result = handle_pasted_eml(form_data['raw_email'],
+                                       form_data['source'],
+                                       form_data['source_reference'],
+                                       request.user.username,
+                                       method,
+                                       form_data['campaign'],
+                                       form_data['campaign_confidence'],
+                                       form_data['bucket_list'],
+                                       form_data['ticket'],
+                                       form_data['related_id'],
+                                       form_data['related_type'],
+                                       form_data['relationship_type'])
 
-    method = "Raw Upload"
-    if fields_form.cleaned_data['source_method']:
-        method = method + " - " + fields_form.cleaned_data['source_method']
+            if result['status']:
+                redirect = reverse('crits.emails.views.email_detail',
+                                   args=[result['object'].id])
+                if not request.is_ajax():
+                    return HttpResponseRedirect(redirect)
+                json_reply['success'] = True
+                del json_reply['form']
+                message = 'Email uploaded successfully'
+                if result.get('reason'):
+                    message += ', but %s' % result['reason']
+                message += ('. <a href="%s">View email.</a>' % redirect)
+            else:
+                message = result['reason']
 
-    obj = handle_pasted_eml(fields_form.cleaned_data['raw_email'],
-                    fields_form.cleaned_data['source'],
-                    fields_form.cleaned_data['source_reference'],
-                    request.user.username,
-                    method,
-                    campaign=fields_form.cleaned_data['campaign'],
-                    confidence=fields_form.cleaned_data['campaign_confidence'])
-    if not obj['status']:
-        if request.is_ajax():
-            json_reply['message'] = obj['reason']
-            return HttpResponse(json.dumps(json_reply), mimetype="application/json")
-        else:
-            return render_to_response('error.html', {'error': obj['reason']}, RequestContext(request))
 
     if request.is_ajax():
-        json_reply['success'] = True
-        del json_reply['form']
-        json_reply['message'] = 'Email uploaded successfully. <a href="%s">View email.</a>' % reverse('crits.emails.views.email_detail', args=[obj['object'].id])
-        return HttpResponse(json.dumps(json_reply), mimetype="application/json")
+        json_reply['message'] = message
+        return HttpResponse(json.dumps(json_reply),
+                            content_type="application/json")
     else:
-        return HttpResponseRedirect(reverse('crits.emails.views.email_detail', args=[obj['object'].id]))
+        return render_to_response('error.html',
+                                  {'error': message},
+                                  RequestContext(request))
+
 
 @user_passes_test(user_can_view_data)
 def email_eml_add(request):
@@ -345,47 +347,53 @@ def email_eml_add(request):
     eml_form = EmailEMLForm(request.user, request.POST, request.FILES)
     json_reply = {
                    'form': eml_form.as_table(),
-                   'success': False,
-                   'message': ""
+                   'success': False
                  }
 
     if request.method != "POST":
-        json_reply['message'] = "Must submit via POST."
-        return render_to_response('file_upload_response.html',
-                                  {'response': json.dumps(json_reply)},
-                                  RequestContext(request))
+        message = "Must submit via POST."
+    else:
+        if not eml_form.is_valid():
+            message = "Form is invalid."
+        else:
+            form_data = eml_form.cleaned_data
+            data = ''
+            for chunk in request.FILES['filedata']:
+                data += chunk
 
-    if not eml_form.is_valid():
-        json_reply['message'] = "Form is invalid."
-        return render_to_response('file_upload_response.html',
-                                  {'response': json.dumps(json_reply)},
-                                  RequestContext(request))
+            method = "EML Upload"
+            if form_data['source_method']:
+                method = method + " - " + form_data['source_method']
 
-    data = ''
-    for chunk in request.FILES['filedata']:
-        data += chunk
+            result = handle_eml(data,
+                                form_data['source'],
+                                form_data['source_reference'],
+                                request.user.username,
+                                method,
+                                form_data['campaign'],
+                                form_data['campaign_confidence'],
+                                form_data['bucket_list'],
+                                form_data['ticket'],
+                                form_data['related_id'],
+                                form_data['related_type'],
+                                form_data['relationship_type'])
 
-    method = "EML Upload"
-    if eml_form.cleaned_data['source_method']:
-        method = method + " - " + eml_form.cleaned_data['source_method']
+            if result['status']:
+                redirect = reverse('crits.emails.views.email_detail',
+                                   args=[result['object'].id])
+                json_reply['success'] = True
+                message = 'Email uploaded successfully'
+                if result.get('reason'):
+                    message += ', but %s' % result['reason']
+                message += ('. <a href="%s">View email.</a>' % redirect)
+            else:
+                message = result['reason']
 
-    obj = handle_eml(data, eml_form.cleaned_data['source'],
-                     eml_form.cleaned_data['source_reference'],
-                     request.user.username,
-                     method,
-                     campaign=eml_form.cleaned_data['campaign'],
-                     confidence=eml_form.cleaned_data['campaign_confidence'])
-    if not obj['status']:
-        json_reply['message'] = obj['reason']
-        return render_to_response('file_upload_response.html',
-                                  {'response': json.dumps(json_reply)},
-                                  RequestContext(request))
-
-    json_reply['success'] = True
-    json_reply['message'] = 'Email uploaded successfully. <a href="%s">View email.</a>' % reverse('crits.emails.views.email_detail', args=[obj['object'].id])
+    json_reply['message'] = message
     return render_to_response('file_upload_response.html',
                               {'response': json.dumps(json_reply)},
                               RequestContext(request))
+
 
 @user_passes_test(user_can_view_data)
 def email_outlook_add(request):
@@ -402,45 +410,51 @@ def email_outlook_add(request):
     outlook_form = EmailOutlookForm(request.user, request.POST, request.FILES)
     json_reply = {
         'form': outlook_form.as_table(),
-        'success': False,
-        'message': ""
+        'success': False
         }
 
     if request.method != "POST":
-        json_reply['message'] = "Must submit via POST."
-        return render(request, 'file_upload_response.html', {'response': json.dumps(json_reply)})
-
-    if not outlook_form.is_valid():
-        json_reply['message'] = "Form is invalid."
-        return render(request, 'file_upload_response.html', {'response': json.dumps(json_reply)})
-
-    analyst = request.user.username
-    method = "Outlook MSG Upload"
-    if outlook_form.cleaned_data['source_method']:
-        method = method + " - " + outlook_form.cleaned_data['source_method']
-    source = outlook_form.cleaned_data['source']
-    source_reference = outlook_form.cleaned_data['source_reference']
-    password = outlook_form.cleaned_data['password']
-    campaign = outlook_form.cleaned_data['campaign']
-    campaign_confidence = outlook_form.cleaned_data['campaign_confidence']
-
-    result = handle_msg(request.FILES['msg_file'],
-                        source,
-                        source_reference,
-                        analyst,
-                        method,
-                        password,
-                        campaign,
-                        campaign_confidence)
-
-    json_reply['success'] = result['status']
-    if not result['status']:
-        json_reply['message'] = result['reason']
+        message = "Must submit via POST."
     else:
-        json_reply['message'] = 'Email uploaded successfully. <a href="%s">View email.</a>' % reverse('crits.emails.views.email_detail', args=[result['obj_id']])
-        if 'message' in result:
-            json_reply['message'] += "<br />Attachments:<br />%s" % result['message']
-    return render(request, 'file_upload_response.html', {'response': json.dumps(json_reply)})
+        if not outlook_form.is_valid():
+            message = "Form is invalid."
+        else:
+            form_data = outlook_form.cleaned_data
+            method = "Outlook MSG Upload"
+            if form_data['source_method']:
+                method = method + " - " + form_data['source_method']
+
+            result = handle_msg(request.FILES['msg_file'],
+                                form_data['source'],
+                                form_data['source_reference'],
+                                request.user.username,
+                                method,
+                                form_data['password'],
+                                form_data['campaign'],
+                                form_data['campaign_confidence'],
+                                form_data['bucket_list'],
+                                form_data['ticket'],
+                                form_data['related_id'],
+                                form_data['related_type'],
+                                form_data['relationship_type'])
+
+            if result['status']:
+                redirect = reverse('crits.emails.views.email_detail',
+                                   args=[result['obj_id']])
+                json_reply['success'] = True
+                message = 'Email uploaded successfully'
+                if result.get('reason'):
+                    message += ', but %s' % result['reason']
+                message += ('. <a href="%s">View email.</a>' % redirect)
+                if 'message' in result:
+                    message += "<br />Attachments:<br />%s" % result['message']
+            else:
+                message = result['reason']
+
+    json_reply['message'] = message
+    return render(request, 'file_upload_response.html',
+                  {'response': json.dumps(json_reply)})
+
 
 @user_passes_test(user_can_view_data)
 def email_detail(request, email_id):
@@ -467,6 +481,7 @@ def email_detail(request, email_id):
                               args,
                               RequestContext(request))
 
+
 @user_passes_test(user_can_view_data)
 def indicator_from_header_field(request, email_id):
     """
@@ -481,7 +496,8 @@ def indicator_from_header_field(request, email_id):
 
     if request.method == "POST" and request.is_ajax():
         if 'type' in request.POST:
-            header_field = request.POST['type']
+            header_field = request.POST.get('field')
+            header_type = request.POST.get('type')
             analyst = request.user.username
             sources = user_sources(analyst)
             email = Email.objects(id=email_id,
@@ -492,15 +508,9 @@ def indicator_from_header_field(request, email_id):
                     'message':  "Could not find email."
                 }
             else:
-                if header_field in ("from_address, sender, reply_to"):
-                    ind_type = "Address - e-mail"
-                elif header_field in ("originating_ip", "x_originating_ip"):
-                    ind_type = "Address - ipv4-addr"
-                else:
-                    ind_type = "String"
                 result = create_indicator_from_header_field(email,
                                                             header_field,
-                                                            ind_type,
+                                                            header_type,
                                                             analyst,
                                                             request)
         else:
@@ -508,11 +518,13 @@ def indicator_from_header_field(request, email_id):
                 'success':  False,
                 'message':  "Type is a required value."
             }
-        return HttpResponse(json.dumps(result), mimetype="application/json")
+        return HttpResponse(json.dumps(result),
+                            content_type="application/json")
     else:
         return render_to_response('error.html',
                                   {'error': "Expected AJAX POST"},
                                   RequestContext(request))
+
 
 @user_passes_test(user_can_view_data)
 def update_header_value(request, email_id):
@@ -535,7 +547,7 @@ def update_header_value(request, email_id):
                                            value,
                                            analyst)
         return HttpResponse(json.dumps(result),
-                            mimetype="application/json")
+                            content_type="application/json")
     else:
         return render_to_response('error.html',
                                   {'error': "Expected AJAX POST"},

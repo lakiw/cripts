@@ -25,7 +25,7 @@ from django.template.loader import render_to_string
 
 from crits.campaigns.forms import CampaignForm
 from crits.config.config import CRITsConfig
-from crits.core.crits_mongoengine import json_handler, create_embedded_source
+from crits.core.crits_mongoengine import json_handler
 from crits.core.crits_mongoengine import EmbeddedCampaign
 from crits.core.data_tools import clean_dict
 from crits.core.exceptions import ZipFileError
@@ -36,9 +36,11 @@ from crits.core.user_tools import user_sources, is_admin, is_user_favorite
 from crits.core.user_tools import is_user_subscribed
 from crits.domains.handlers import get_valid_root_domain
 from crits.emails.email import Email
+from crits.events.event import Event
 from crits.indicators.handlers import handle_indicator_ind
 from crits.indicators.indicator import Indicator
 from crits.notifications.handlers import remove_user_from_notification
+from crits.relationships.handlers import forge_relationship
 from crits.samples.handlers import handle_file, handle_uploaded_file, mail_sample
 from crits.services.handlers import run_triage
 
@@ -69,7 +71,7 @@ def create_email_field_dict(field_name,
 
     return {"field_name": field_name,
             "field_type": field_type,
-            "field_value": field_value,
+            "field_value": field_value or "",
             "field_displayed_text": field_displayed_text,
             "is_allow_create_indicator": is_allow_create_indicator,
             "is_href": is_href,
@@ -107,7 +109,7 @@ def get_email_formatted(email_id, analyst, data_format):
     sources = user_sources(analyst)
     email = Email.objects(id=email_id, source__name__in=sources).first()
     if not email:
-        return HttpResponse(json.dumps({}), mimetype="application/json")
+        return HttpResponse(json.dumps({}), content_type="application/json")
     exclude = [
                 "created",
                 "source",
@@ -134,7 +136,7 @@ def get_email_formatted(email_id, analyst, data_format):
         data = {"email_yaml": email.to_json(exclude=exclude)}
     else:
         data = {"email_yaml": {}}
-    return HttpResponse(json.dumps(data), mimetype="application/json")
+    return HttpResponse(json.dumps(data), content_type="application/json")
 
 def get_email_detail(email_id, analyst):
     """
@@ -177,6 +179,18 @@ def get_email_detail(email_id, analyst):
         # relationships
         relationships = email.sort_relationships("%s" % analyst, meta=True)
 
+        # Get count of related Events for each related Indicator
+        for ind in relationships.get('Indicator', []):
+            count = Event.objects(relationships__object_id=ind['id'],
+                                  source__name__in=sources).count()
+            ind['rel_ind_events'] = count
+
+        # Get count of related Events for each related Sample
+        for smp in relationships.get('Sample', []):
+            count = Event.objects(relationships__object_id=smp['id'],
+                                  source__name__in=sources).count()
+            smp['rel_smp_events'] = count
+
         # relationship
         relationship = {
                 'type': 'Email',
@@ -216,8 +230,8 @@ def get_email_detail(email_id, analyst):
                 href_search_field="sender"
                 ))
         email_fields.append(create_email_field_dict(
+                "to",
                 "Email To",
-                None,
                 email.to,
                 "To",
                 False, True, True, True, False,
@@ -442,7 +456,8 @@ def generate_email_jtable(request, option):
                                    'jtid': '%s_listing' % type_},
                                   RequestContext(request))
 
-def handle_email_fields(data, analyst, method):
+def handle_email_fields(data, analyst, method, related_id=None,
+                        related_type=None, relationship_type=None):
     """
     Take email fields and convert them into an email object.
 
@@ -457,7 +472,6 @@ def handle_email_fields(data, analyst, method):
               "object" The email object if successful,
               "reason" (str).
     """
-
     result = {
             'status': False,
             'reason': "",
@@ -508,7 +522,7 @@ def handle_email_fields(data, analyst, method):
             if isinstance(y, basestring):
                 if len(y) > 0:
                     tmp_y = y.split(',')
-                    y_final = [ty.strip() for ty in tmp_y]
+                    y_final = [ty.strip() for ty in tmp_y if len(ty.strip()) > 0]
                     data[x] = y_final
                 else:
                     data[x] = []
@@ -519,17 +533,10 @@ def handle_email_fields(data, analyst, method):
 
     new_email = Email()
     new_email.merge(data)
-
     if bucket_list:
         new_email.add_bucket_list(bucket_list, analyst)
     if ticket:
         new_email.add_ticket(ticket, analyst)
-
-    new_email.source = [create_embedded_source(sourcename,
-                                               reference=reference,
-                                               method=method,
-                                               analyst=analyst)]
-
     if campaign:
         ec = EmbeddedCampaign(name=campaign,
                               confidence=confidence,
@@ -538,6 +545,19 @@ def handle_email_fields(data, analyst, method):
                               date=datetime.datetime.now())
         new_email.add_campaign(ec)
 
+    related_obj = None
+    if related_id and related_type and relationship_type:
+        related_obj = class_from_id(related_type, related_id)
+        if not related_obj:
+            retVal['success'] = False
+            retVal['message'] = 'Related Object not found.'
+            return retVal
+
+
+    new_email.add_source(source=sourcename, method=method,
+                         reference=reference, analyst=analyst)
+
+
     try:
         new_email.save(username=analyst)
         new_email.reload()
@@ -545,12 +565,22 @@ def handle_email_fields(data, analyst, method):
         result['object'] = new_email
         result['status'] = True
     except Exception, e:
-        result['reason'] = "Failed to save object.\n<br /><pre>%s</pre>" % str(e)
+        result['reason'] = "Failed to save object.\n<br /><pre>%s</pre>" % e
+        return result
 
+    # Relate the email to any other object
+    if related_obj:
+        relationship_type=RelationshipTypes.inverse(relationship=relationship_type)
+        forge_relationship(class_=new_email,
+                           right_class=related_obj,
+                           rel_type=relationship_type,
+                           user=analyst)
     return result
 
 def handle_json(data, sourcename, reference, analyst, method,
-                save_unsupported=True, campaign=None, confidence=None):
+                save_unsupported=True, campaign=None, confidence=None,
+                bucket_list=None, ticket=None):
+
     """
     Take email in JSON and convert them into an email object.
 
@@ -570,6 +600,10 @@ def handle_json(data, sourcename, reference, analyst, method,
     :type campaign: str
     :param confidence: Confidence level of the campaign.
     :type confidence: str
+    :param bucket_list: The bucket(s) to assign to this data.
+    :type bucket_list: str
+    :param ticket: The ticket to assign to this data.
+    :type ticket: str
     :returns: dict with keys:
               "status" (boolean),
               "object" The email object if successful,
@@ -595,6 +629,10 @@ def handle_json(data, sourcename, reference, analyst, method,
     result['data'] = converted
 
     new_email = dict_to_email(result['data'], save_unsupported=save_unsupported)
+    if bucket_list:
+        new_email.add_bucket_list(bucket_list, analyst)
+    if ticket:
+        new_email.add_ticket(ticket, analyst)
     if campaign:
         if not confidence:
             confidence = "low"
@@ -607,10 +645,8 @@ def handle_json(data, sourcename, reference, analyst, method,
 
     result['object'] = new_email
 
-    result['object'].source = [create_embedded_source(sourcename,
-                                                    reference=reference,
-                                                    method=method,
-                                                    analyst=analyst)]
+    result['object'].add_source(source=sourcename, reference=reference,
+                                method=method, analyst=analyst)
 
     try:
         result['object'].save(username=analyst)
@@ -624,7 +660,9 @@ def handle_json(data, sourcename, reference, analyst, method,
 
 # if email_id is provided it is the existing email id to modify.
 def handle_yaml(data, sourcename, reference, analyst, method, email_id=None,
-                save_unsupported=True, campaign=None, confidence=None):
+                save_unsupported=True, campaign=None, confidence=None,
+                bucket_list=None, ticket=None, related_id=None,
+                related_type=None, relationship_type=None):
     """
     Take email in YAML and convert them into an email object.
 
@@ -646,6 +684,10 @@ def handle_yaml(data, sourcename, reference, analyst, method, email_id=None,
     :type campaign: str
     :param confidence: Confidence level of the campaign.
     :type confidence: str
+    :param bucket_list: The bucket(s) to assign to this data.
+    :type bucket_list: str
+    :param ticket: The ticket to assign to this data.
+    :type ticket: str
     :returns: dict with keys:
               "status" (boolean),
               "object" The email object if successful,
@@ -671,6 +713,10 @@ def handle_yaml(data, sourcename, reference, analyst, method, email_id=None,
     result['data'] = converted
 
     new_email = dict_to_email(result['data'], save_unsupported=save_unsupported)
+    if bucket_list:
+        new_email.add_bucket_list(bucket_list, analyst)
+    if ticket:
+        new_email.add_ticket(ticket, analyst)
     if campaign:
         if not confidence:
             confidence = "low"
@@ -713,11 +759,26 @@ def handle_yaml(data, sourcename, reference, analyst, method, email_id=None,
             result['reason'] = "Failed to save object.\n<br /><pre>%s</pre>" % str(e)
             return result
     else:
-        result['object'].source = [create_embedded_source(sourcename,
-                                                        reference=reference,
-                                                        method=method,
-                                                        analyst=analyst)]
+        result['object'].add_source(source=sourcename, method=method,
+                                    reference=reference, analyst=analyst)
 
+        result['object'].save(username=analyst)
+
+        # Relate the email to any other object
+        related_obj = None
+        if related_id and related_type and relationship_type:
+            related_obj = class_from_id(related_type, related_id)
+            if not related_obj:
+                retVal['success'] = False
+                retVal['message'] = 'Related Object not found.'
+                return retVal
+
+        if related_obj:
+            relationship_type=RelationshipTypes.inverse(relationship=relationship_type)
+            result['object'].add_relationship(related_obj,
+                                              relationship_type,
+                                              analyst=analyst,
+                                              get_rels=False)
         try:
             result['object'].save(username=analyst)
             result['object'].reload()
@@ -731,7 +792,8 @@ def handle_yaml(data, sourcename, reference, analyst, method, email_id=None,
 
 
 def handle_msg(data, sourcename, reference, analyst, method, password='',
-               campaign=None, confidence=None):
+               campaign=None, confidence=None, bucket_list=None, ticket=None,
+               related_id=None, related_type=None, relationship_type=None):
     """
     Take email in MSG and convert them into an email object.
 
@@ -751,16 +813,20 @@ def handle_msg(data, sourcename, reference, analyst, method, password='',
     :type campaign: str
     :param confidence: Confidence level of the campaign.
     :type confidence: str
+    :param bucket_list: The bucket(s) to assign to this data.
+    :type bucket_list: str
+    :param ticket: The ticket to assign to this data.
+    :type ticket: str
     :returns: dict with keys:
               "status" (boolean),
               "obj_id" The email ObjectId if successful,
               "message" (str)
               "reason" (str).
     """
-
     response = {'status': False}
 
     result = parse_ole_file(data)
+
     if result.has_key('error'):
         response['reason'] = result['error']
         return response
@@ -769,14 +835,16 @@ def handle_msg(data, sourcename, reference, analyst, method, password='',
     result['email']['source_reference'] = reference
     result['email']['campaign'] = campaign
     result['email']['campaign_confidence'] = confidence
-    result['email']['bucket_list'] = ""
-    result['email']['ticket'] = ""
+    result['email']['bucket_list'] = bucket_list
+    result['email']['ticket'] = ticket
 
     if result['email'].has_key('date'):
         result['email']['isodate'] = date_parser(result['email']['date'],
                                                  fuzzy=True)
 
-    obj = handle_email_fields(result['email'], analyst, method)
+    obj = handle_email_fields(result['email'], analyst, method,
+                              related_id=related_id, related_type=related_type,
+                              relationship_type=relationship_type)
 
     if not obj["status"]:
         response['reason'] = obj['reason']
@@ -789,7 +857,7 @@ def handle_msg(data, sourcename, reference, analyst, method, password='',
     for file in result['attachments']:
         type_ = file.get('type', '')
         if 'pkcs7' not in type_:
-            mimetype = magic.from_buffer(file['data'], mime=True)
+            mimetype = magic.from_buffer(file.get('data', ''), mime=True)
             if mimetype is None:
                 file_format = 'raw'
             elif 'application/zip' in mimetype:
@@ -803,29 +871,49 @@ def handle_msg(data, sourcename, reference, analyst, method, password='',
                                 'password': password}
                 r = create_email_attachment(email, cleaned_data, analyst, sourcename,
                                         method, reference, campaign, confidence,
-                                        "", "", file['data'], file['name'])
+                                        "", "", file.get('data', ''), file.get('name', ''))
                 if 'success' in r:
                     if not r['success']:
-                        attach_messages.append("%s: %s" % (file['name'],
+                        attach_messages.append("%s: %s" % (file.get('name', ''),
                                                          r['message']))
                     else:
-                        attach_messages.append("%s: Added Successfully!" % file['name'])
+                        attach_messages.append("%s: Added Successfully!" % file.get('name', ''))
             except BaseException:
                 error_message = 'The email uploaded successfully, but there was an error\
                                 uploading the attachment ' + file['name'] + '\n\n' + str(sys.exc_info())
                 response['reason'] = error_message
                 return response
         else:
-            attach_messages.append('%s: Cannot decrypt attachment (pkcs7).' % file['name'])
+            attach_messages.append('%s: Cannot decrypt attachment (pkcs7).' % file.get('name', ''))
     if len(attach_messages):
         response['message'] = '<br/>'.join(attach_messages)
+
+    # Relate any Attachments to the related_obj
+    related_obj = None
+    if related_id and related_type and relationship_type:
+        related_obj = class_from_id(related_type, related_id)
+        if not related_obj:
+            retVal['success'] = False
+            retVal['message'] = 'Related Object not found.'
+            return retVal
+
+        email.reload()
+        for rel in email.relationships:
+            if rel.rel_type == 'Sample':
+                forge_relationship(class_=related_obj,
+                                   right_type=rel.rel_type,
+                                   right_id=rel.object_id,
+                                   rel_type=RelationshipTypes.RELATED_TO,
+                                   user=analyst)
+
     response['status'] = True
     response['obj_id'] = obj['object'].id
     return response
 
 def handle_pasted_eml(data, sourcename, reference, analyst, method,
-                      parent_type=None, parent_id=None, campaign=None,
-                      confidence=None):
+                      campaign=None, confidence=None, bucket_list=None,
+                      ticket=None, related_id=None, related_type=None,
+                      relationship_type=None):
     """
     Take email in EML and convert them into an email object.
 
@@ -839,14 +927,14 @@ def handle_pasted_eml(data, sourcename, reference, analyst, method,
     :type analyst: str
     :param method: The method of acquiring this email.
     :type method: str
-    :param parent_type: The top-level object type of the parent.
-    :type parent_type: str
-    :param parent_id: The ObjectId of the parent.
-    :type parent_id: str
     :param campaign: The campaign to attribute to this email.
     :type campaign: str
     :param confidence: Confidence level of the campaign.
     :type confidence: str
+    :param bucket_list: The bucket(s) to assign to this data.
+    :type bucket_list: str
+    :param ticket: The ticket to assign to this data.
+    :type ticket: str
     :returns: dict with keys:
               "status" (boolean),
               "reason" (str),
@@ -862,6 +950,8 @@ def handle_pasted_eml(data, sourcename, reference, analyst, method,
     emldata = []
     boundary = None
     isbody = False
+    if not isinstance(data, basestring):
+        data = data.read()
     for line in data.split("\n"):
         # We match the regex for a boundary definition
         m = boundaryre.search(line)
@@ -877,12 +967,14 @@ def handle_pasted_eml(data, sourcename, reference, analyst, method,
             line = " %s" % line
         emldata.append(line)
     emldata = "\n".join(emldata)
-    return handle_eml(emldata, sourcename, reference, analyst, method, parent_type,
-                      parent_id, campaign, confidence)
+    return handle_eml(emldata, sourcename, reference, analyst, method,
+                      campaign, confidence, bucket_list, ticket,
+                      related_id, related_type, relationship_type)
 
 
-def handle_eml(data, sourcename, reference, analyst, method, parent_type=None,
-               parent_id=None, campaign=None, confidence=None):
+def handle_eml(data, sourcename, reference, analyst, method, campaign=None,
+               confidence=None, bucket_list=None, ticket=None,
+               related_id=None, related_type=None, relationship_type=None):
     """
     Take email in EML and convert them into an email object.
 
@@ -896,14 +988,20 @@ def handle_eml(data, sourcename, reference, analyst, method, parent_type=None,
     :type analyst: str
     :param method: The method of acquiring this email.
     :type method: str
-    :param parent_type: The top-level object type of the parent.
-    :type parent_type: str
-    :param parent_id: The ObjectId of the parent.
-    :type parent_id: str
     :param campaign: The campaign to attribute to this email.
     :type campaign: str
     :param confidence: Confidence level of the campaign.
     :type confidence: str
+    :param bucket_list: The bucket(s) to assign to this data.
+    :type bucket_list: str
+    :param ticket: The ticket to assign to this data.
+    :type ticket: str
+    :param related_id: ID of object to create relationship with
+    :type related_id: str
+    :param related_type: Type of object to create relationship with
+    :type related_id: str
+    :param relationship_type: Type of relationship to create.
+    :type relationship_type: str
     :returns: dict with keys:
               "status" (boolean),
               "reason" (str),
@@ -919,7 +1017,6 @@ def handle_eml(data, sourcename, reference, analyst, method, parent_type=None,
             'data': None,
             'attachments': {}
           }
-
     if not sourcename:
         result['reason'] = "Missing source information."
         return result
@@ -975,7 +1072,9 @@ def handle_eml(data, sourcename, reference, analyst, method, parent_type=None,
     msg = eml.message_from_string(str(stripped_mail))
 
     if not msg.items():
-        result['reason'] = "No items found."
+        result['reason'] = """Could not parse email. Possibly the input does
+                           not conform to a Internet Message style headers
+                           and header continuation lines..."""
         return result
 
     # clean up headers
@@ -1035,6 +1134,10 @@ def handle_eml(data, sourcename, reference, analyst, method, parent_type=None,
     result['data'] = msg_import
 
     new_email = dict_to_email(result['data'])
+    if bucket_list:
+        new_email.add_bucket_list(bucket_list, analyst)
+    if ticket:
+        new_email.add_ticket(ticket, analyst)
     if campaign:
         if not confidence:
             confidence = "low"
@@ -1047,10 +1150,8 @@ def handle_eml(data, sourcename, reference, analyst, method, parent_type=None,
 
     result['object'] = new_email
 
-    result['object'].source = [create_embedded_source(sourcename,
-                                                      reference=reference,
-                                                      method=method,
-                                                      analyst=analyst)]
+    result['object'].add_source(source=sourcename, reference=reference,
+                                method=method, analyst=analyst)
 
     # Save the Email first, so we can have the id to use to create
     # relationships.
@@ -1061,48 +1162,59 @@ def handle_eml(data, sourcename, reference, analyst, method, parent_type=None,
         result['object'].reload()
         run_triage(result['object'], analyst)
     except Exception, e:
-        result['reason'] = "Failed to save email.\n<br /><pre>" + \
-            str(e) + "</pre>"
+        result['reason'] = "Failed to save email.\n<br /><pre>%s</pre>" % e
         return result
 
-    # Relate the email back to the pcap, if it came from PCAP.
-    if parent_id and parent_type:
-        rel_item = class_from_id(parent_type, parent_id)
-        if rel_item:
-            rel_type = RelationshipTypes.CONTAINED_WITHIN
-            ret = result['object'].add_relationship(rel_item,
-                                                    rel_type,
-                                                    analyst=analyst,
-                                                    get_rels=False)
+    # Relate the email to any other object
+    related_obj = None
+    if related_id and related_type and relationship_type:
+        related_obj = class_from_id(related_type, related_id)
+        if not related_obj:
+            retVal['success'] = False
+            retVal['message'] = 'Related Object not found.'
+            return retVal
+
+        rel_type=RelationshipTypes.inverse(relationship=relationship_type)
+        ret = result['object'].add_relationship(related_obj,
+                                                rel_type,
+                                                analyst=analyst)
         if not ret['success']:
-            result['reason'] = "Failed to create relationship.\n<br /><pre>"
-            + result['message'] + "</pre>"
+            msg = "Failed to create relationship.\n<br /><pre>%s</pre>"
+            result['reason'] = msg % ret['message']
             return result
 
         # Save the email again since it now has a new relationship.
         try:
             result['object'].save(username=analyst)
         except Exception, e:
-            result['reason'] = "Failed to save email.\n<br /><pre>"
-            + str(e) + "</pre>"
+            result['reason'] = "Failed to save email.\n<br /><pre>%s</pre>" % e
             return result
 
     for (md5_, attachment) in result['attachments'].items():
-        if handle_file(attachment['filename'],
-                       attachment['blob'],
-                       sourcename,
-                       method='eml_processor',
-                       reference=reference,
-                       related_id=result['object'].id,
-                       user=analyst,
-                       md5_digest=md5_,
-                       related_type='Email',
-                       campaign=campaign,
-                       confidence=confidence,
-                       relationship=RelationshipTypes.CONTAINED_WITHIN) == None:
-            result['reason'] = "Failed to save attachment.\n<br /><pre>"
-            + md5_ + "</pre>"
+        ret = handle_file(attachment['filename'],
+                          attachment['blob'],
+                          new_email.source,
+                          related_id=result['object'].id,
+                          user=analyst,
+                          md5_digest=md5_,
+                          related_type='Email',
+                          campaign=new_email.campaign,
+                          confidence=confidence,
+                          bucket_list=bucket_list,
+                          ticket=ticket,
+                          relationship=RelationshipTypes.CONTAINED_WITHIN,
+                          is_return_only_md5=False)
+        if not ret['success']:
+            msg = "Failed to save attachment '%s'.\n<br /><pre>%s</pre>"
+            result['reason'] = msg % (md5_, ret['message'])
             return result
+
+        # Also relate the attachment to the related TLO
+        if related_obj:
+            forge_relationship(class_=related_obj,
+                               right_class=ret['object'],
+                               rel_type=RelationshipTypes.RELATED_TO,
+                               user=analyst)
 
     result['status'] = True
     return result
@@ -1489,7 +1601,7 @@ def parse_ole_file(file):
     ole.close()
 
     # Process headers to extract data
-    headers = Parser().parsestr(email.get('raw_header', ''), headersonly=True)
+    headers = Parser().parse(io.StringIO(email.get('raw_header', '')), headersonly=True)
     email['from_address'] = headers.get('From', '')
     email['reply_to'] = headers.get('Reply-To', '')
     email['date'] = headers.get('Date', '')

@@ -1,3 +1,5 @@
+import json
+
 from mongoengine import Document
 from mongoengine import StringField, ListField
 from mongoengine import IntField
@@ -6,16 +8,20 @@ from django.conf import settings
 from crits.samples.migrate import migrate_sample
 from crits.core.crits_mongoengine import CritsBaseAttributes
 from crits.core.crits_mongoengine import CritsSourceDocument
+from crits.core.crits_mongoengine import CritsActionsDocument
+from crits.core.crits_mongoengine import json_handler
+from crits.core.data_tools import format_file
 from crits.core.fields import getFileField
 
 
-class Sample(CritsBaseAttributes, CritsSourceDocument, Document):
+class Sample(CritsBaseAttributes, CritsSourceDocument, CritsActionsDocument,
+             Document):
     """Sample object"""
 
     meta = {
         "collection": settings.COL_SAMPLES,
         "crits_type": 'Sample',
-        "latest_schema_version": 4,
+        "latest_schema_version": 5,
         "shard_key": ('md5',),
         "schema_doc": {
             'filename': 'The name of the last file that was uploaded with this'\
@@ -28,6 +34,7 @@ class Sample(CritsBaseAttributes, CritsSourceDocument, Document):
             'sha1': 'The SHA1 of the file',
             'sha256': 'The SHA256 of the file',
             'ssdeep': 'The ssdeep of the file',
+            'impfuzzy': 'The impfuzzy of the executable file',
             'campaign': 'List [] of campaigns using this file',
             'source': 'List [] of sources that provided this file',
             'created': 'ISODate of when this file was uploaded',
@@ -57,7 +64,7 @@ class Sample(CritsBaseAttributes, CritsSourceDocument, Document):
                          'linked_fields': ["filename", "source", "campaign",
                                            "filetype"],
                          'details_link': 'details',
-                         'no_sort': ['details', 'id']
+                         'no_sort': ['details']
                        },
     }
 
@@ -71,6 +78,7 @@ class Sample(CritsBaseAttributes, CritsSourceDocument, Document):
     sha256 = StringField()
     size = IntField(default=0)
     ssdeep = StringField()
+    impfuzzy = StringField()
 
     def migrate(self):
         migrate_sample(self)
@@ -88,6 +96,10 @@ class Sample(CritsBaseAttributes, CritsSourceDocument, Document):
         import pydeep
         import magic
         from hashlib import md5, sha1, sha256
+        try:
+            import pyimpfuzzy
+        except ImportError:
+            pass
         try:
             self.filetype = magic.from_buffer(data)
         except:
@@ -112,20 +124,30 @@ class Sample(CritsBaseAttributes, CritsSourceDocument, Document):
             self.ssdeep = pydeep.hash_bytes(data)
         except:
             self.ssdeep = None
+        try:
+            self.impfuzzy = pyimpfuzzy.get_impfuzzy_data(data)
+        except:
+            self.impfuzzy = None
 
     def is_pe(self):
         """
         Is this a PE file.
         """
 
-        return self.filedata.grid_id != None and self.filedata.read(2) == "MZ"
+        ret = self.filedata.grid_id != None and self.filedata.read(2) == "MZ"
+        if self.filedata.grid_id:
+            self.filedata.seek(0)
+        return ret
 
     def is_pdf(self):
         """
         Is this a PDF.
         """
 
-        return self.filedata.grid_id != None and "%PDF-" in self.filedata.read(1024)
+        ret = self.filedata.grid_id != None and "%PDF-" in self.filedata.read(1024)
+        if self.filedata.grid_id:
+            self.filedata.seek(0)
+        return ret
 
     def discover_binary(self):
         """
@@ -151,3 +173,17 @@ class Sample(CritsBaseAttributes, CritsSourceDocument, Document):
 
         if isinstance(filenames, list):
             self.filenames = filenames
+
+    def _json_yaml_convert(self, exclude=[]):
+        """
+        Helper to convert to a dict before converting to JSON.
+
+        :param exclude: list of fields to exclude.
+        :type exclude: list
+        :returns: json
+        """
+
+        d = self.to_dict(exclude)
+        if 'filedata' not in exclude:
+            (d['filedata'], ext) = format_file(self.filedata.read(), 'base64')
+        return json.dumps(d, default=json_handler)
