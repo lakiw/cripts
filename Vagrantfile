@@ -8,10 +8,10 @@ Vagrant.configure(2) do |config|
 
   # Assumes that, if present, the "crits_services" repository is checked out
   # beside the "crits" repository.
-  if File.exists?("../crits_services")
-    # We use this destination because it's what the other CRITs documentation
+  if File.exists?("../cripts_services")
+    # We use this destination because it's what the other CRIPTs documentation
     # refers to.
-    config.vm.synced_folder "../crits_services", "/data/crits_services"
+    config.vm.synced_folder "../cripts_services", "/data/cripts_services"
   end
 
   config.vm.provider "virtualbox" do |vb|

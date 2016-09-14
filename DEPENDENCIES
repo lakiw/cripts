@@ -1,4 +1,4 @@
-This is a list of all core dependencies for CRITs. Please be aware if you
+This is a list of all core dependencies for CRIPTs. Please be aware if you
 leverage services they may require their own dependencies. Since we import
 services into core when the web server loads, failure to install dependencies
 for these services may cause CRITs to break!

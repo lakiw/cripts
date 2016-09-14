@@ -10,7 +10,7 @@ CRIPTs is a fork of the CRITS toolset specifically altered to keep track of pass
 
 CRITs is a web-based tool which combines an analytic engine with a cyber threat database that not only serves as a repository for attack data and malware, but also provides analysts with a powerful platform for conducting malware analyses, correlating malware, and for targeting data. These analyses and correlations can also be saved and exploited within CRITs. CRITs employs a simple but very useful hierarchy to structure cyber threat information. This structure gives analysts the power to 'pivot' on metadata to discover previously unknown related content.
 
-Visit our [website](https://crits.github.io) for more information, documentation, and links to community content such as our mailing lists and IRC channel.
+Visit its [website](https://crits.github.io) for more information, documentation, and links to community content such as our mailing lists and IRC channel.
 
 # Installation
 
@@ -23,7 +23,7 @@ The following instructions assume you are running Ubuntu or RHEL6 64-bit with Py
 CRIPTs comes with a bootstrap script which will help you:
 
 * Install all of the dependencies.
-* Configure CRITs for database connectivity and your first admin user.
+* Configure CRIPTs for database connectivity and your first admin user.
 * Get MongoDB running with default settings.
 * Use Django's runserver to quickly get you up and running with the CRITs interface.
 

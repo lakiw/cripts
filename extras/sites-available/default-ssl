@@ -6,21 +6,21 @@
     CustomLog /var/log/apache2/ssl_access.log combined
 
     SSLEngine on
-    SSLCertificateFile    /etc/ssl/certs/crits.crt
-    SSLCertificateKeyFile /etc/ssl/private/crits.plain.key
+    SSLCertificateFile    /etc/ssl/certs/cripts.crt
+    SSLCertificateKeyFile /etc/ssl/private/cripts.plain.key
     SSLProtocol All -SSLv2 -SSLv3
 
-    DocumentRoot "/data/crits/extras/www"
-    Alias /static/ /data/crits/extras/www/static/
-    Alias /js/ /data/crits/extras/www/js/
-    Alias /css/ /data/crits/extras/www/css/
-    Alias /ext/ /data/crits/extras/www/ext/
-    Alias /images/ /data/crits/extras/www/images/
-    Alias /img/ /data/crits/extras/www/images/
-    Alias /new_images/ /data/crits/extras/www/new_images/
-    Alias /plugin/ /data/crits/extras/www/plugin/
-    Alias /favicon.ico /data/crits/extras/www/favicon.ico
-    WSGIScriptAlias / /data/crits/django.wsgi
+    DocumentRoot "/data/cripts/extras/www"
+    Alias /static/ /data/cripts/extras/www/static/
+    Alias /js/ /data/cripts/extras/www/js/
+    Alias /css/ /data/cripts/extras/www/css/
+    Alias /ext/ /data/cripts/extras/www/ext/
+    Alias /images/ /data/cripts/extras/www/images/
+    Alias /img/ /data/cripts/extras/www/images/
+    Alias /new_images/ /data/cripts/extras/www/new_images/
+    Alias /plugin/ /data/cripts/extras/www/plugin/
+    Alias /favicon.ico /data/cripts/extras/www/favicon.ico
+    WSGIScriptAlias / /data/cripts/django.wsgi
     WSGIApplicationGroup %{GLOBAL}
 
 </VirtualHost>

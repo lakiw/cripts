@@ -1,11 +1,9 @@
 #!/bin/sh
-# (c) 2015, The MITRE Corporation. All rights reserved.
-# Source code distributed pursuant to license agreement.
 #
 # Usage: script/bootstrap
 # This script is designed to install all of the necessary dependencies for a
-# CRITs install, walk through some basic setup, and help you start a quick
-# instance of CRITs.
+# CRIPTs install, walk through some basic setup, and help you start a quick
+# instance of CRIPTs.
 
 #=====================Message Colors=========================
 FAIL=$(tput setaf 1) #red
@@ -89,7 +87,7 @@ create_files()
 }
 
 
-depend_crits()
+depend_cripts()
 {
     printf "${HEAD}Installing Python Dependencies${END}\n"
     if [ "$OS" = 'darwin' ]
@@ -99,7 +97,7 @@ depend_crits()
          SWIG_FEATURES="-cpperraswarn -includeall -I$(brew --prefix openssl)/include" \
          ${PIP} install -U -r requirements.txt
     else 
-        sudo -E env LDFLAGS=-L/opt/local/lib \
+        sudo -EH env LDFLAGS=-L/opt/local/lib \
                     CFLAGS=-I/opt/local/include \
                     SWIG_FEATURES=-cpperraswarn -includeall -I/opt/local/include \
                     ${PIP} install M2Crypto
@@ -112,7 +110,7 @@ depend_crits()
         OS-provided package with the package manager (apt-get/yum/brew)
         or try to adjust the CFLAGS, LDFLAGS, and SWIG_FEATURES
         with the right path to openssl headers and libs:
-        ${INFO}sudo -E env LDFLAGS=\"-L/opt/local/lib\" \
+        ${INFO}sudo -EH env LDFLAGS=\"-L/opt/local/lib\" \
                     CFLAGS=\"-I/opt/local/include\" \
                     SWIG_FEATURES=\"-cpperraswarn -includeall -I/opt/local/include\" \
                     pip install M2Crypto ${END}\n"
@@ -143,20 +141,20 @@ start_server()
     ${PYTH} manage.py runserver 0.0.0.0:8080
 }
 
-# Creates CRITs username and password for administrator
+# Creates CRIPTs username and password for administrator
 server_setup()
 {
 
-    touch logs/crits.log
-    chmod 0644 logs/crits.log
+    touch logs/cripts.log
+    chmod 0644 logs/cripts.log
 
-    if [ ! -f crits/config/database.py ]; then
+    if [ ! -f cripts/config/database.py ]; then
         echo "Creating default database configuration file"
-        cp crits/config/database_example.py crits/config/database.py
-        SC=$(cat /dev/urandom | LC_CTYPE=C tr -dc 'abcdefghijklmnopqrstuvwxyz0123456789!@#%^&*(\-_=+)' | fold -w 50 | head -n 1)
+        cp cripts/config/database_example.py cripts/config/database.py
+        SC=$(cat /dev/urandom | LC_CTYPE=C tr -dc 'abcdefghijklmnopqrstuvwxyz0123456789' | fold -w 50 | head -n 1)
         # This is going to escape the '&' character that is a special character in sed 
         SE=$(echo ${SC} | sed -e 's/\\/\\\\/g' | sed -e 's/\//\\\//g' | sed -e 's/&/\\\&/g')
-        sed -i -e "s/^\(SECRET_KEY = \).*$/\1\'${SE}\'/1" crits/config/database.py
+        sed -i -e "s/^\(SECRET_KEY = \).*$/\1\'${SE}\'/1" cripts/config/database.py
     else
         echo "Database configuration file exists. skipping!"
     fi
@@ -191,7 +189,7 @@ server_setup()
       echo "To get a usable system, you still need to use fabric to:"
       echo "- Create an administrator account"
       echo "    $ fab vagrant create_admin_user"
-      echo "- (Optional) Set some development-specific CRITs config settings"
+      echo "- (Optional) Set some development-specific CRIPTs config settings"
       echo "    $ fab vagrant dev_setup"
       echo "- (Optional) Set up services"
       echo "    $ fab vagrant init_services"
@@ -296,7 +294,7 @@ freebsd_install()
 
 red_hat_install()
 {
-    printf "${HEAD}Installing CRITs Dependencies${END}\n"
+    printf "${HEAD}Installing CRIPTs Dependencies${END}\n"
     if [ ! -f /etc/yum.repos.d/rpmforge.repo ];
     then
         printf "${INFO}Installing RPMForge repo${END}\n"
@@ -331,7 +329,7 @@ red_hat_install()
 
 centos_install()
 {
-    printf "${HEAD}Installing CRITs Dependencies${END}\n"
+    printf "${HEAD}Installing CRIPTs Dependencies${END}\n"
     if [ ! -f /etc/yum.repos.d/rpmforge.repo ];
     then
         printf "${INFO}Installing RPMForge repo${END}\n"
@@ -385,32 +383,32 @@ do
             then
                 printf "${PASS}ubuntu is Supported!${END}\n"
                 ubuntu_install || exit_restart $STEP
-                depend_crits ||exit_restart $STEP
+                depend_critps ||exit_restart $STEP
             elif [ "$OS" = 'debian' ]
             then
                 printf "${PASS}Debian is Supported!${END}\n"
                 debian_install || exit_restart $STEP
-                depend_crits ||exit_restart $STEP
+                depend_cripts ||exit_restart $STEP
             elif [ "$OS" = 'darwin' ]
             then
                 printf "${PASS}OS X is Supported!${END}\n"
                 darwin_install || exit_restart $STEP
-                depend_crits ||exit_restart $STEP
+                depend_cripts ||exit_restart $STEP
             elif [ "$OS" = "centos" ]
             then
                 printf "${PASS}CentOS is Supported!${END}\n"
                 centos_install || exit_restart $STEP
-                depend_crits ||exit_restart $STEP
+                depend_cripts ||exit_restart $STEP
             elif [ "$OS" = "red hat" ]
             then
                 printf "${PASS}Red Hat is Supported!${END}\n"
                 red_hat_install || exit_restart $STEP
-                depend_crits ||exit_restart $STEP
+                depend_critps ||exit_restart $STEP
             elif [ "$OS" = 'freebsd' ]
             then
                 printf "${PASS}FreeBSD is Supported${END}\n"
                 freebsd_install || exit_restart $STEP
-                depend_crits ||exit_restart $STEP
+                depend_cripts ||exit_restart $STEP
             else
                 printf "${FAIL}OS: $OS, need Ubuntu, Debian, Darwin (OS X), CentOS, Red Hat, or FreeBSD${END}\n"
                 exit

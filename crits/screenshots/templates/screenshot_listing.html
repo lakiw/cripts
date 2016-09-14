@@ -1,9 +1,0 @@
-{% extends "base.html" %}
-{% block title %}Screenshots{% endblock %}
-
-{% block content %}
-<script>
-    var update_ss_description = "{% url 'crits.core.views.update_object_description' %}";
-</script>
-    {% include "jtable.html" %}
-{% endblock %}

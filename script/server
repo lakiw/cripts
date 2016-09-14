@@ -1,10 +1,7 @@
 #!/bin/sh
-# (c) 2015, The MITRE Corporation. All rights reserved.
-# Source code distributed pursuant to license agreement.
-#
 # Usage: script/server
 # This script starts the necessary services for a local or
-# development environment for CRITs.
+# development environment for CRIPTs.
 
 # If MongoDB isn't already running, attempt to start it.
 # This can fail if MongoDB is running already but on a non-standard port.
