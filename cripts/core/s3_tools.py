@@ -57,7 +57,7 @@ def s3_create_bucket(bucket):
 
 def s3_translate_collection(collection):
     """
-    Translate CRITs collection to S3 bucket.
+    Translate CRIPs collection to S3 bucket.
 
     :param collection: The collection to translate.
     :type collection: str

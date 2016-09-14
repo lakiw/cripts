@@ -1,12 +1,10 @@
 from django import forms
 from django.conf import settings
-#from crits.core.form_utils import decorate_bound_field
-#decorate_bound_field()
 
 
 class ConfigGeneralForm(forms.Form):
     """
-    Django form for updating the CRITs Configuration.
+    Django form for updating the CRIPTs Configuration.
     """
 
     required_css_class = 'required'
@@ -133,7 +131,7 @@ class ConfigSecurityForm(forms.Form):
         initial=False,
         required=False)
     create_unknown_user = forms.BooleanField(
-        help_text=('Creates CRITs accounts for users authenticated through '
+        help_text=('Creates CRIPTs accounts for users authenticated through '
                    'REMOTE_USER. Will use LDAP info if ldap settings are '
                    'filled out.'),
         initial=False,
@@ -160,7 +158,7 @@ class ConfigLoggingForm(forms.Form):
     required_css_class = 'required'
     log_directory = forms.CharField(
         widget=forms.TextInput,
-        help_text=('Directory to find the crits.log file.<br />'
+        help_text=('Directory to find the cripts.log file.<br />'
                    '*Requires a web server restart.'),
         initial='',
         required=False)
@@ -226,44 +224,44 @@ class ConfigDownloadForm(forms.Form):
     def __init__(self, *args, **kwargs):
         super(ConfigDownloadForm, self).__init__(*args, **kwargs)
 
-class ConfigCritsForm(forms.Form):
+class ConfigCriptsForm(forms.Form):
     required_css_class = 'required'
     company_name = forms.CharField(widget=forms.TextInput, required=True)
     classification = forms.CharField(widget=forms.TextInput, required=True)
-    crits_message = forms.CharField(
+    cripts_message = forms.CharField(
         widget=forms.Textarea(attrs={'cols': '25',
                                      'rows': '3'}),
-        label='CRITS Message',
+        label='CRIPTS Message',
         help_text='Message to user on the Login page',
-        initial='Welcome to CRITs!',
+        initial='Welcome to CRIPs!',
         required=False)
-    crits_email = forms.CharField(
+    cripts_email = forms.CharField(
         widget=forms.TextInput,
-        label='CRITs Email',
+        label='CRIPTs Email',
         help_text='*Requires a web server restart.',
         required=True)
-    crits_email_subject_tag = forms.CharField(
+    cripts_email_subject_tag = forms.CharField(
         widget=forms.TextInput,
         label="Text to tag on to every Email's subject line",
         help_text='*Requires a web server restart.',
         required=False)
-    crits_email_end_tag = forms.BooleanField(
+    cripts_email_end_tag = forms.BooleanField(
         label='Tag on the end (default=True) or the beginning',
         help_text='*Requires a web server restart.',
         initial=True,
         required=False)
-    crits_version = forms.CharField(
+    cripts_version = forms.CharField(
         widget=forms.TextInput,
         label='DB Version',
-        initial=settings.CRITS_VERSION,
+        initial=settings.CRIPTS_VERSION,
         required=True)
     git_repo_url = forms.CharField(
         widget=forms.TextInput,
         label='Git Repo URL',
-        initial=settings.CRITS_VERSION,
+        initial=settings.CRIPTS_VERSION,
         required=False)
     instance_name = forms.CharField(widget=forms.TextInput, required=True)
     instance_url = forms.CharField(widget=forms.TextInput, required=True)
     def __init__(self, *args, **kwargs):
-        super(ConfigCritsForm, self).__init__(*args, **kwargs)
-        self.fields['crits_version'].widget.attrs['readonly'] = True
+        super(ConfigCriptsForm, self).__init__(*args, **kwargs)
+        self.fields['cripts_version'].widget.attrs['readonly'] = True

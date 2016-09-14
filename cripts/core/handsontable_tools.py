@@ -1,9 +1,9 @@
 import json
 
 from django import forms
-from crits.core import form_consts
-from crits.core.data_tools import convert_string_to_bool, remove_html_tags
-from crits.core.widgets import ExtendedChoiceField
+from cripts.core import form_consts
+from cripts.core.data_tools import convert_string_to_bool, remove_html_tags
+from cripts.core.widgets import ExtendedChoiceField
 
 def convert_handsontable_to_rows(request):
     """

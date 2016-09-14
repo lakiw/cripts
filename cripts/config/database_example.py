@@ -6,7 +6,7 @@
 # MongoDB connection information
 MONGO_HOST = 'localhost'      # server to connect to
 MONGO_PORT = 27017            # port MongoD is running on
-MONGO_DATABASE = 'crits'      # database name to connect to
+MONGO_DATABASE = 'cripts'      # database name to connect to
 # The following optional settings should only be changed if you specifically
 # enabled and configured them during your MongoDB installation
 # See http://docs.mongodb.org/v2.4/administration/security/ regarding implementation

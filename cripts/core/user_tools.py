@@ -4,8 +4,8 @@ try:
 except ImportError:
     from mongoengine.errors import ValidationError
 
-from crits.core.data_tools import generate_qrcode
-from crits.core.totp import gen_user_secret
+from cripts.core.data_tools import generate_qrcode
+from cripts.core.totp import gen_user_secret
 
 from django.conf import settings
 
@@ -23,8 +23,8 @@ def is_user_favorite(analyst, type_, id_):
     """
 
     if analyst:
-        from crits.core.user import CRITsUser
-        user = CRITsUser.objects(username=analyst).first()
+        from cripts.core.user import CRIPTsUser
+        user = CRIPTsUser.objects(username=analyst).first()
         if not user:
             return False
 
@@ -44,10 +44,10 @@ def user_sources(username):
     """
 
     if username:
-        from crits.core.user import CRITsUser
+        from cripts.core.user import CRIPTsUser
         username = str(username)
         try:
-            user = CRITsUser.objects(username=username).first()
+            user = CRIPTsUser.objects(username=username).first()
             if user:
                 return user.sources
             else:
@@ -86,9 +86,9 @@ def get_user_organization(username):
     :returns: str
     """
 
-    from crits.core.user import CRITsUser
+    from cripts.core.user import CRIPTsUser
     username = str(username)
-    user = CRITsUser.objects(username=username).first()
+    user = CRIPTsUser.objects(username=username).first()
     if user:
         return user.organization
     else:
@@ -103,9 +103,9 @@ def is_admin(username):
     :returns: True, False
     """
 
-    from crits.core.user import CRITsUser
+    from cripts.core.user import CRIPTsUser
     username = str(username)
-    user = CRITsUser.objects(username=username).first()
+    user = CRIPTsUser.objects(username=username).first()
     if user:
         if user.role == "Administrator":
             return True
@@ -120,9 +120,9 @@ def get_user_role(username):
     :returns: str
     """
 
-    from crits.core.user import CRITsUser
+    from cripts.core.user import CRIPTsUser
     username = str(username)
-    user = CRITsUser.objects(username=username).first()
+    user = CRIPTsUser.objects(username=username).first()
     return user.role
 
 def user_can_view_data(user):
@@ -161,8 +161,8 @@ def get_user_list():
     :returns: list
     """
 
-    from crits.core.user import CRITsUser
-    users = CRITsUser.objects().order_by('+username').exclude('subscriptions')
+    from cripts.core.user import CRIPTsUser
+    users = CRIPTsUser.objects().order_by('+username').exclude('subscriptions')
     user_list = []
     user_list.append({'username': "", 'sources': [], 'role': ""})
     for user in users:
@@ -175,13 +175,13 @@ def get_user_info(username=None):
 
     :param username: The user to get info for.
     :type username: str
-    :returns: :class:`crits.core.user.CRITsUser`
+    :returns: :class:`cripts.core.user.CRIPTsUser`
     """
 
-    from crits.core.user import CRITsUser
+    from cripts.core.user import CRIPTsUser
     if username is not None:
         username = str(username)
-        return CRITsUser.objects(username=username).first()
+        return CRIPTsUser.objects(username=username).first()
     else:
         return username
 
@@ -196,7 +196,7 @@ def add_new_user_role(name, analyst):
     :returns: True, False
     """
 
-    from crits.core.user_role import UserRole
+    from cripts.core.user_role import UserRole
     name = name.strip()
     role = UserRole.objects(name=name).first()
     if not role:
@@ -219,9 +219,9 @@ def get_user_email_notification(username):
     :returns: str
     """
 
-    from crits.core.user import CRITsUser
+    from cripts.core.user import CRIPTsUser
     username = str(username)
-    user = CRITsUser.objects(username=username).first()
+    user = CRIPTsUser.objects(username=username).first()
     return user.get_preference('notify', 'email', False)
 
 def get_user_subscriptions(username):
@@ -233,9 +233,9 @@ def get_user_subscriptions(username):
     :returns: list
     """
 
-    from crits.core.user import CRITsUser
+    from cripts.core.user import CRIPTsUser
     username = str(username)
-    user = CRITsUser.objects(username=username).first()
+    user = CRIPTsUser.objects(username=username).first()
     return user.subscriptions
 
 def get_subscribed_users(stype, oid, sources):
@@ -252,14 +252,14 @@ def get_subscribed_users(stype, oid, sources):
     :returns: list
     """
 
-    from crits.core.user import CRITsUser
+    from cripts.core.user import CRIPTsUser
     user_list = []
     query = { '$or': [
                        {'subscriptions.%s.id' % stype: ObjectId(oid)},
                        {'subscriptions.Source.name': { '$in': sources }}
                      ]
             }
-    users = CRITsUser.objects(__raw__=query)
+    users = CRIPTsUser.objects(__raw__=query)
     for user in users:
         user_list.append(user.username)
     return user_list
@@ -277,10 +277,10 @@ def is_user_subscribed(username, stype, oid):
     :returns: boolean
     """
 
-    from crits.core.user import CRITsUser
+    from cripts.core.user import CRIPTsUser
     username = str(username)
     query = {'username': username, 'subscriptions.%s.id' % stype: ObjectId(oid)}
-    results = CRITsUser.objects(__raw__=query).first()
+    results = CRIPTsUser.objects(__raw__=query).first()
     if results is not None:
         return True
     else:
@@ -297,10 +297,10 @@ def is_user_subscribed_to_source(username, source):
     :returns: boolean
     """
 
-    from crits.core.user import CRITsUser
+    from cripts.core.user import CRIPTsUser
     username = str(username)
     query = {'username': username, 'subscriptions.Source.name': source}
-    results = CRITsUser.objects(__raw__=query).first()
+    results = CRIPTsUser.objects(__raw__=query).first()
     if results is not None:
         return True
     else:
@@ -319,12 +319,12 @@ def subscribe_user(username, stype, oid):
     :returns: dict with keys "success" (boolean) and "message" (str) if failed.
     """
 
-    from crits.core.user import CRITsUser
-    from crits.core.user import EmbeddedSubscription
+    from cripts.core.user import CRIPTsUser
+    from cripts.core.user import EmbeddedSubscription
     username = str(username)
     es = EmbeddedSubscription()
     es._id = oid
-    user = CRITsUser.objects(username=username).first()
+    user = CRIPTsUser.objects(username=username).first()
     if stype in user.subscriptions:
         user.subscriptions[stype].append(es)
     else:
@@ -349,9 +349,9 @@ def unsubscribe_user(username, stype, oid):
     :returns: dict with keys "success" (boolean) and "message" (str) if failed.
     """
 
-    from crits.core.user import CRITsUser
+    from cripts.core.user import CRIPTsUser
     username = str(username)
-    user = CRITsUser.objects(username=username).first()
+    user = CRIPTsUser.objects(username=username).first()
     for s in user.subscriptions[stype]:
         if str(s._id) == oid:
             user.subscriptions[stype].remove(s)
@@ -374,10 +374,10 @@ def subscribe_to_source(username, source):
     :returns: dict with keys "success" (boolean) and "message" (str) if failed.
     """
 
-    from crits.core.user import EmbeddedSourceSubscription
-    from crits.core.user import CRITsUser
+    from cripts.core.user import EmbeddedSourceSubscription
+    from cripts.core.user import CRIPTsUser
     username = str(username)
-    user = CRITsUser.objects(username=username).first()
+    user = CRIPTsUser.objects(username=username).first()
     es = EmbeddedSourceSubscription()
     es.name = source
     user.subscriptions['Source'].append(es)
@@ -399,9 +399,9 @@ def unsubscribe_from_source(username, source):
     :returns: dict with keys "success" (boolean) and "message" (str) if failed.
     """
 
-    from crits.core.user import CRITsUser
+    from cripts.core.user import CRIPTsUser
     username = str(username)
-    user = CRITsUser.objects(username=username).first()
+    user = CRIPTsUser.objects(username=username).first()
     for s in user.subscriptions['Source']:
         if s.name == source:
             user.subscriptions['Source'].remove(s)
@@ -426,9 +426,9 @@ def update_user_preference(username, section, values):
     :returns: dict with keys "success" (boolean) and "message" (str) if failed.
     """
 
-    from crits.core.user import CRITsUser
+    from cripts.core.user import CRIPTsUser
     username = str(username)
-    user = CRITsUser.objects(username=username).first()
+    user = CRIPTsUser.objects(username=username).first()
 
     if user:
         if not section in user.prefs:
@@ -451,7 +451,7 @@ def get_nav_template(nav_preferences):
     Returns the template for the navigation menu based on the nav preferences
 
     :param nav_preferences: The navigation preferences which is based
-                            on :class:`crits.core.forms.NavMenuForm`
+                            on :class:`cripts.core.forms.NavMenuForm`
     :type nav_preferences: dict
     :returns: The navigation template for the specified navigation preference.
               If a navigation preference is not specified then None is returned.
@@ -479,9 +479,9 @@ def toggle_user_preference(username, section, setting, is_enabled=False):
     :returns: "success" (boolean), "message" (str) if failed,
               "state" (boolean) if successful
     """
-    from crits.core.user import CRITsUser
+    from cripts.core.user import CRIPTsUser
     username = str(username)
-    user = CRITsUser.objects(username=username).first()
+    user = CRIPTsUser.objects(username=username).first()
 
     if user:
         # Split the preference option into subtrees on '.'
@@ -532,9 +532,9 @@ def get_email_address(username):
     :returns: str
     """
 
-    from crits.core.user import CRITsUser
+    from cripts.core.user import CRIPTsUser
     username = str(username)
-    return CRITsUser.objects.get(username=username).email
+    return CRIPTsUser.objects.get(username=username).email
 
 def change_user_password(username, current_p, new_p, new_p_c):
     """
@@ -553,9 +553,9 @@ def change_user_password(username, current_p, new_p, new_p_c):
 
     if new_p != new_p_c:
         return {'success': False, 'message': 'New password confirmation does not match.'}
-    from crits.core.user import CRITsUser
+    from cripts.core.user import CRIPTsUser
     username = str(username)
-    user = CRITsUser.objects(username=username).first()
+    user = CRIPTsUser.objects(username=username).first()
     if not user:
         return {'success': False, 'message': 'Unknown user.'}
     if not user.check_password(current_p):
@@ -563,10 +563,10 @@ def change_user_password(username, current_p, new_p, new_p_c):
     if user.set_password(new_p, username):
         return {'success': True, 'message': 'Password Change Successful.'}
     else:
-        from crits.config.config import CRITsConfig
-        crits_config = CRITsConfig.objects().first()
-        if crits_config:
-            regex_desc = crits_config.password_complexity_desc
+        from cripts.config.config import CRIPTsConfig
+        cripts_config = CRIPTsConfig.objects().first()
+        if cripts_config:
+            regex_desc = cripts_config.password_complexity_desc
         else:
             regex_desc = settings.PASSWORD_COMPLEXITY_DESC
         return {'success': False,
@@ -582,9 +582,9 @@ def toggle_active(username, analyst):
     :type analyst: str
     """
 
-    from crits.core.user import CRITsUser
+    from cripts.core.user import CRIPTsUser
     username = str(username)
-    user = CRITsUser.objects(username=username).first()
+    user = CRIPTsUser.objects(username=username).first()
     if user:
         if user.is_active:
             user.mark_inactive(analyst=analyst)
@@ -610,9 +610,9 @@ def save_user_secret(username, totp_pass, title, size):
               "qr_img" (str or None)
     """
 
-    from crits.core.user import CRITsUser
+    from cripts.core.user import CRIPTsUser
     username = str(username)
-    user = CRITsUser.objects(username=username).first()
+    user = CRIPTsUser.objects(username=username).first()
     response = {}
     if user:
         (crypt_secret, totp_secret) = gen_user_secret(totp_pass, username)
@@ -643,9 +643,9 @@ def get_api_key_by_name(username, name):
     :returns: str, None
     """
 
-    from crits.core.user import CRITsUser
+    from cripts.core.user import CRIPTsUser
     username = str(username)
-    user = CRITsUser.objects(username=username).first()
+    user = CRIPTsUser.objects(username=username).first()
     if user:
         return user.get_api_key(name)
     return None
@@ -661,9 +661,9 @@ def create_api_key_by_name(username, name, default=False):
     :returns: dict with keys "success" (boolean) and "message" (str)
     """
 
-    from crits.core.user import CRITsUser
+    from cripts.core.user import CRIPTsUser
     username = str(username)
-    user = CRITsUser.objects(username=username).first()
+    user = CRIPTsUser.objects(username=username).first()
     if user:
         return user.create_api_key(name, username, default=default)
     return {'success': False,
@@ -680,9 +680,9 @@ def make_default_api_key_by_name(username, name):
     :returns: dict with keys "success" (boolean) and "message" (str)
     """
 
-    from crits.core.user import CRITsUser
+    from cripts.core.user import CRIPTsUser
     username = str(username)
-    user = CRITsUser.objects(username=username).first()
+    user = CRIPTsUser.objects(username=username).first()
     if user:
         return user.default_api_key(name, username)
     return {'success': False,
@@ -699,9 +699,9 @@ def revoke_api_key_by_name(username, name):
     :returns: dict with keys "success" (boolean) and "message" (str)
     """
 
-    from crits.core.user import CRITsUser
+    from cripts.core.user import CRIPTsUser
     username = str(username)
-    user = CRITsUser.objects(username=username).first()
+    user = CRIPTsUser.objects(username=username).first()
     if user:
         return user.revoke_api_key(name, username)
     return {'success': False,

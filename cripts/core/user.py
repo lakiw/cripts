@@ -55,17 +55,17 @@ from django.core.exceptions import ImproperlyConfigured
 from django.db import models
 #from django.utils.translation import ugettext_lazy as _
 
-from crits.config.config import CRITsConfig
-from crits.core.crits_mongoengine import CritsDocument, CritsSchemaDocument
-from crits.core.crits_mongoengine import CritsDocumentFormatter, UnsupportedAttrs
-from crits.core.user_migrate import migrate_user
+from cripts.config.config import CRIPTsConfig
+from cripts.core.cripts_mongoengine import CriptsDocument, CriptsSchemaDocument
+from cripts.core.cripts_mongoengine import CriptsDocumentFormatter, UnsupportedAttrs
+from cripts.core.user_migrate import migrate_user
 
 
 
 logger = logging.getLogger(__name__)
 
 
-class EmbeddedSubscription(EmbeddedDocument, CritsDocumentFormatter):
+class EmbeddedSubscription(EmbeddedDocument, CriptsDocumentFormatter):
     """
     Embedded Subscription
     """
@@ -74,7 +74,7 @@ class EmbeddedSubscription(EmbeddedDocument, CritsDocumentFormatter):
     date = DateTimeField(default=datetime.datetime.now)
 
 
-class EmbeddedSourceSubscription(EmbeddedDocument, CritsDocumentFormatter):
+class EmbeddedSourceSubscription(EmbeddedDocument, CriptsDocumentFormatter):
     """
     Embedded Subscription
     """
@@ -83,49 +83,20 @@ class EmbeddedSourceSubscription(EmbeddedDocument, CritsDocumentFormatter):
     name = StringField(required=True)
 
 
-class EmbeddedFavorites(EmbeddedDocument, CritsDocumentFormatter):
+class EmbeddedFavorites(EmbeddedDocument, CriptsDocumentFormatter):
     """
     Embedded Favorites
     """
-
-    Actor = ListField(StringField())
-    Backdoor = ListField(StringField())
-    Campaign = ListField(StringField())
-    Certificate = ListField(StringField())
-    Domain = ListField(StringField())
-    Email = ListField(StringField())
+    
     Event = ListField(StringField())
-    Exploit = ListField(StringField())
-    IP = ListField(StringField())
-    Indicator = ListField(StringField())
-    PCAP = ListField(StringField())
-    RawData = ListField(StringField())
-    Sample = ListField(StringField())
-    Screenshot = ListField(StringField())
-    Signature = ListField(StringField())
-    Target = ListField(StringField())
+    
 
-class EmbeddedSubscriptions(EmbeddedDocument, CritsDocumentFormatter):
+class EmbeddedSubscriptions(EmbeddedDocument, CriptsDocumentFormatter):
     """
     Embedded Subscriptions
     """
 
-    Actor = ListField(EmbeddedDocumentField(EmbeddedSubscription))
-    Backdoor = ListField(EmbeddedDocumentField(EmbeddedSubscription))
-    Campaign = ListField(EmbeddedDocumentField(EmbeddedSubscription))
-    Certificate = ListField(EmbeddedDocumentField(EmbeddedSubscription))
-    Domain = ListField(EmbeddedDocumentField(EmbeddedSubscription))
-    Email = ListField(EmbeddedDocumentField(EmbeddedSubscription))
     Event = ListField(EmbeddedDocumentField(EmbeddedSubscription))
-    Exploit = ListField(EmbeddedDocumentField(EmbeddedSubscription))
-    IP = ListField(EmbeddedDocumentField(EmbeddedSubscription))
-    Indicator = ListField(EmbeddedDocumentField(EmbeddedSubscription))
-    PCAP = ListField(EmbeddedDocumentField(EmbeddedSubscription))
-    RawData = ListField(EmbeddedDocumentField(EmbeddedSubscription))
-    Sample = ListField(EmbeddedDocumentField(EmbeddedSubscription))
-    Signature = ListField(EmbeddedDocumentField(EmbeddedSubscription))
-    Source = ListField(EmbeddedDocumentField(EmbeddedSourceSubscription))
-    Target = ListField(EmbeddedDocumentField(EmbeddedSubscription))
 
 
 class PreferencesField(DynamicEmbeddedDocument):
@@ -156,7 +127,7 @@ class PreferencesField(DynamicEmbeddedDocument):
                                                             "initial_notifications_display": "show",
                                                             "newer_notifications_location": "top"})
 
-class EmbeddedPasswordReset(EmbeddedDocument, CritsDocumentFormatter):
+class EmbeddedPasswordReset(EmbeddedDocument, CriptsDocumentFormatter):
     """
     Embedded Password Reset
     """
@@ -166,7 +137,7 @@ class EmbeddedPasswordReset(EmbeddedDocument, CritsDocumentFormatter):
     date = DateTimeField(default=datetime.datetime.now)
 
 
-class EmbeddedLoginAttempt(EmbeddedDocument, CritsDocumentFormatter):
+class EmbeddedLoginAttempt(EmbeddedDocument, CriptsDocumentFormatter):
     """
     Embedded Login Attempt
     """
@@ -178,7 +149,7 @@ class EmbeddedLoginAttempt(EmbeddedDocument, CritsDocumentFormatter):
     date = DateTimeField(default=datetime.datetime.now)
 
 
-class EmbeddedAPIKey(EmbeddedDocument, CritsDocumentFormatter):
+class EmbeddedAPIKey(EmbeddedDocument, CriptsDocumentFormatter):
     """
     Embedded API Key
     """
@@ -189,9 +160,9 @@ class EmbeddedAPIKey(EmbeddedDocument, CritsDocumentFormatter):
     default = BooleanField(default=False)
 
 
-class CRITsUser(CritsDocument, CritsSchemaDocument, Document):
+class CRIPTsUser(CriptsDocument, CriptsSchemaDocument, Document):
     """
-    CRITs User object
+    CRIPTs User object
     """
 
     meta = {
@@ -202,12 +173,12 @@ class CRITsUser(CritsDocument, CritsSchemaDocument, Document):
              'sparse': True,
             },
         ],
-        "crits_type": 'User',
+        "cripts_type": 'User',
         "latest_schema_version": 3,
         "schema_doc": {
             'username': 'The username of this analyst',
             'organization': 'The name of the organization this user is from',
-            'role': 'The role this user has been granted from a CRITs Admin',
+            'role': 'The role this user has been granted from a CRIPTs Admin',
             'sources': ('List [] of source names this user has been granted'
                         ' access to view data from'),
             'subscriptions': {
@@ -357,7 +328,7 @@ class CRITsUser(CritsDocument, CritsSchemaDocument, Document):
                 self.unsupported_attrs = UnsupportedAttrs()
             self.unsupported_attrs.__setattr__(name, value)
         else:
-            super(CritsDocument, self).__setattr__(name, value)
+            super(CriptsDocument, self).__setattr__(name, value)
 
     @property
     def pk(self):
@@ -429,7 +400,7 @@ class CRITsUser(CritsDocument, CritsSchemaDocument, Document):
 
     def is_password_complex(self, password):
         """
-        Based on the CRITsConfig, is the password provided complex enough to be
+        Based on the CRIPTsConfig, is the password provided complex enough to be
         used?
 
         :param password: The password to check for complexity.
@@ -437,9 +408,9 @@ class CRITsUser(CritsDocument, CritsSchemaDocument, Document):
         :returns: True, False
         """
 
-        crits_config = CRITsConfig.objects().first()
-        if crits_config:
-            pw_regex = crits_config.password_complexity_regex
+        cripts_config = CRIPTsConfig.objects().first()
+        if cripts_config:
+            pw_regex = cripts_config.password_complexity_regex
         else:
             pw_regex = settings.PASSWORD_COMPLEXITY_REGEX
         complex_regex = re.compile(pw_regex)
@@ -502,9 +473,9 @@ class CRITsUser(CritsDocument, CritsSchemaDocument, Document):
                 if self.set_password(new_p):
                     return {'success': True, 'message': 'Password reset.'}
                 else:
-                    crits_config = CRITsConfig.objects().first()
-                    if crits_config:
-                        pw_desc = crits_config.password_complexity_desc
+                    cripts_config = CRIPTsConfig.objects().first()
+                    if cripts_config:
+                        pw_desc = cripts_config.password_complexity_desc
                     else:
                         pw_desc = settings.PASSWORD_COMPLEXITY_DESC
                     message = 'Password not complex enough: %s' % pw_desc
@@ -682,8 +653,8 @@ class CRITsUser(CritsDocument, CritsSchemaDocument, Document):
         if password and user.set_password(password):
             user.save(username=analyst)
             return user
-        elif CRITsConfig.remote_user:
-            user.save(username="CRITS_REMOTE_USER")
+        elif CRIPTsConfig.remote_user:
+            user.save(username="CRIPTS_REMOTE_USER")
             return user
         else:
             return None
@@ -737,9 +708,9 @@ class CRITsUser(CritsDocument, CritsSchemaDocument, Document):
 
         from django.core.mail import send_mail
         if not from_email:
-            crits_config = CRITsConfig.objects().first()
-            if crits_config:
-                from_email = crits_config.crits_email
+            cripts_config = CRIPTsConfig.objects().first()
+            if cripts_config:
+                from_email = cripts_config.cripts_email
         send_mail(subject, message, from_email, [self.email])
 
     def get_username(self):
@@ -827,7 +798,7 @@ class CRITsUser(CritsDocument, CritsSchemaDocument, Document):
         import ldap, ldapurl
         resp = {"result": "ERROR"}
         if not config:
-            config = CRITsConfig.objects().first()
+            config = CRIPTsConfig.objects().first()
         # Make sure we have the rquired settings, else return failure
         if not config.ldap_server or not config.ldap_userdn:
             return resp
@@ -902,7 +873,7 @@ class CRITsUser(CritsDocument, CritsSchemaDocument, Document):
         return resp
 
     def getDashboards(self):
-        from crits.dashboards.handlers import getDashboardsForUser
+        from cripts.dashboards.handlers import getDashboardsForUser
         return getDashboardsForUser(self)
 
 class AuthenticationMiddleware(object):
@@ -931,10 +902,10 @@ class AuthenticationMiddleware(object):
         )
         request.user = SimpleLazyObject(lambda: get_user(self._get_user_session_key(request)))
 
-# stolen from MongoEngine and modified to use the CRITsUser class.
-class CRITsAuthBackend(object):
+# stolen from MongoEngine and modified to use the CRIPTsUser class.
+class CRIPTsAuthBackend(object):
     """
-    Authenticate using MongoEngine and crits.core.user.CRITsUser.
+    Authenticate using MongoEngine and cripts.core.user.CRIPTsUser.
     """
 
     supports_object_permissions = False
@@ -959,7 +930,7 @@ class CRITsAuthBackend(object):
         :type accept_language: str
         :param totp_enabled: If TOTP is enabled and should be checked as well.
         :type totp_enabled: str
-        :returns: :class:`crits.core.user.CRITsUser`, None
+        :returns: :class:`cripts.core.user.CRIPTsUser`, None
         """
 
         # Need username and password for logins, checkem both
@@ -973,7 +944,7 @@ class CRITsAuthBackend(object):
         fusername = username
         if '\\' in username:
             username = username.split("\\")[1]
-        user = CRITsUser.objects(username=username).first()
+        user = CRIPTsUser.objects(username=username).first()
         if user:
             # If the user needs TOTP and it is not disabled system-wide, and
             # the user has exceeded the login threshold for this time period
@@ -985,7 +956,7 @@ class CRITsAuthBackend(object):
                 self.track_login_attempt(user, e)
                 user.reload()
                 return None
-            config = CRITsConfig.objects().first()
+            config = CRIPTsConfig.objects().first()
             if not config:
                 return None
             if config.ldap_auth:
@@ -1056,7 +1027,7 @@ class CRITsAuthBackend(object):
                     logger.info("Invalid LDAP credentials for: %s" % un)
                 except Exception as err:
                     logger.info("LDAP Auth error: %s" % err)
-            # If LDAP auth fails, attempt normal CRITs auth.
+            # If LDAP auth fails, attempt normal CRIPTs auth.
             # This will help with being able to use local admin accounts when
             # you have LDAP auth enabled.
             if password and user.check_password(password):
@@ -1073,13 +1044,13 @@ class CRITsAuthBackend(object):
                 logger.info("Account disabled due to too many invalid login attempts: %s" %
                             user.username)
 
-                if config.crits_email_end_tag:
-                    subject = "CRITs Account Lockout" + config.crits_email_subject_tag
+                if config.cripts_email_end_tag:
+                    subject = "CRIPTs Account Lockout" + config.cripts_email_subject_tag
                 else:
-                    subject = config.crits_email_subject_tag + "CRITs Account Lockout"
+                    subject = config.cripts_email_subject_tag + "CRIPTs Account Lockout"
                 body = """
 
-You are receiving this email because your CRITs account has been locked out due to
+You are receiving this email because your CRIPTs account has been locked out due to
 too many invalid login attempts.  If you did not perform this action,
 someone may be attempting to access your account.
 
@@ -1110,7 +1081,7 @@ Please contact a site administrator to resolve.
         Get a user with the specified user_id.
         """
 
-        return CRITsUser.objects.with_id(user_id)
+        return CRIPTsUser.objects.with_id(user_id)
 
     def _exceeded_login_threshold(self, user, interval=10):
         """
@@ -1157,9 +1128,9 @@ Please contact a site administrator to resolve.
         return user
 
 
-class CRITsRemoteUserBackend(CRITsAuthBackend):
+class CRIPTsRemoteUserBackend(CRIPTsAuthBackend):
     """
-    Handle CRITs users when dealing with REMOTE_USER
+    Handle CRIPTs users when dealing with REMOTE_USER
     """
 
     def authenticate(self, username, password=None, user_agent=None,
@@ -1180,7 +1151,7 @@ class CRITsRemoteUserBackend(CRITsAuthBackend):
         :type accept_language: str
         :param totp_enabled: If TOTP is enabled and should be checked as well.
         :type totp_enabled: str
-        :returns: :class:`crits.core.user.CRITsUser`, None
+        :returns: :class:`cripts.core.user.CRIPTsUser`, None
         """
 
         e = EmbeddedLoginAttempt()
@@ -1188,12 +1159,12 @@ class CRITsRemoteUserBackend(CRITsAuthBackend):
         e.remote_addr = remote_addr
         e.accept_language = accept_language
         if not username:
-            logger.warn("No username passed to CRITsRemoteUserBackend (auth)")
+            logger.warn("No username passed to CRIPTsRemoteUserBackend (auth)")
             return None
-        config = CRITsConfig.objects().first()
+        config = CRIPTsConfig.objects().first()
         user = None
         username = self.clean_username(username)
-        user = CRITsUser.objects(username=username).first()
+        user = CRIPTsUser.objects(username=username).first()
         if user and user.is_active:
             if self._exceeded_login_threshold(user):
                 return None
@@ -1205,7 +1176,7 @@ class CRITsRemoteUserBackend(CRITsAuthBackend):
             return user
         elif not user and config.create_unknown_user:
             # Create the user
-            user = CRITsUser.create_user(username=username, password=None)
+            user = CRIPTsUser.create_user(username=username, password=None)
             user.sources.append(config.company_name)
             # Attempt to update info from LDAP
             user.update_from_ldap("Auto LDAP update", config)

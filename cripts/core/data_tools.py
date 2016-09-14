@@ -14,9 +14,9 @@ from dateutil.parser import parse
 from django.conf import settings
 from hashlib import md5
 
-from crits.core.class_mapper import class_from_value
-from crits.core.exceptions import ZipFileError
-from crits.core.mongo_tools import get_file
+from cripts.core.class_mapper import class_from_value
+from cripts.core.exceptions import ZipFileError
+from cripts.core.mongo_tools import get_file
 
 def get_file_fs(sample_md5):
     """
@@ -78,7 +78,7 @@ def create_zip(files, pw_protect=True):
                  (<filename>, <data>).
     :param pw_protect: To password protect the zip file or not.
     :type pw_protect: boolean
-    :returns: :class:`crits.core.exceptions.ZipFileError`, str
+    :returns: :class:`cripts.core.exceptions.ZipFileError`, str
     """
 
     dumpdir = ""
@@ -90,12 +90,12 @@ def create_zip(files, pw_protect=True):
         # Save the sample as a file in a temp directory
         # NOTE: the following line was causing a "permission denied" exception.
         # Removed dir arg.
-        from crits.config.config import CRITsConfig
-        crits_config = CRITsConfig.objects().first()
-        if crits_config:
-            zip7_password = crits_config.zip7_password or 'infected'
+        from cripts.config.config import CRIPTsConfig
+        cripts_config = CRIPTsConfig.objects().first()
+        if cripts_config:
+            zip7_password = cripts_config.zip7_password or 'hashed'
         else:
-            zip7_password = settings.ZIP7_PASSWORD or 'infected'
+            zip7_password = settings.ZIP7_PASSWORD or 'hashed'
         dumpdir = tempfile.mkdtemp() #dir=temproot
         #write out binary files
         for f in files:
@@ -235,11 +235,11 @@ def format_object(obj_type, obj_id, data_format="yaml", cleanse=True,
                   remove_unsupported=False):
     """
     Formats a top-level object for utilization in certain conditions. Removes
-    CRITs-internal necessary data so users editing the document via the
+    CRIPTs-internal necessary data so users editing the document via the
     interface don't alter or have the ability to overwrite things they should
     not.
 
-    :param obj_type: The CRITs type of the top-level object to format.
+    :param obj_type: The CRIPTs type of the top-level object to format.
     :type obj_type: str
     :param obj_id: The ObjectId to search for.
     :type obj_id: str
@@ -270,7 +270,7 @@ def format_object(obj_type, obj_id, data_format="yaml", cleanse=True,
     :returns: str
     """
 
-    collection = settings.CRITS_TYPES[obj_type]
+    collection = settings.CRIPTS_TYPES[obj_type]
     obj_class = class_from_value(obj_type, obj_id)
     if not obj_class:
         return ""

@@ -8,9 +8,9 @@ import io
 
 from django.conf import settings
 if settings.FILE_DB == settings.S3:
-    import crits.core.s3_tools as S3
+    import cripts.core.s3_tools as S3
 
-class CritsDateTimeField(DateTimeField):
+class CriptsDateTimeField(DateTimeField):
     """
     Custom MongoEngine DateTimeField. Utilizes a transform such that if the
     value passed in is a string we will convert it to a datetime.datetime
@@ -21,7 +21,7 @@ class CritsDateTimeField(DateTimeField):
 
     def __set__(self, instance, value):
         value = self.transform(value)
-        return super(CritsDateTimeField, self).__set__(instance, value)
+        return super(CriptsDateTimeField, self).__set__(instance, value)
 
     def transform(self, value):
         if value and isinstance(value, basestring):
@@ -143,7 +143,7 @@ class S3FileField(FileField):
 
 def getFileField(db_alias=DEFAULT_CONNECTION_NAME, collection_name="fs", **kwargs):
     """
-    Determine if the admin has configured CRITs to utilize GridFS or S3 for
+    Determine if the admin has configured CRIPTs to utilize GridFS or S3 for
     binary storage.
     """
 

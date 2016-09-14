@@ -14,89 +14,64 @@ from django.shortcuts import render_to_response, redirect
 from django.template import RequestContext
 from django.template.loader import render_to_string
 
-from crits.actors.actor import ActorThreatIdentifier
-from crits.actors.forms import AddActorForm, AddActorIdentifierTypeForm
-from crits.actors.forms import AddActorIdentifierForm, AttributeIdentifierForm
-from crits.backdoors.forms import AddBackdoorForm
-from crits.campaigns.campaign import Campaign
-from crits.campaigns.forms import AddCampaignForm, CampaignForm
-from crits.certificates.forms import UploadCertificateForm
-from crits.comments.forms import AddCommentForm, InlineCommentForm
-from crits.config.config import CRITsConfig
-from crits.core.crits_mongoengine import Action
-from crits.core.data_tools import json_handler
-from crits.core.forms import ActionsForm, NewActionForm
-from crits.core.forms import SourceAccessForm, AddSourceForm, AddUserRoleForm
-from crits.core.forms import SourceForm, DownloadFileForm, AddReleasabilityForm
-from crits.core.forms import TicketForm
-from crits.core.handlers import add_releasability, add_releasability_instance
-from crits.core.handlers import remove_releasability, remove_releasability_instance
-from crits.core.handlers import add_new_source, generate_counts_jtable
-from crits.core.handlers import source_add_update, source_remove, source_remove_all
-from crits.core.handlers import modify_bucket_list, promote_bucket_list
-from crits.core.handlers import download_object_handler, unflatten
-from crits.core.handlers import modify_sector_list, validate_next
-from crits.core.handlers import generate_bucket_jtable, generate_bucket_csv
-from crits.core.handlers import generate_sector_jtable, generate_sector_csv
-from crits.core.handlers import generate_dashboard, generate_global_search
-from crits.core.handlers import login_user, reset_user_password
-from crits.core.handlers import generate_user_profile, generate_user_preference
-from crits.core.handlers import modify_source_access, get_bucket_autocomplete
-from crits.core.handlers import dns_timeline, email_timeline, indicator_timeline
-from crits.core.handlers import generate_users_jtable, generate_items_jtable
-from crits.core.handlers import toggle_item_state, download_grid_file
-from crits.core.handlers import get_data_for_item, generate_audit_jtable
-from crits.core.handlers import details_from_id, status_update
-from crits.core.handlers import get_favorites, favorite_update
-from crits.core.handlers import generate_favorites_jtable
-from crits.core.handlers import ticket_add, ticket_update, ticket_remove
-from crits.core.handlers import description_update, data_update
-from crits.core.handlers import do_add_preferred_actions, add_new_action
-from crits.core.handlers import action_add, action_remove, action_update
-from crits.core.handlers import get_action_types_for_tlo
-from crits.core.source_access import SourceAccess
-from crits.core.user import CRITsUser
-from crits.core.user_role import UserRole
-from crits.core.user_tools import user_can_view_data, is_admin, user_sources
-from crits.core.user_tools import user_is_admin, get_user_list, get_nav_template
-from crits.core.user_tools import get_user_role, get_user_email_notification
-from crits.core.user_tools import get_user_info, get_user_organization
-from crits.core.user_tools import is_user_subscribed, unsubscribe_user
-from crits.core.user_tools import subscribe_user, subscribe_to_source
-from crits.core.user_tools import unsubscribe_from_source, is_user_subscribed_to_source
-from crits.core.user_tools import add_new_user_role, change_user_password, toggle_active
-from crits.core.user_tools import save_user_secret
-from crits.core.user_tools import toggle_user_preference, update_user_preference
-from crits.core.user_tools import get_api_key_by_name, create_api_key_by_name
-from crits.core.user_tools import revoke_api_key_by_name, make_default_api_key_by_name
-from crits.core.class_mapper import class_from_id
-from crits.domains.forms import TLDUpdateForm, AddDomainForm
-from crits.emails.forms import EmailUploadForm, EmailEMLForm, EmailYAMLForm, EmailRawUploadForm, EmailOutlookForm
-from crits.events.forms import EventForm
-from crits.exploits.forms import AddExploitForm
-from crits.indicators.forms import UploadIndicatorCSVForm, UploadIndicatorTextForm
-from crits.indicators.forms import UploadIndicatorForm
-from crits.ips.forms import AddIPForm
-from crits.locations.forms import AddLocationForm
-from crits.notifications.handlers import get_user_notifications
-from crits.notifications.handlers import remove_user_from_notification
-from crits.notifications.handlers import remove_user_notifications
-from crits.objects.forms import AddObjectForm
-from crits.pcaps.forms import UploadPcapForm
-from crits.raw_data.forms import UploadRawDataFileForm, UploadRawDataForm
-from crits.raw_data.forms import NewRawDataTypeForm
-from crits.raw_data.raw_data import RawDataType
-from crits.relationships.forms import ForgeRelationshipForm
-from crits.samples.forms import UploadFileForm
-from crits.screenshots.forms import AddScreenshotForm
-from crits.signatures.forms import UploadSignatureForm
-from crits.signatures.forms import NewSignatureTypeForm
-from crits.signatures.forms import NewSignatureDependencyForm
-from crits.signatures.signature import SignatureType
-from crits.signatures.signature import SignatureDependency
-from crits.targets.forms import TargetInfoForm
 
-from crits.vocabulary.sectors import Sectors
+from cripts.comments.forms import AddCommentForm, InlineCommentForm
+from cripts.config.config import CRIPTsConfig
+from cripts.core.cripts_mongoengine import Action
+from cripts.core.data_tools import json_handler
+from cripts.core.forms import ActionsForm, NewActionForm
+from cripts.core.forms import SourceAccessForm, AddSourceForm, AddUserRoleForm
+from cripts.core.forms import SourceForm, DownloadFileForm, AddReleasabilityForm
+from cripts.core.forms import TicketForm
+from cripts.core.handlers import add_releasability, add_releasability_instance
+from cripts.core.handlers import remove_releasability, remove_releasability_instance
+from cripts.core.handlers import add_new_source, generate_counts_jtable
+from cripts.core.handlers import source_add_update, source_remove, source_remove_all
+from cripts.core.handlers import modify_bucket_list, promote_bucket_list
+from cripts.core.handlers import download_object_handler, unflatten
+from cripts.core.handlers import modify_sector_list, validate_next
+from cripts.core.handlers import generate_bucket_jtable, generate_bucket_csv
+from cripts.core.handlers import generate_sector_jtable, generate_sector_csv
+from cripts.core.handlers import generate_dashboard, generate_global_search
+from cripts.core.handlers import login_user, reset_user_password
+from cripts.core.handlers import generate_user_profile, generate_user_preference
+from cripts.core.handlers import modify_source_access, get_bucket_autocomplete
+from cripts.core.handlers import dns_timeline, email_timeline, indicator_timeline
+from cripts.core.handlers import generate_users_jtable, generate_items_jtable
+from cripts.core.handlers import toggle_item_state, download_grid_file
+from cripts.core.handlers import get_data_for_item, generate_audit_jtable
+from cripts.core.handlers import details_from_id, status_update
+from cripts.core.handlers import get_favorites, favorite_update
+from cripts.core.handlers import generate_favorites_jtable
+from cripts.core.handlers import ticket_add, ticket_update, ticket_remove
+from cripts.core.handlers import description_update, data_update
+from cripts.core.handlers import do_add_preferred_actions, add_new_action
+from cripts.core.handlers import action_add, action_remove, action_update
+from cripts.core.handlers import get_action_types_for_tlo
+from cripts.core.source_access import SourceAccess
+from cripts.core.user import CRIPTsUser
+from cripts.core.user_role import UserRole
+from cripts.core.user_tools import user_can_view_data, is_admin, user_sources
+from cripts.core.user_tools import user_is_admin, get_user_list, get_nav_template
+from cripts.core.user_tools import get_user_role, get_user_email_notification
+from cripts.core.user_tools import get_user_info, get_user_organization
+from cripts.core.user_tools import is_user_subscribed, unsubscribe_user
+from cripts.core.user_tools import subscribe_user, subscribe_to_source
+from cripts.core.user_tools import unsubscribe_from_source, is_user_subscribed_to_source
+from cripts.core.user_tools import add_new_user_role, change_user_password, toggle_active
+from cripts.core.user_tools import save_user_secret
+from cripts.core.user_tools import toggle_user_preference, update_user_preference
+from cripts.core.user_tools import get_api_key_by_name, create_api_key_by_name
+from cripts.core.user_tools import revoke_api_key_by_name, make_default_api_key_by_name
+from cripts.core.class_mapper import class_from_id
+from cripts.events.forms import EventForm
+from cripts.notifications.handlers import get_user_notifications
+from cripts.notifications.handlers import remove_user_from_notification
+from cripts.notifications.handlers import remove_user_notifications
+from cripts.objects.forms import AddObjectForm
+from cripts.relationships.forms import ForgeRelationshipForm
+
+from cripts.vocabulary.sectors import Sectors
 
 logger = logging.getLogger(__name__)
 
@@ -265,9 +240,9 @@ def get_item_data(request):
     # If we write a function that doesn't pass these values,
     # then grab them from the cookies
     if not item_id:
-        item_id = request.COOKIES.get('crits_rel_id','')
+        item_id = request.COOKIES.get('cripts_rel_id','')
     if not item_type:
-        item_type = request.COOKIES.get('crits_rel_type','')
+        item_type = request.COOKIES.get('cripts_rel_type','')
     response = get_data_for_item(item_type, item_id)
     return HttpResponse(json.dumps(response, default=json_handler),
                         content_type="application/json")
@@ -341,7 +316,7 @@ def login(request):
     """
 
     # Gather basic request information
-    crits_config = CRITsConfig.objects().first()
+    cripts_config = CRIPTsConfig.objects().first()
     url = request.GET.get('next')
     user_agent = request.META.get('HTTP_USER_AGENT', '')
     remote_addr = request.META.get('REMOTE_ADDR', '')
@@ -363,7 +338,7 @@ def login(request):
     username = None
     login = True
     show_auth = True
-    message = crits_config.crits_message
+    message = cripts_config.cripts_message
     token_message = """
 <b>If you are not using TOTP or not sure what TOTP is,<br />leave the Token field empty.</b><br />
 If you are setting up TOTP for the first time, please enter a PIN above.<br />
@@ -371,7 +346,7 @@ If you are already setup with TOTP, please enter your PIN + Key above."""
     response = {}
 
     # Check for remote user being enabled and check for user
-    if crits_config.remote_user:
+    if cripts_config.remote_user:
         show_auth = False
         username = request.META.get(settings.REMOTE_USER_META,None)
         if username:
@@ -402,7 +377,7 @@ If you are already setup with TOTP, please enter your PIN + Key above."""
     if request.method == 'POST' and request.is_ajax():
         next_url = request.POST.get('next_url', None)
         # Get username from form if this is not Remote User
-        if not crits_config.remote_user:
+        if not cripts_config.remote_user:
             username = request.POST.get('username', None)
 
         # Even if it is remote user, try to get password.
@@ -413,7 +388,7 @@ If you are already setup with TOTP, please enter your PIN + Key above."""
         totp_pass = request.POST.get('totp_pass', None)
 
         if (not username or
-                (not totp_pass and crits_config.totp_web == 'Required')):
+                (not totp_pass and cripts_config.totp_web == 'Required')):
             response['success'] = False
             response['message'] = 'Unknown user or bad password.'
             return HttpResponse(json.dumps(response),
@@ -623,7 +598,7 @@ def source_access(request):
 @user_passes_test(user_is_admin)
 def source_add(request):
     """
-    Add a source to CRITs. Should be an AJAX POST.
+    Add a source to CRIPTs. Should be an AJAX POST.
 
     :param request: Django request.
     :type request: :class:`django.http.HttpRequest`
@@ -657,7 +632,7 @@ def source_add(request):
 @user_passes_test(user_is_admin)
 def user_role_add(request):
     """
-    Add a user role to CRITs. Should be an AJAX POST.
+    Add a user role to CRIPTs. Should be an AJAX POST.
 
     :param request: Django request.
     :type request: :class:`django.http.HttpRequest`
@@ -902,10 +877,10 @@ def download_object(request):
         obj_type = form.cleaned_data['obj_type']
         obj_id = form.cleaned_data['obj_id']
 
-        crits_config = CRITsConfig.objects().first()
-        total_max = getattr(crits_config, 'total_max', settings.TOTAL_MAX)
-        depth_max = getattr(crits_config, 'depth_max', settings.DEPTH_MAX)
-        rel_max = getattr(crits_config, 'rel_max', settings.REL_MAX)
+        cripts_config = CRIPTsConfig.objects().first()
+        total_max = getattr(cripts_config, 'total_max', settings.TOTAL_MAX)
+        depth_max = getattr(cripts_config, 'depth_max', settings.DEPTH_MAX)
+        rel_max = getattr(cripts_config, 'rel_max', settings.REL_MAX)
 
         try:
             total_limit = int(total_limit)
@@ -1031,49 +1006,49 @@ def base_context(request):
     :returns: dict
     """
 
-    crits_config = CRITsConfig.objects().first()
+    cripts_config = CRIPTsConfig.objects().first()
     base_context = {}
-    classification = getattr(crits_config,
+    classification = getattr(cripts_config,
                              'classification',
                              settings.CLASSIFICATION)
-    instance_name = getattr(crits_config,
+    instance_name = getattr(cripts_config,
                             'instance_name',
                             settings.INSTANCE_NAME)
-    company_name = getattr(crits_config,
+    company_name = getattr(cripts_config,
                            'company_name',
                            settings.COMPANY_NAME)
-    crits_version = settings.CRITS_VERSION
-    enable_toasts = getattr(crits_config,
+    cripts_version = settings.CRIPTS_VERSION
+    enable_toasts = getattr(cripts_config,
                             'enable_toasts',
                             settings.ENABLE_TOASTS)
-    git_branch = getattr(crits_config,
+    git_branch = getattr(cripts_config,
                          'git_branch',
                          settings.GIT_BRANCH)
-    git_hash = getattr(crits_config,
+    git_hash = getattr(cripts_config,
                        'git_hash',
                         settings.GIT_HASH)
-    git_hash_long = getattr(crits_config,
+    git_hash_long = getattr(cripts_config,
                        'git_hash_long',
                         settings.GIT_HASH_LONG)
-    git_repo_url = getattr(crits_config,
+    git_repo_url = getattr(cripts_config,
                             'git_repo_url',
                             settings.GIT_REPO_URL)
-    hide_git_hash = getattr(crits_config,
+    hide_git_hash = getattr(cripts_config,
                       'hide_git_hash',
                       settings.HIDE_GIT_HASH)
-    splunk_url = getattr(crits_config,
+    splunk_url = getattr(cripts_config,
                          'splunk_search_url',
                          settings.SPLUNK_SEARCH_URL)
-    secure_cookie = getattr(crits_config,
+    secure_cookie = getattr(cripts_config,
                            'secure_cookie',
                            settings.SECURE_COOKIE)
     mongo_database = settings.MONGO_DATABASE
-    base_context['crits_config'] = crits_config
+    base_context['cripts_config'] = cripts_config
     base_context['current_datetime'] = datetime.datetime.now()
     base_context['classification'] = classification.upper()
     base_context['instance_name'] = instance_name
     base_context['company_name'] = company_name
-    base_context['crits_version'] = crits_version
+    base_context['cripts_version'] = cripts_version
     base_context['enable_toasts'] = enable_toasts
     if git_repo_url:
         base_context['git_repo_link'] = "<a href='"+git_repo_url+"/commit/"+git_hash_long+"'>"+git_branch+':'+git_hash+"</a>"
@@ -1090,48 +1065,17 @@ def base_context(request):
         user = request.user.username
         # Forms that don't require a user
         base_context['add_new_action'] = NewActionForm()
-        base_context['add_target'] = TargetInfoForm()
-        base_context['campaign_add'] = AddCampaignForm()
         base_context['comment_add'] = AddCommentForm()
         base_context['inline_comment_add'] = InlineCommentForm()
-        base_context['campaign_form'] = CampaignForm()
         base_context['location_add'] = AddLocationForm()
-        base_context['add_raw_data_type'] = NewRawDataTypeForm()
         base_context['relationship_form'] = ForgeRelationshipForm()
-        base_context['add_signature_type'] = NewSignatureTypeForm()
-        base_context['add_signature_dependency'] = NewSignatureDependencyForm()
         base_context['source_access'] = SourceAccessForm()
         base_context['upload_tlds'] = TLDUpdateForm()
         base_context['user_role_add'] = AddUserRoleForm()
         base_context['new_ticket'] = TicketForm(initial={'date': datetime.datetime.now()})
-        base_context['add_actor_identifier_type'] = AddActorIdentifierTypeForm()
-        base_context['attribute_actor_identifier'] = AttributeIdentifierForm()
 
         # Forms that require a user
-        try:
-            base_context['actor_add'] = AddActorForm(user)
-        except Exception, e:
-            logger.warning("Base Context AddActorForm Error: %s" % e)
-        try:
-            base_context['add_actor_identifier'] = AddActorIdentifierForm(user)
-        except Exception, e:
-            logger.warning("Base Context AddActorIdentifierForm Error: %s" % e)
-        try:
-            base_context['backdoor_add'] = AddBackdoorForm(user)
-        except Exception, e:
-            logger.warning("Base Context AddBackdoorForm Error: %s" % e)
-        try:
-            base_context['exploit_add'] = AddExploitForm(user)
-        except Exception, e:
-            logger.warning("Base Context AddExploitForm Error: %s" % e)
-        try:
-            base_context['add_domain'] = AddDomainForm(user)
-        except Exception, e:
-            logger.warning("Base Context AddDomainForm Error: %s" % e)
-        try:
-            base_context['ip_form'] = AddIPForm(user, None)
-        except Exception, e:
-            logger.warning("Base Context AddIPForm Error: %s" % e)
+        
         try:
             base_context['new_action'] = ActionsForm(initial={'analyst': user,
                 'active': "off",
@@ -1144,53 +1088,13 @@ def base_context(request):
         except Exception, e:
             logger.warning("Base Context SourceForm Error: %s" % e)
         try:
-            base_context['upload_cert'] = UploadCertificateForm(user)
-        except Exception, e:
-            logger.warning("Base Context UploadCertificateForm Error: %s" % e)
-        try:
             base_context['upload_csv'] = UploadIndicatorCSVForm(user)
         except Exception, e:
             logger.warning("Base Context UploadIndicatorCSVForm Error: %s" % e)
         try:
-            base_context['upload_email_outlook'] = EmailOutlookForm(user)
-        except Exception, e:
-            logger.warning("Base Context EmailOutlookForm Error: %s" % e)
-        try:
-            base_context['upload_email_eml'] = EmailEMLForm(user)
-        except Exception, e:
-            logger.warning("Base Context EmailEMLForm Error: %s" % e)
-        try:
-            base_context['upload_email_fields'] = EmailUploadForm(user)
-        except Exception, e:
-            logger.warning("Base Context EmailUploadForm Error: %s" % e)
-        try:
-            base_context['upload_email_yaml'] = EmailYAMLForm(user)
-        except Exception, e:
-            logger.warning("Base Context EmailYAMLForm Error: %s" % e)
-        try:
-            base_context['upload_email_raw'] = EmailRawUploadForm(user)
-        except Exception, e:
-            logger.warning("Base Context EmailRawUploadForm Error: %s" % e)
-        try:
             base_context['upload_event'] = EventForm(user)
         except Exception, e:
             logger.warning("Base Context EventForm Error: %s" % e)
-        try:
-            base_context['upload_ind'] = UploadIndicatorForm(user)
-        except Exception, e:
-            logger.warning("Base Context UploadIndicatorForm Error: %s" % e)
-        try:
-            base_context['upload_pcap'] = UploadPcapForm(user)
-        except Exception, e:
-            logger.warning("Base Context UploadPcapForm Error: %s" % e)
-        try:
-            base_context['upload_text'] = UploadIndicatorTextForm(user)
-        except Exception, e:
-            logger.warning("Base Context UploadIndicatorTextForm Error: %s" % e)
-        try:
-            base_context['upload_sample'] = UploadFileForm(user)
-        except Exception, e:
-            logger.warning("Base Context UploadFileForm Error: %s" % e)
         try:
             base_context['object_form'] = AddObjectForm(user, None)
         except Exception, e:
@@ -1199,18 +1103,6 @@ def base_context(request):
             base_context['releasability_form'] = AddReleasabilityForm(user)
         except Exception, e:
             logger.warning("Base Context AddReleasabilityForm Error: %s" % e)
-        try:
-            base_context['screenshots_form'] = AddScreenshotForm(user)
-        except Exception, e:
-            logger.warning("Base Context AddScreenshotForm Error: %s" % e)
-        try:
-            base_context['upload_raw_data'] = UploadRawDataForm(user)
-        except Exception, e:
-            logger.warning("Base Context UploadRawDataForm Error: %s" % e)
-        try:
-            base_context['upload_raw_data_file'] = UploadRawDataFileForm(user)
-        except Exception, e:
-            logger.warning("Base Context UploadRawDataFileForm Error: %s" % e)
         try:
             base_context['upload_signature'] = UploadSignatureForm(user)
         except Exception, e:
@@ -1309,7 +1201,7 @@ def user_context(request):
     except:
         context['admin'] = False
     # Get user theme
-    user = CRITsUser.objects(username=request.user.username).first()
+    user = CRIPTsUser.objects(username=request.user.username).first()
     if user:
         context['theme'] = user.get_preference('ui', 'theme', 'default')
         favorite_count = 0
@@ -1487,7 +1379,7 @@ def clear_user_notifications(request):
     """
 
     remove_user_notifications("%s" % request.user.username)
-    return HttpResponseRedirect(reverse('crits.core.views.profile') + '#notifications_button')
+    return HttpResponseRedirect(reverse('cripts.core.views.profile') + '#notifications_button')
 
 @user_passes_test(user_can_view_data)
 def delete_user_notification(request, type_, oid):
@@ -1525,7 +1417,7 @@ def change_subscription(request, stype, oid):
 
     :param request: Django request.
     :type request: :class:`django.http.HttpRequest`
-    :param stype: The CRITs type of the top-level object.
+    :param stype: The CRIPTs type of the top-level object.
     :type stype: str
     :param oid: The ObjectId of the top-level object.
     :type oid: str
@@ -1654,7 +1546,7 @@ def change_totp_pin(request):
         username = request.user.username
         new_pin = request.POST.get('new_pin', None)
         if new_pin:
-            result = save_user_secret(username, new_pin, "crits", (200,200))
+            result = save_user_secret(username, new_pin, "cripts", (200,200))
             if result['success']:
                 result['message'] = "Secret: %s" % result['secret']
                 if result['qr_img']:
@@ -1747,7 +1639,7 @@ def item_editor(request):
                 SourceAccess,
                 UserRole]
     for col_obj in obj_list:
-        counts[col_obj._meta['crits_type']] = col_obj.objects().count()
+        counts[col_obj._meta['cripts_type']] = col_obj.objects().count()
     return render_to_response("item_editor.html",
                               {'counts': counts},
                               RequestContext(request))
@@ -1870,7 +1762,7 @@ def details(request, type_=None, id_=None):
 
     :param request: Django request.
     :type request: :class:`django.http.HttpRequest`
-    :param type_: The CRITs type of the top-level object.
+    :param type_: The CRIPTs type of the top-level object.
     :type type_: str
     :param id_: The ObjectId to search for.
     :type id_: str
@@ -1899,7 +1791,7 @@ def add_update_ticket(request, method, type_=None, id_=None):
     :type request: :class:`django.http.HttpRequest`
     :param method: Whether this is an "add", "update", or "remove".
     :type method: str
-    :param type_: The CRITs type of the top-level object.
+    :param type_: The CRIPTs type of the top-level object.
     :type type_: str
     :param id_: The ObjectId to search for.
     :type id_: str
@@ -1939,12 +1831,12 @@ def add_update_ticket(request, method, type_=None, id_=None):
                 add['date'] = date
                 result = ticket_update(type_, id_, add, user)
 
-            crits_config = CRITsConfig.objects().first()
+            cripts_config = CRIPTsConfig.objects().first()
             if 'object' in result:
                 result['html'] = render_to_string('tickets_row_widget.html',
                                                   {'ticket': result['object'],
                                                    'admin': is_admin(request.user),
-                                                   'crits_config': crits_config,
+                                                   'cripts_config': cripts_config,
                                                    'obj_type': type_,
                                                    'obj': class_from_id(type_, id_)})
             return HttpResponse(json.dumps(result,

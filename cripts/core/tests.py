@@ -5,15 +5,15 @@ from django.test.client import RequestFactory, Client
 
 from mongoengine import Document, StringField
 
-from crits.config.config import CRITsConfig
-from crits.core.user import CRITsUser
-from crits.core.crits_mongoengine import CritsBaseAttributes, CritsQuerySet
-from crits.core.crits_mongoengine import CritsSourceDocument
-from crits.core.source_access import SourceAccess
+from cripts.config.config import CRIPTsConfig
+from cripts.core.user import CRIPTsUser
+from cripts.core.cripts_mongoengine import CriptsBaseAttributes, CriptsQuerySet
+from cripts.core.cripts_mongoengine import CriptsSourceDocument
+from cripts.core.source_access import SourceAccess
 
 # We will be running tests against a bunch of functions from these files
-import crits.core.views as views
-import crits.core.handlers as handlers
+import cripts.core.views as views
+import cripts.core.handlers as handlers
 
 
 TCOL = "ct_test"
@@ -36,26 +36,26 @@ TOBJ_NAME = "tobj"
 
 def get_config():
     """
-    Get the CRITs configuration.
+    Get the CRIPTs configuration.
 
-    :returns: :class:`crits.config.config.CRITsConfig`
+    :returns: :class:`cripts.config.config.CRIPTsConfig`
     """
 
-    crits_config = CRITsConfig.objects().first()
-    if not crits_config:
-        crits_config = CRITsConfig()
-        crits_config.save()
-    return crits_config
+    cripts_config = CRIPTsConfig.objects().first()
+    if not cripts_config:
+        cripts_config = CRIPTsConfig()
+        cripts_config.save()
+    return cripts_config
 
 
-class TestSourceObject(CritsBaseAttributes, CritsSourceDocument, Document):
+class TestSourceObject(CriptsBaseAttributes, CriptsSourceDocument, Document):
     """
-    CRITs test object with source
+    CRIPTs test object with source
     """
 
     meta = {
         "collection": TCOLS,
-        "crits_type": "TestSourceBase",
+        "cripts_type": "TestSourceBase",
         "latest_schema_version": 1,
         "schema_doc": {
             'name': 'Name',
@@ -66,14 +66,14 @@ class TestSourceObject(CritsBaseAttributes, CritsSourceDocument, Document):
     value = StringField(required=True)
 
 
-class TestObject(CritsBaseAttributes, Document):
+class TestObject(CriptsBaseAttributes, Document):
     """
-    CRITs test object
+    CRIPTs test object
     """
 
     meta = {
         "collection": TCOL,
-        "crits_type": "TestBase",
+        "cripts_type": "TestBase",
         "latest_schema_version": 1,
         "schema_doc": {
             'name': 'Name',
@@ -91,12 +91,12 @@ def prep_db():
 
     clean_db()
     # Create a new default config
-    crits_config = CRITsConfig()
-    crits_config.save()
+    cripts_config = CRIPTsConfig()
+    cripts_config.save()
     # Add Source
     handlers.add_new_source(TSRC, TRANDUSER)
     # Add User
-    user = CRITsUser.create_user(username=TUSER_NAME,
+    user = CRIPTsUser.create_user(username=TUSER_NAME,
                                  password=TUSER_PASS,
                                  email=TUSER_EMAIL,
                                  )
@@ -130,12 +130,12 @@ def clean_db():
     src = SourceAccess.objects(name=TSRC).first()
     if src:
         src.delete()
-    user = CRITsUser.objects(username=TUSER_NAME).first()
+    user = CRIPTsUser.objects(username=TUSER_NAME).first()
     if user:
         user.delete()
     TestObject.drop_collection()
     TestSourceObject.drop_collection()
-    CRITsConfig.drop_collection()
+    CRIPTsConfig.drop_collection()
 
 
 class SourceTests(SimpleTestCase):
@@ -171,12 +171,12 @@ class UserTests(SimpleTestCase):
     """
 
     def setUp(self):
-        user = CRITsUser.objects(username=TUSER_NAME).first()
+        user = CRIPTsUser.objects(username=TUSER_NAME).first()
         if user:
             user.delete()
 
     def AddUser(self):
-        self.user = CRITsUser.create_user(username=TUSER_NAME,
+        self.user = CRIPTsUser.create_user(username=TUSER_NAME,
                                           password=TUSER_PASS,
                                           email=TUSER_EMAIL,
                                           )
@@ -188,12 +188,12 @@ class UserTests(SimpleTestCase):
         self.user.save()
 
     def FindUser(self):
-        self.assertTrue(CRITsUser.objects(username=TUSER_NAME).first())
+        self.assertTrue(CRIPTsUser.objects(username=TUSER_NAME).first())
 
     def DelUser(self):
-        fuser = CRITsUser.objects(username=TUSER_NAME).first()
+        fuser = CRIPTsUser.objects(username=TUSER_NAME).first()
         fuser.delete()
-        fuser = CRITsUser.objects(username=TUSER_NAME).first()
+        fuser = CRIPTsUser.objects(username=TUSER_NAME).first()
         self.assertFalse(fuser)
 
     def testUserAddDel(self):
@@ -211,7 +211,7 @@ class DataQueryTests(SimpleTestCase):
         prep_db()
         self.factory = RequestFactory()
         self.req = self.factory.get('/')
-        self.user = CRITsUser.objects(username=TUSER_NAME).first()
+        self.user = CRIPTsUser.objects(username=TUSER_NAME).first()
         self.req.user = self.user
 
     def tearDown(self):
@@ -282,12 +282,12 @@ class DataQueryTests(SimpleTestCase):
         resp = handlers.data_query(obj, self.user.username)
         self.assertEqual(resp['count'], 1)
         self.assertEqual(resp['result'], 'OK')
-        self.assertEqual(resp['crits_type'], 'TestBase')
+        self.assertEqual(resp['cripts_type'], 'TestBase')
         self.assertEqual(resp['msg'], '')
-        self.assertTrue(isinstance(resp['data'], CritsQuerySet))
+        self.assertTrue(isinstance(resp['data'], CriptsQuerySet))
         self.assertEqual(resp['data'][0].name, TOBJ_NAME)
         self.assertEqual(resp['data'][0].value, TOBJ_VALUE)
-        self.assertEqual(resp['data'][0]._meta['crits_type'], "TestBase")
+        self.assertEqual(resp['data'][0]._meta['cripts_type'], "TestBase")
 
     def testSourceDataQuery(self):
         objs = TestSourceObject
@@ -295,9 +295,9 @@ class DataQueryTests(SimpleTestCase):
         resp = handlers.data_query(objs, self.user.username)
         self.assertEqual(resp['count'], 0)
         self.assertEqual(resp['result'], 'OK')
-        self.assertEqual(resp['crits_type'], 'TestSourceBase')
+        self.assertEqual(resp['cripts_type'], 'TestSourceBase')
         self.assertEqual(resp['msg'], '')
-        self.assertTrue(isinstance(resp['data'], CritsQuerySet))
+        self.assertTrue(isinstance(resp['data'], CriptsQuerySet))
         # Add source for user and query again
         data = {'username': self.user.username,
                 'first_name': self.user.first_name,
@@ -315,11 +315,11 @@ class DataQueryTests(SimpleTestCase):
         # Now we should get one result, but not the UnknownSource object
         self.assertEqual(resp['count'], 1)
         self.assertEqual(resp['result'], 'OK')
-        self.assertEqual(resp['crits_type'], 'TestSourceBase')
+        self.assertEqual(resp['cripts_type'], 'TestSourceBase')
         self.assertEqual(resp['msg'], '')
         self.assertEqual(resp['data'][0].name, TOBJS_NAME)
         self.assertEqual(resp['data'][0].value, TOBJS_VALUE)
-        self.assertEqual(resp['data'][0]._meta['crits_type'], "TestSourceBase")
+        self.assertEqual(resp['data'][0]._meta['cripts_type'], "TestSourceBase")
 
 
 class LoginTests(SimpleTestCase):
@@ -331,7 +331,7 @@ class LoginTests(SimpleTestCase):
         prep_db()
         self.factory = RequestFactory()
         self.client = Client()
-        self.user = CRITsUser.objects(username=TUSER_NAME).first()
+        self.user = CRIPTsUser.objects(username=TUSER_NAME).first()
 
     def tearDown(self):
         clean_db()
@@ -375,7 +375,7 @@ class DashboardViewTests(SimpleTestCase):
         prep_db()
         self.factory = RequestFactory()
         self.req = self.factory.get('/dashboard/')
-        self.user = CRITsUser.objects(username=TUSER_NAME).first()
+        self.user = CRIPTsUser.objects(username=TUSER_NAME).first()
         self.req.user = self.user
 
     def tearDown(self):

@@ -3,18 +3,18 @@ import os
 from mongoengine import Document, StringField, ListField
 from mongoengine import BooleanField, IntField
 
-from crits.core.crits_mongoengine import CritsDocument
+from cripts.core.cripts_mongoengine import CriptsDocument
 
-class CRITsConfig(CritsDocument, Document):
+class CRIPTsConfig(CriptsDocument, Document):
     """
-    CRITs Configuration Class.
+    CRIPTs Configuration Class.
     """
 
     from django.conf import settings
 
     meta = {
         "collection": settings.COL_CONFIG,
-        "crits_type": 'Config',
+        "cripts_type": 'Config',
         "latest_schema_version": 1,
         "schema_doc": {
         },
@@ -24,21 +24,21 @@ class CRITsConfig(CritsDocument, Document):
     classification = StringField(default='unclassified')
     company_name = StringField(default='My Company')
     create_unknown_user = BooleanField(default=False)
-    crits_message = StringField(default='')
-    crits_email = StringField(default='')
-    crits_email_subject_tag = StringField(default='')
-    crits_email_end_tag = BooleanField(default=True)
-    # This is actually the internal DB version, but is named crits_version
+    cripts_message = StringField(default='')
+    cripts_email = StringField(default='')
+    cripts_email_subject_tag = StringField(default='')
+    cripts_email_end_tag = BooleanField(default=True)
+    # This is actually the internal DB version, but is named cripts_version
     # for historical reasons.
-    crits_version = StringField(required=True,
-                                default=settings.CRITS_VERSION)
+    cripts_version = StringField(required=True,
+                                default=settings.CRIPTS_VERSION)
     debug = BooleanField(default=True)
     depth_max = IntField(default=10)
     email_host = StringField(default='')
     email_port = StringField(default='')
     enable_api = BooleanField(default=False)
     enable_toasts = BooleanField(default=False)
-    git_repo_url = StringField(default='https://github.com/crits/crits')
+    git_repo_url = StringField(default='https://github.com/lakiw/cripts')
     http_proxy = StringField(default='')
     instance_name = StringField(default='My Instance')
     instance_url = StringField(default='')
@@ -72,7 +72,7 @@ class CRITsConfig(CritsDocument, Document):
     totp_web = StringField(default='Disabled')
     totp_cli = StringField(default='Disabled')
     zip7_path = StringField(default='/usr/bin/7z')
-    zip7_password = StringField(default='infected')
+    zip7_password = StringField(default='hashes')
 
     def migrate(self):
         """

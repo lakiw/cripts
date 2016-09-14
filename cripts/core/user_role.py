@@ -1,16 +1,16 @@
 from mongoengine import Document, StringField
 from django.conf import settings
 
-from crits.core.crits_mongoengine import CritsDocument, CritsSchemaDocument
+from cripts.core.cripts_mongoengine import CriptsDocument, CriptsSchemaDocument
 
-class UserRole(CritsDocument, CritsSchemaDocument, Document):
+class UserRole(CriptsDocument, CriptsSchemaDocument, Document):
     """
     User Role object.
     """
 
     meta = {
         "collection": settings.COL_USER_ROLES,
-        "crits_type": 'UserRole',
+        "cripts_type": 'UserRole',
         "latest_schema_version": 1,
         "schema_doc": {
             'name': 'Name of the role',

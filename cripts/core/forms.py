@@ -4,14 +4,14 @@ from django import forms
 from django.forms.utils import ErrorList
 from django.forms.widgets import HiddenInput, RadioSelect, SelectMultiple
 
-from crits.core import form_consts
-from crits.core.form_consts import Action as ActionConsts
-from crits.core.handlers import get_source_names, get_item_names, ui_themes
-from crits.core.user_role import UserRole
-from crits.core.user_tools import get_user_organization
-from crits.core.widgets import CalWidget
-from crits.config.config import CRITsConfig
-from crits import settings
+from cripts.core import form_consts
+from cripts.core.form_consts import Action as ActionConsts
+from cripts.core.handlers import get_source_names, get_item_names, ui_themes
+from cripts.core.user_role import UserRole
+from cripts.core.user_tools import get_user_organization
+from cripts.core.widgets import CalWidget
+from cripts.config.config import CRIPTsConfig
+from cripts import settings
 
 def add_bucketlist_to_form(input_form):
     """
@@ -116,14 +116,14 @@ class NewActionForm(forms.Form):
         super(NewActionForm, self).__init__(*args, **kwargs)
 
         # Sort the available TLOs.
-        tlos = [tlo for tlo in settings.CRITS_TYPES.keys()]
+        tlos = [tlo for tlo in settings.CRIPTS_TYPES.keys()]
         tlos.sort()
         self.fields['object_types'].choices = [(tlo, tlo) for tlo in tlos]
 
 
 class AddSourceForm(forms.Form):
     """
-    Django form for adding a new source to CRITs.
+    Django form for adding a new source to CRIPTs.
     """
 
     error_css_class = 'error'
@@ -334,20 +334,12 @@ class DownloadFileForm(forms.Form):
                                          label="Binary format")
 
     def __init__(self, *args, **kwargs):
-        crits_config = CRITsConfig.objects().first()
-        depth_max = getattr(crits_config, 'depth_max', settings.DEPTH_MAX)
-        total_max = getattr(crits_config, 'total_max', settings.TOTAL_MAX)
-        rel_max = getattr(crits_config, 'rel_max', settings.REL_MAX)
+        cripts_config = CRIPTsConfig.objects().first()
+        depth_max = getattr(cripts_config, 'depth_max', settings.DEPTH_MAX)
+        total_max = getattr(cripts_config, 'total_max', settings.TOTAL_MAX)
+        rel_max = getattr(cripts_config, 'rel_max', settings.REL_MAX)
         super(DownloadFileForm, self).__init__(*args, **kwargs)
-        self.fields['objects'].choices = [('Actor', 'Actors'),
-                                          ('Certificate', 'Certificates'),
-                                          ('Domain', 'Domains'),
-                                          ('Email', 'Emails'),
-                                          ('Indicator', 'Indicators'),
-                                          ('PCAP', 'PCAPs'),
-                                          ('RawData', 'Raw Data'),
-                                          ('Sample', 'Samples'),
-                                          ('Signature', 'Signatures')]
+        self.fields['objects'].choices = []
         self.fields['total_limit'].initial = total_max
         self.fields['rel_limit'].initial = rel_max
         self.fields['depth_limit'].help_text = self.fields['depth_limit'].help_text % depth_max

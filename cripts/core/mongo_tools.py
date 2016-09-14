@@ -1,6 +1,6 @@
 from django.conf import settings
 if settings.FILE_DB == settings.S3:
-    from crits.core.s3_tools import get_file_s3
+    from cripts.core.s3_tools import get_file_s3
 
 import gridfs
 import pymongo
@@ -27,7 +27,7 @@ def mongo_connector(collection, preference=settings.MONGO_READ_PREFERENCE):
     :param preference: PyMongo Read Preference for ReplicaSet/clustered DBs.
     :type preference: str.
     :returns: :class:`pymongo.Connection`,
-              :class:`crits.core.mongo_tools.MongoError`
+              :class:`cripts.core.mongo_tools.MongoError`
     """
 
     try:
@@ -56,7 +56,7 @@ def gridfs_connector(collection, preference=settings.MONGO_READ_PREFERENCE):
     :param preference: PyMongo Read Preference for ReplicaSet/clustered DBs.
     :type preference: str.
     :returns: :class:`gridfs.GridFS`,
-              :class:`crits.core.mongo_tools.MongoError`
+              :class:`cripts.core.mongo_tools.MongoError`
     """
 
     try:
@@ -409,5 +409,5 @@ def format_error(e):
     :returns: str
     """
 
-    from crits.core.handlers import format_error as fe
+    from cripts.core.handlers import format_error as fe
     return fe(e)

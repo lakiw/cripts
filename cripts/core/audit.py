@@ -3,17 +3,17 @@ import datetime
 from mongoengine import Document, StringField, ObjectIdField
 from django.conf import settings
 
-from crits.core.crits_mongoengine import CritsDocument, CritsSchemaDocument
-from crits.core.fields import CritsDateTimeField
+from cripts.core.cripts_mongoengine import CriptsDocument, CriptsSchemaDocument
+from cripts.core.fields import CriptsDateTimeField
 
 
-class AuditLog(CritsDocument, CritsSchemaDocument, Document):
+class AuditLog(CriptsDocument, CriptsSchemaDocument, Document):
     """
     Audit Log Class
     """
     meta = {
         "allow_inheritance": False,
-        "crits_type": "AuditLog",
+        "cripts_type": "AuditLog",
         "collection": settings.COL_AUDIT_LOG,
         "latest_schema_version": 1,
         "schema_doc": {
@@ -27,7 +27,7 @@ class AuditLog(CritsDocument, CritsSchemaDocument, Document):
 
     value = StringField()
     user = StringField()
-    date = CritsDateTimeField(default=datetime.datetime.now)
+    date = CriptsDateTimeField(default=datetime.datetime.now)
     target_type = StringField(db_field='type')
     target_id = ObjectIdField()
     method = StringField()

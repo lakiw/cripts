@@ -19,11 +19,11 @@ from mongoengine import QuerySet as QS
 
 from pprint import pformat
 
-from crits.core.user_tools import user_sources, is_admin
-from crits.core.fields import CritsDateTimeField
-from crits.core.class_mapper import class_from_id, class_from_type
-from crits.vocabulary.relationships import RelationshipTypes
-from crits.vocabulary.objects import ObjectTypes
+from cripts.core.user_tools import user_sources, is_admin
+from cripts.core.fields import CriptsDateTimeField
+from cripts.core.class_mapper import class_from_id, class_from_type
+from cripts.vocabulary.relationships import RelationshipTypes
+from cripts.vocabulary.objects import ObjectTypes
 
 # Hack to fix an issue with non-cached querysets and django-tastypie-mongoengine
 # The issue is in django-tastypie-mongoengine in resources.py from what I can
@@ -48,9 +48,9 @@ class Query(object):
 
     query_terms = dict([(query_term, None) for query_term in QUERY_TERMS_ALL])
 
-class CritsQuerySet(QS):
+class CriptsQuerySet(QS):
     """
-    CRITs default QuerySet. Used to override methods like .only() and to extend
+    CRIPTs default QuerySet. Used to override methods like .only() and to extend
     it with other methods we want to perform on a QuerySet object.
     """
 
@@ -82,7 +82,7 @@ class CritsQuerySet(QS):
         #Always include schema_version so we can migrate if needed.
         if 'schema_version' not in fields:
             fields = fields + ('schema_version',)
-        return super(CritsQuerySet, self).only(*fields)
+        return super(CriptsQuerySet, self).only(*fields)
 
     def from_json(self, json_data):
         """
@@ -94,7 +94,7 @@ class CritsQuerySet(QS):
 
         :param json_data: List or result of json.dumps.
         :type json_data: list or str
-        :returns: :class:`crits.core.crits_mongoengine.CritsQuerySet`
+        :returns: :class:`cripts.core.cripts_mongoengine.CriptsQuerySet`
         """
 
         if not isinstance(json_data, list):
@@ -106,7 +106,7 @@ class CritsQuerySet(QS):
 
     def to_dict(self, excludes=[], projection=[]):
         """
-        Converts CritsQuerySet to a list of dictionaries.
+        Converts CriptsQuerySet to a list of dictionaries.
 
         :param excludes: List fields to exclude in each document.
         :type excludes: list
@@ -119,7 +119,7 @@ class CritsQuerySet(QS):
 
     def to_csv(self, fields):
         """
-        Converts CritsQuerySet to CSV formatted string.
+        Converts CriptsQuerySet to CSV formatted string.
 
         :param fields: List fields to return for each document.
         :type fields: list
@@ -145,7 +145,7 @@ class CritsQuerySet(QS):
 
     def to_json(self, exclude=[]):
         """
-        Converts a CritsQuerySet to JSON.
+        Converts a CritpsQuerySet to JSON.
 
         :param exclude: Fields to exclude from each document.
         :type exclude: list
@@ -168,7 +168,7 @@ class CritsQuerySet(QS):
 
     def to_yaml(self, exclude=[]):
         """
-        Converts a CritsQuerySet to a list of YAML docs.
+        Converts a CriptsQuerySet to a list of YAML docs.
 
         :param exclude: Fields to exclude from each document.
         :type exclude: list
@@ -179,7 +179,7 @@ class CritsQuerySet(QS):
 
     def sanitize_sources(self, username=None):
         """
-        Sanitize each document in a CritsQuerySet for source information and
+        Sanitize each document in a CriptsQuerySet for source information and
         return the results as a list.
 
         :param username: The user which requested the data.
@@ -197,7 +197,7 @@ class CritsQuerySet(QS):
         return final_list
 
 
-class CritsDocumentFormatter(object):
+class CriptsDocumentFormatter(object):
     """
     Class to inherit from to gain the ability to convert a top-level object
     class to another format.
@@ -237,7 +237,7 @@ class CritsDocumentFormatter(object):
         merge(self, arg_dict=arg_dict, overwrite=overwrite)
 
 
-class CritsStatusDocument(BaseDocument):
+class CriptsStatusDocument(BaseDocument):
     """
     Inherit to add status to a top-level object.
     """
@@ -258,17 +258,17 @@ class CritsStatusDocument(BaseDocument):
                 for action in self.actions:
                     action.active = "off"
 
-class CritsBaseDocument(BaseDocument):
+class CriptsBaseDocument(BaseDocument):
     """
     Inherit to add a created and modified date to a top-level object.
     """
 
-    created = CritsDateTimeField(default=datetime.datetime.now)
+    created = CriptsDateTimeField(default=datetime.datetime.now)
     # modified will be overwritten on save
-    modified = CritsDateTimeField()
+    modified = CriptsDateTimeField()
 
 
-class CritsSchemaDocument(BaseDocument):
+class CriptsSchemaDocument(BaseDocument):
     """
     Inherit to add a schema_version to a top-level object.
 
@@ -280,7 +280,7 @@ class CritsSchemaDocument(BaseDocument):
     schema_version = IntField(default=0)
 
 
-class UnsupportedAttrs(DynamicEmbeddedDocument, CritsDocumentFormatter):
+class UnsupportedAttrs(DynamicEmbeddedDocument, CriptsDocumentFormatter):
     """
     Inherit to allow a top-level object to store unsupported attributes.
     """
@@ -288,11 +288,11 @@ class UnsupportedAttrs(DynamicEmbeddedDocument, CritsDocumentFormatter):
     meta = {}
 
 
-class CritsDocument(BaseDocument):
+class CriptsDocument(BaseDocument):
     """
-    Mixin for adding CRITs specific functionality to the MongoEngine module.
+    Mixin for adding CRIPTs specific functionality to the MongoEngine module.
 
-    All CRITs MongoEngine-based classes should inherit from this class
+    All CRIPTs MongoEngine-based classes should inherit from this class
     in addition to MongoEngine's Document.
 
     NOTE: this class uses some undocumented methods and attributes from MongoEngine's
@@ -304,7 +304,7 @@ class CritsDocument(BaseDocument):
         'migrated': False,
         'migrating': False,
         'needs_migration': False,
-        'queryset_class': CritsQuerySet
+        'queryset_class': CriptsQuerySet
     }
 
     unsupported_attrs = EmbeddedDocumentField(UnsupportedAttrs)
@@ -322,7 +322,7 @@ class CritsDocument(BaseDocument):
             #.delete() is normally defined on a Document, not BaseDocument, so
             #   we'll have to monkey patch to call our delete.
             self.delete = self._custom_delete
-        super(CritsDocument, self).__init__(**values)
+        super(CriptsDocument, self).__init__(**values)
 
     def _custom_save(self, force_insert=False, validate=True, clean=False,
         write_concern=None,  cascade=None, cascade_kwargs=None,
@@ -332,7 +332,7 @@ class CritsDocument(BaseDocument):
         automatically update modified times, and audit the changes made.
         """
 
-        from crits.core.handlers import audit_entry
+        from cripts.core.handlers import audit_entry
         if hasattr(self, 'schema_version') and not self.schema_version:
             #Check that documents retrieved from the DB have a recognized
             #   schema_version
@@ -363,11 +363,11 @@ class CritsDocument(BaseDocument):
     def _custom_delete(self, username=None, **write_concern):
         """
         Custom delete function. Overridden to allow us to extend to other parts
-        of CRITs and clean up dangling relationships, comments, objects, GridFS
+        of CRIPTs and clean up dangling relationships, comments, objects, GridFS
         files, bucket_list counts, and favorites.
         """
 
-        from crits.core.handlers import audit_entry, alter_bucket_list
+        from cripts.core.handlers import audit_entry, alter_bucket_list
         audit_entry(self, username, "delete")
         if self._has_method("delete_all_relationships"):
             self.delete_all_relationships(username=username)
@@ -401,7 +401,7 @@ class CritsDocument(BaseDocument):
                 self.unsupported_attrs = UnsupportedAttrs()
             self.unsupported_attrs.__setattr__(name, value)
         else:
-            super(CritsDocument, self).__setattr__(name, value)
+            super(CriptsDocument, self).__setattr__(name, value)
 
     def _has_method(self, method):
         """
@@ -425,7 +425,7 @@ class CritsDocument(BaseDocument):
         and automatically migrate to newer schema versions.
         """
 
-        doc = super(CritsDocument, cls)._from_son(son, _auto_dereference)
+        doc = super(CriptsDocument, cls)._from_son(son, _auto_dereference)
         #Make sure any fields that are unsupported but exist in the database
         #   get added to the document's unsupported_attributes field.
         #Get database names for all fields that *should* exist on the object.
@@ -605,7 +605,7 @@ class CritsDocument(BaseDocument):
         be removed from here when the codebase is updated.
 
         :returns: class which inherits from
-                  :class:`crits.core.crits_mongoengine.CritsBaseAttributes`
+                  :class:`cripts.core.cripts_mongoengine.CriptsBaseAttributes`
         """
 
         return cls._from_son(json_util.loads(json_data))
@@ -627,7 +627,7 @@ class CritsDocument(BaseDocument):
         Converts YAML data to an unsaved document instance.
 
         :returns: class which inherits from
-                  :class:`crits.core.crits_mongoengine.CritsBaseAttributes`
+                  :class:`cripts.core.cripts_mongoengine.CriptsBaseAttributes`
         """
 
         return cls._from_son(yaml.load(yaml_data))
@@ -654,7 +654,7 @@ class CritsDocument(BaseDocument):
         return pformat(self.to_dict())
 
 
-class EmbeddedPreferredAction(EmbeddedDocument, CritsDocumentFormatter):
+class EmbeddedPreferredAction(EmbeddedDocument, CriptsDocumentFormatter):
     """
     Embedded Preferred Action
     """
@@ -664,14 +664,14 @@ class EmbeddedPreferredAction(EmbeddedDocument, CritsDocumentFormatter):
     object_value = StringField()
 
 
-class Action(CritsDocument, CritsSchemaDocument, Document):
+class Action(CriptsDocument, CriptsSchemaDocument, Document):
     """
     Action type class.
     """
 
     meta = {
         "collection": settings.COL_IDB_ACTIONS,
-        "crits_type": 'Action',
+        "cripts_type": 'Action',
         "latest_schema_version": 1,
         "schema_doc": {
             'name': 'The name of this Action',
@@ -686,7 +686,7 @@ class Action(CritsDocument, CritsSchemaDocument, Document):
     object_types = ListField(StringField())
     preferred = ListField(EmbeddedDocumentField(EmbeddedPreferredAction))
 
-class EmbeddedAction(EmbeddedDocument, CritsDocumentFormatter):
+class EmbeddedAction(EmbeddedDocument, CriptsDocumentFormatter):
     """
     Embedded action class.
     """
@@ -694,13 +694,13 @@ class EmbeddedAction(EmbeddedDocument, CritsDocumentFormatter):
     action_type = StringField()
     active = StringField()
     analyst = StringField()
-    begin_date = CritsDateTimeField(default=datetime.datetime.now)
-    date = CritsDateTimeField(default=datetime.datetime.now)
-    end_date = CritsDateTimeField()
-    performed_date = CritsDateTimeField(default=datetime.datetime.now)
+    begin_date = CriptsDateTimeField(default=datetime.datetime.now)
+    date = CriptsDateTimeField(default=datetime.datetime.now)
+    end_date = CriptsDateTimeField()
+    performed_date = CriptsDateTimeField(default=datetime.datetime.now)
     reason = StringField()
 
-class CritsActionsDocument(BaseDocument):
+class CriptsActionsDocument(BaseDocument):
     """
     Inherit if you want to track actions information on a top-level object.
     """
@@ -726,7 +726,7 @@ class CritsActionsDocument(BaseDocument):
         :type performed_date: datetime.datetime
         :param reason: The reason for this action.
         :type reason: str
-        :param date: The date this action was added to CRITs.
+        :param date: The date this action was added to CRIPTs.
         :type date: datetime.datetime
         """
 
@@ -776,7 +776,7 @@ class CritsActionsDocument(BaseDocument):
         :type performed_date: datetime.datetime
         :param reason: The reason for this action.
         :type reason: str
-        :param date: The date this action was added to CRITs.
+        :param date: The date this action was added to CRIPTs.
         :type date: datetime.datetime
         """
 
@@ -798,18 +798,18 @@ class CritsActionsDocument(BaseDocument):
                 break
 
 # Embedded Documents common to most classes
-class EmbeddedSource(EmbeddedDocument, CritsDocumentFormatter):
+class EmbeddedSource(EmbeddedDocument, CriptsDocumentFormatter):
     """
     Embedded Source.
     """
 
-    class SourceInstance(EmbeddedDocument, CritsDocumentFormatter):
+    class SourceInstance(EmbeddedDocument, CriptsDocumentFormatter):
         """
         Information on the instance of this source.
         """
 
         analyst = StringField()
-        date = CritsDateTimeField(default=datetime.datetime.now)
+        date = CriptsDateTimeField(default=datetime.datetime.now)
         method = StringField()
         reference = StringField()
 
@@ -830,7 +830,7 @@ class EmbeddedSource(EmbeddedDocument, CritsDocumentFormatter):
     instances = ListField(EmbeddedDocumentField(SourceInstance))
     name = StringField()
 
-class CritsSourceDocument(BaseDocument):
+class CriptsSourceDocument(BaseDocument):
     """
     Inherit if you want to track source information on a top-level object.
     """
@@ -843,7 +843,7 @@ class CritsSourceDocument(BaseDocument):
         Add a source instance to this top-level object.
 
         :param source_item: An entire source instance.
-        :type source_item: :class:`crits.core.crits_mongoengine.EmbeddedSource`
+        :type source_item: :class:`cripts.core.cripts_mongoengine.EmbeddedSource`
         :param source: Name of the source.
         :type source: str
         :param method: Method of acquisition.
@@ -1006,13 +1006,13 @@ class CritsSourceDocument(BaseDocument):
         return [obj['name'] for obj in self._data['source']]
 
 
-class EmbeddedTicket(EmbeddedDocument, CritsDocumentFormatter):
+class EmbeddedTicket(EmbeddedDocument, CriptsDocumentFormatter):
     """
     Embedded Ticket Class.
     """
 
     analyst = StringField()
-    date = CritsDateTimeField(default=datetime.datetime.now)
+    date = CriptsDateTimeField(default=datetime.datetime.now)
     ticket_number = StringField()
 
 class EmbeddedTickets(BaseDocument):
@@ -1043,7 +1043,7 @@ class EmbeddedTickets(BaseDocument):
 
         :param tickets: The ticket(s) to add.
         :type tickets: str, list, or
-                       :class:`crits.core.crits_mongoengine.EmbeddedTicket`
+                       :class:`cripts.core.cripts_mongoengine.EmbeddedTicket`
         :param analyst: The user adding this ticket.
         :type analyst: str
         :param date: The date for the ticket.
@@ -1117,19 +1117,19 @@ class EmbeddedTickets(BaseDocument):
         return [obj['ticket_number'] for obj in self._data['tickets']]
 
 
-class EmbeddedCampaign(EmbeddedDocument, CritsDocumentFormatter):
+class EmbeddedCampaign(EmbeddedDocument, CriptsDocumentFormatter):
     """
     Embedded Campaign Class.
     """
 
     analyst = StringField()
     confidence = StringField(default='low', choices=('low', 'medium', 'high'))
-    date = CritsDateTimeField(default=datetime.datetime.now)
+    date = CriptsDateTimeField(default=datetime.datetime.now)
     description = StringField()
     name = StringField(required=True)
 
 
-class EmbeddedLocation(EmbeddedDocument, CritsDocumentFormatter):
+class EmbeddedLocation(EmbeddedDocument, CriptsDocumentFormatter):
     """
     Embedded Location object
     """
@@ -1143,12 +1143,12 @@ class EmbeddedLocation(EmbeddedDocument, CritsDocumentFormatter):
     date = DateTimeField(default=datetime.datetime.now)
 
 
-class Releasability(EmbeddedDocument, CritsDocumentFormatter):
+class Releasability(EmbeddedDocument, CriptsDocumentFormatter):
     """
     Releasability Class.
     """
 
-    class ReleaseInstance(EmbeddedDocument, CritsDocumentFormatter):
+    class ReleaseInstance(EmbeddedDocument, CriptsDocumentFormatter):
         """
         Releasability Instance Class.
         """
@@ -1176,36 +1176,36 @@ class UnrecognizedSchemaError(ValidationError):
             field_name='schema_version', **kwargs)
 
 
-class EmbeddedObject(EmbeddedDocument, CritsDocumentFormatter):
+class EmbeddedObject(EmbeddedDocument, CriptsDocumentFormatter):
     """
     Embedded Object Class.
     """
 
     analyst = StringField()
-    date = CritsDateTimeField(default=datetime.datetime.now)
+    date = CriptsDateTimeField(default=datetime.datetime.now)
     source = ListField(EmbeddedDocumentField(EmbeddedSource), required=True)
     object_type = StringField(required=True, db_field="type")
     value = StringField(required=True)
 
 
-class EmbeddedRelationship(EmbeddedDocument, CritsDocumentFormatter):
+class EmbeddedRelationship(EmbeddedDocument, CriptsDocumentFormatter):
     """
     Embedded Relationship Class.
     """
 
     relationship = StringField(required=True)
-    relationship_date = CritsDateTimeField()
+    relationship_date = CriptsDateTimeField()
     object_id = ObjectIdField(required=True, db_field="value")
-    date = CritsDateTimeField(default=datetime.datetime.now)
+    date = CriptsDateTimeField(default=datetime.datetime.now)
     rel_type = StringField(db_field="type", required=True)
     analyst = StringField()
     rel_reason = StringField()
     rel_confidence = StringField(default='unknown', required=True)
 
-class CritsBaseAttributes(CritsDocument, CritsBaseDocument,
-                          CritsSchemaDocument, CritsStatusDocument, EmbeddedTickets):
+class CriptsBaseAttributes(CriptsDocument, CriptsBaseDocument,
+                          CriptsSchemaDocument, CriptsStatusDocument, EmbeddedTickets):
     """
-    CRITs Base Attributes Class. The main class that should be inherited if you
+    CRIPTs Base Attributes Class. The main class that should be inherited if you
     are making a new top-level object. Adds all of the standard top-level object
     features.
     """
@@ -1226,7 +1226,7 @@ class CritsBaseAttributes(CritsDocument, CritsBaseDocument,
         Add a campaign to this top-level object.
 
         :param campaign_item: The campaign to add.
-        :type campaign_item: :class:`crits.core.crits_mongoengine.EmbeddedCampaign`
+        :type campaign_item: :class:`cripts.core.cripts_mongoengine.EmbeddedCampaign`
         :param update: If True, allow merge with pre-existing campaigns
         :              If False, do not change any pre-existing campaigns
         :type update:  boolean
@@ -1275,7 +1275,7 @@ class CritsBaseAttributes(CritsDocument, CritsBaseDocument,
         :param campaign_name: The campaign to remove.
         :type campaign_name: str
         :param campaign_item: The campaign to add.
-        :type campaign_item: :class:`crits.core.crits_mongoengine.EmbeddedCampaign`
+        :type campaign_item: :class:`cripts.core.cripts_mongoengine.EmbeddedCampaign`
         """
 
         if isinstance(campaign_item, EmbeddedCampaign):
@@ -1287,7 +1287,7 @@ class CritsBaseAttributes(CritsDocument, CritsBaseDocument,
         Add a location to this top-level object.
 
         :param location_item: The location to add.
-        :type location_item: :class:`crits.core.crits_mongoengine.EmbeddedLocation`
+        :type location_item: :class:`cripts.core.cripts_mongoengine.EmbeddedLocation`
         :returns: dict with keys "success" (boolean) and "message" (str)
         """
 
@@ -1373,7 +1373,7 @@ class CritsBaseAttributes(CritsDocument, CritsBaseDocument,
         :type append: boolean
         """
 
-        from crits.core.handlers import alter_bucket_list
+        from cripts.core.handlers import alter_bucket_list
         # Track the addition or subtraction of tags.
         # Get the bucket_list for the object, find out if this is an addition
         # or subtraction of a bucket_list.
@@ -1425,7 +1425,7 @@ class CritsBaseAttributes(CritsDocument, CritsBaseDocument,
         :type append: boolean
         """
 
-        from crits.core.handlers import alter_sector_list
+        from cripts.core.handlers import alter_sector_list
         # Track the addition or subtraction of tags.
         # Get the sectors for the object, find out if this is an addition
         # or subtraction of a sector.
@@ -1472,8 +1472,8 @@ class CritsBaseAttributes(CritsDocument, CritsBaseDocument,
         :returns: list
         """
 
-        from crits.comments.handlers import get_comments
-        comments = get_comments(self.id, self._meta['crits_type'])
+        from cripts.comments.handlers import get_comments
+        comments = get_comments(self.id, self._meta['cripts_type'])
         return comments
 
     def delete_all_comments(self):
@@ -1481,26 +1481,10 @@ class CritsBaseAttributes(CritsDocument, CritsBaseDocument,
         Delete all comments for this top-level object.
         """
 
-        from crits.comments.comment import Comment
+        from cripts.comments.comment import Comment
         Comment.objects(obj_id=self.id,
-                        obj_type=self._meta['crits_type']).delete()
+                        obj_type=self._meta['cripts_type']).delete()
 
-    def get_screenshots(self, analyst):
-        """
-        Get the screenshots for this top-level object.
-
-        :returns: list
-        """
-
-        from crits.screenshots.handlers import get_screenshots_for_id
-        screenshots = get_screenshots_for_id(self._meta['crits_type'],
-                                             self.id,
-                                             analyst,
-                                             True)
-        if 'screenshots' in screenshots:
-            return screenshots['screenshots']
-        else:
-            return []
 
     def add_object(self, object_type, value, source, method, reference,
                    analyst, object_item=None):
@@ -1520,7 +1504,7 @@ class CritsBaseAttributes(CritsDocument, CritsBaseDocument,
         :param analyst: The user adding this object.
         :type analyst: str
         :param object_item: An entire object ready to be added.
-        :type object_item: :class:`crits.core.crits_mongoengine.EmbeddedObject`
+        :type object_item: :class:`cripts.core.cripts_mongoengine.EmbeddedObject`
         :returns: dict with keys:
                   "success" (boolean)
                   "message" (str)
@@ -1559,7 +1543,7 @@ class CritsBaseAttributes(CritsDocument, CritsBaseDocument,
         for o in self.obj:
             if (o.object_type == object_type and
                 o.value == value):
-                from crits.objects.handlers import delete_object_file
+                from cripts.objects.handlers import delete_object_file
                 self.obj.remove(o)
                 delete_object_file(value)
                 break
@@ -1569,7 +1553,7 @@ class CritsBaseAttributes(CritsDocument, CritsBaseDocument,
         Delete all analysis results for this top-level object.
         """
 
-        from crits.services.analysis_result import AnalysisResult
+        from cripts.services.analysis_result import AnalysisResult
         results = AnalysisResult.objects(object_id=str(self.id))
         for result in results:
             result.delete()
@@ -1579,7 +1563,7 @@ class CritsBaseAttributes(CritsDocument, CritsBaseDocument,
         Delete all objects for this top-level object.
         """
 
-        from crits.objects.handlers import delete_object_file
+        from cripts.objects.handlers import delete_object_file
         for o in self.obj:
             if o.object_type == ObjectTypes.FILE_UPLOAD:
                 delete_object_file(o.value)
@@ -1590,10 +1574,10 @@ class CritsBaseAttributes(CritsDocument, CritsBaseDocument,
         Delete all favorites for this top-level object.
         """
 
-        from crits.core.user import CRITsUser
-        users = CRITsUser.objects()
+        from cripts.core.user import CRIPTsUser
+        users = CRIPTsUser.objects()
         for user in users:
-            type_ = self._meta['crits_type']
+            type_ = self._meta['cripts_type']
             if type_ in user.favorites and str(self.id) in user.favorites[type_]:
                 user.favorites[type_].remove(str(self.id))
                 user.save()
@@ -1653,7 +1637,7 @@ class CritsBaseAttributes(CritsDocument, CritsBaseDocument,
         Render a campaign to HTML to prepare for inclusion in a template.
 
         :param campaign: The campaign to templetize.
-        :type campaign: :class:`crits.core.crits_mongoengine.EmbeddedCampaign`
+        :type campaign: :class:`cripts.core.cripts_mongoengine.EmbeddedCampaign`
         :param analyst: The user requesting the Campaign.
         :type analyst: str
         :returns: str
@@ -1664,7 +1648,7 @@ class CritsBaseAttributes(CritsDocument, CritsBaseDocument,
                                  'hit': self,
                                  'obj': None,
                                  'admin': is_admin(analyst),
-                                 'relationship': {'type': self._meta['crits_type']}})
+                                 'relationship': {'type': self._meta['cripts_type']}})
         return html
 
     def format_location(self, location, analyst):
@@ -1672,7 +1656,7 @@ class CritsBaseAttributes(CritsDocument, CritsBaseDocument,
         Render a location to HTML to prepare for inclusion in a template.
 
         :param location: The location to templetize.
-        :type location: :class:`crits.core.crits_mongoengine.EmbeddedLocation`
+        :type location: :class:`cripts.core.cripts_mongoengine.EmbeddedLocation`
         :param analyst: The user requesting the Campaign.
         :type analyst: str
         :returns: str
@@ -1683,7 +1667,7 @@ class CritsBaseAttributes(CritsDocument, CritsBaseDocument,
                                  'hit': self,
                                  'obj': None,
                                  'admin': is_admin(analyst),
-                                 'relationship': {'type': self._meta['crits_type']}})
+                                 'relationship': {'type': self._meta['cripts_type']}})
         return html
 
     def sort_objects(self):
@@ -1709,7 +1693,7 @@ class CritsBaseAttributes(CritsDocument, CritsBaseDocument,
 
         :param rel_item: The top-level object to relate to.
         :type rel_item: class which inherits from
-                        :class:`crits.core.crits_mongoengine.CritsBaseAttributes`
+                        :class:`cripts.core.cripts_mongoengine.CriptsBaseAttributes`
         :param rel_type: The type of relationship.
         :type rel_type: str
         :param rel_date: The date this relationship applies.
@@ -1744,7 +1728,7 @@ class CritsBaseAttributes(CritsDocument, CritsBaseDocument,
         # setup the relationship for me
         my_rel = EmbeddedRelationship()
         my_rel.relationship = rel_type
-        my_rel.rel_type = rel_item._meta['crits_type']
+        my_rel.rel_type = rel_item._meta['cripts_type']
         my_rel.analyst = analyst
         my_rel.date = date
         my_rel.relationship_date = rel_date
@@ -1755,7 +1739,7 @@ class CritsBaseAttributes(CritsDocument, CritsBaseDocument,
         # setup the relationship for them
         their_rel = EmbeddedRelationship()
         their_rel.relationship = rev_type
-        their_rel.rel_type = self._meta['crits_type']
+        their_rel.rel_type = self._meta['cripts_type']
         their_rel.analyst = analyst
         their_rel.date = date
         their_rel.relationship_date = rel_date
@@ -1816,50 +1800,9 @@ class CritsBaseAttributes(CritsDocument, CritsBaseDocument,
             results = {'success': True,
                        'message': my_rel}
 
-        # In case of relating to a versioned backdoor we also want to relate to
-        # the family backdoor.
-        self_type = self._meta['crits_type']
-        rel_item_type = rel_item._meta['crits_type']
-
-        # If both are not backdoors, just return
-        if self_type != 'Backdoor' and rel_item_type != 'Backdoor':
-            return results
-
-        # If either object is a family backdoor, don't go further.
-        if ((self_type == 'Backdoor' and self.version == '') or
-            (rel_item_type == 'Backdoor' and rel_item.version == '')):
-            return results
-
-        # If one is a versioned backdoor and the other is a family backdoor,
-        # don't go further.
-        if ((self_type == 'Backdoor' and self.version != '' and
-             rel_item_type == 'Backdoor' and rel_item.version == '') or
-            (rel_item_type == 'Backdoor' and rel_item.version != '' and
-             self_type == 'Backdoor' and self.version == '')):
-           return results
-
-        # Figure out which is the backdoor object.
-        if self_type == 'Backdoor':
-            bd = self
-            other = rel_item
-        else:
-            bd = rel_item
-            other = self
-
-        # Find corresponding family backdoor object.
-        klass = class_from_type('Backdoor')
-        family = klass.objects(name=bd.name, version='').first()
-        if family:
-            other.add_relationship(family,
-                                   rel_type,
-                                   rel_date=rel_date,
-                                   analyst=analyst,
-                                   rel_confidence=rel_confidence,
-                                   rel_reason=rel_reason,
-                                   get_rels=get_rels)
-            other.save(user=analyst)
-
         return results
+
+
 
     def _modify_relationship(self, rel_item=None, rel_id=None, type_=None,
                              rel_type=None, rel_date=None, new_type=None,
@@ -1871,7 +1814,7 @@ class CritsBaseAttributes(CritsDocument, CritsBaseDocument,
 
         :param rel_item: The top-level object to relate to.
         :type rel_item: class which inherits from
-                        :class:`crits.core.crits_mongoengine.CritsBaseAttributes`
+                        :class:`cripts.core.cripts_mongoengine.CriptsBaseAttributes`
         :param rel_id: The ObjectId of the top-level object to relate to.
         :type rel_id: str
         :param type_: The type of top-level object to relate to.
@@ -1922,7 +1865,7 @@ class CritsBaseAttributes(CritsDocument, CritsBaseDocument,
                     if (r.object_id == rel_item.id
                         and r.relationship == rel_type
                         and r.relationship_date == rel_date
-                        and r.rel_type == rel_item._meta['crits_type']):
+                        and r.rel_type == rel_item._meta['cripts_type']):
                         if modification == "type":
                             self.relationships[c].relationship = new_type
                         elif modification == "date":
@@ -1936,7 +1879,7 @@ class CritsBaseAttributes(CritsDocument, CritsBaseDocument,
                 else:
                     if (r.object_id == rel_item.id
                         and r.relationship == rel_type
-                        and r.rel_type == rel_item._meta['crits_type']):
+                        and r.rel_type == rel_item._meta['cripts_type']):
                         if modification == "type":
                             self.relationships[c].relationship = new_type
                         elif modification == "date":
@@ -1952,7 +1895,7 @@ class CritsBaseAttributes(CritsDocument, CritsBaseDocument,
                     if (r.object_id == self.id
                         and r.relationship == rev_type
                         and r.relationship_date == rel_date
-                        and r.rel_type == self._meta['crits_type']):
+                        and r.rel_type == self._meta['cripts_type']):
                         if modification == "type":
                             rel_item.relationships[c].relationship = new_rev_type
                         elif modification == "date":
@@ -1966,7 +1909,7 @@ class CritsBaseAttributes(CritsDocument, CritsBaseDocument,
                 else:
                     if (r.object_id == self.id
                         and r.relationship == rev_type
-                        and r.rel_type == self._meta['crits_type']):
+                        and r.rel_type == self._meta['cripts_type']):
                         if modification == "type":
                             rel_item.relationships[c].relationship = new_rev_type
                         elif modification == "date":
@@ -1998,7 +1941,7 @@ class CritsBaseAttributes(CritsDocument, CritsBaseDocument,
 
         :param rel_item: The top-level object to relate to.
         :type rel_item: class which inherits from
-                        :class:`crits.core.crits_mongoengine.CritsBaseAttributes`
+                        :class:`cripts.core.cripts_mongoengine.CriptsBaseAttributes`
         :param rel_id: The ObjectId of the top-level object to relate to.
         :type rel_id: str
         :param type_: The type of top-level object to relate to.
@@ -2028,7 +1971,7 @@ class CritsBaseAttributes(CritsDocument, CritsBaseDocument,
 
         :param rel_item: The top-level object to relate to.
         :type rel_item: class which inherits from
-                        :class:`crits.core.crits_mongoengine.CritsBaseAttributes`
+                        :class:`cripts.core.cripts_mongoengine.CriptsBaseAttributes`
         :param rel_id: The ObjectId of the top-level object to relate to.
         :type rel_id: str
         :param type_: The type of top-level object to relate to.
@@ -2059,7 +2002,7 @@ class CritsBaseAttributes(CritsDocument, CritsBaseDocument,
 
         :param rel_item: The top-level object to relate to.
         :type rel_item: class which inherits from
-                        :class:`crits.core.crits_mongoengine.CritsBaseAttributes`
+                        :class:`cripts.core.cripts_mongoengine.CriptsBaseAttributes`
         :param rel_id: The ObjectId of the top-level object to relate to.
         :type rel_id: str
         :param type_: The type of top-level object to relate to.
@@ -2089,7 +2032,7 @@ class CritsBaseAttributes(CritsDocument, CritsBaseDocument,
 
         :param rel_item: The top-level object to relate to.
         :type rel_item: class which inherits from
-                        :class:`crits.core.crits_mongoengine.CritsBaseAttributes`
+                        :class:`cripts.core.cripts_mongoengine.CriptsBaseAttributes`
         :param rel_id: The ObjectId of the top-level object to relate to.
         :type rel_id: str
         :param type_: The type of top-level object to relate to.
@@ -2118,7 +2061,7 @@ class CritsBaseAttributes(CritsDocument, CritsBaseDocument,
 
         :param rel_item: The top-level object to remove relationship to.
         :type rel_item: class which inherits from
-                        :class:`crits.core.crits_mongoengine.CritsBaseAttributes`
+                        :class:`cripts.core.cripts_mongoengine.CriptsBaseAttributes`
         :param rel_id: The ObjectId of the top-level object to relate to.
         :type rel_id: str
         :param type_: The type of top-level object to relate to.
@@ -2274,7 +2217,7 @@ class CritsBaseAttributes(CritsDocument, CritsBaseDocument,
 
         :param source_item: The source to allow releasability for.
         :type source_item: dict or
-                           :class:`crits.core.crits_mongoengine.Releasability`
+                           :class:`cripts.core.cripts_mongoengine.Releasability`
         :param analyst: The user marking this as releasable.
         :type analyst: str
         """
@@ -2316,7 +2259,7 @@ class CritsBaseAttributes(CritsDocument, CritsBaseDocument,
         :type name: str
         :param instance: The instance of releasability.
         :type instance:
-            :class:`crits.core.crits_mongoengine.Releasability.ReleaseInstance`
+            :class:`cripts.core.cripts_mongoengine.Releasability.ReleaseInstance`
         """
 
         if isinstance(instance, Releasability.ReleaseInstance):
@@ -2443,14 +2386,14 @@ class CritsBaseAttributes(CritsDocument, CritsBaseDocument,
         :returns: list
         """
 
-        from crits.services.analysis_result import AnalysisResult
+        from cripts.services.analysis_result import AnalysisResult
 
         return AnalysisResult.objects(object_id=str(self.id))
 
     def get_details_url(self):
         """
         Generic function that generates a details url for a
-        :class:`crits.core.crits_mongoengine.CritsBaseAttributes` object.
+        :class:`cripts.core.cripts_mongoengine.CriptsBaseAttributes` object.
         """
 
         mapper = self._meta.get('jtable_opts')
@@ -2528,7 +2471,7 @@ def create_embedded_source(name, source_instance=None, date=None,
     :type name: str
     :param source_instance: An instance of this source.
     :type source_instance:
-        :class:`crits.core.crits_mongoengine.EmbeddedSource.SourceInstance`
+        :class:`cripts.core.cripts_mongoengine.EmbeddedSource.SourceInstance`
     :param date: The date for the source instance.
     :type date: datetime.datetime
     :param reference: The reference for this source instance.
@@ -2537,7 +2480,7 @@ def create_embedded_source(name, source_instance=None, date=None,
     :type method: str
     :param analyst: The user creating this embedded source.
     :type analyst: str
-    :returns: None, :class:`crits.core.crits_mongoengine.EmbeddedSource`
+    :returns: None, :class:`cripts.core.cripts_mongoengine.EmbeddedSource`
     """
 
     if isinstance(name, basestring):

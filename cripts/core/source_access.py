@@ -1,16 +1,16 @@
 from mongoengine import Document, IntField, StringField
 from django.conf import settings
 
-from crits.core.crits_mongoengine import CritsDocument, CritsSchemaDocument
+from cripts.core.cripts_mongoengine import CriptsDocument, CriptsSchemaDocument
 
 
-class SourceAccess(CritsDocument, CritsSchemaDocument, Document):
+class SourceAccess(CriptsDocument, CriptsSchemaDocument, Document):
     """
     Source Access class.
     """
 
     meta = {
-        "crits_type": "SourceAccess",
+        "cripts_type": "SourceAccess",
         "collection": settings.COL_SOURCE_ACCESS,
         "latest_schema_version": 1,
         "schema_doc": {

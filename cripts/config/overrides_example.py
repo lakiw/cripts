@@ -4,10 +4,10 @@
 #
 # This is an example file. You should copy this to "overrides.py" and
 # make your changes there.
-# Modifying this example file will not change the settings that CRITs uses.
+# Modifying this example file will not change the settings that CRIPTs uses.
 #
 # The preferred way to configure most settings is using the
-# crits_config database (configurable in the admin section of the UI).
+# cripts_config database (configurable in the admin section of the UI).
 #
 # However this file is still useful for settings that either are not
 # in the database or you want to override other items that cannot be
@@ -35,7 +35,7 @@
         # RequestHeader set Remote-User %{RU}e
         # RequestHeader set X-Forwarded-Protocol "https"
 
-# Now given that we're getting a Remote-User header, configure crits to use that.
+# Now given that we're getting a Remote-User header, configure cripts to use that.
 #
 # WARNING: If you enable this, be 100% certain your backend is not
 # directly accessible and this header could be spoofed by an attacker,

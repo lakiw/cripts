@@ -6,7 +6,7 @@
 # mgoffin
 # 2014-09-24
 def migrate_analysis_results(self):
-    from crits.services.analysis_result import (AnalysisResult,
+    from cripts.services.analysis_result import (AnalysisResult,
                                                 AnalysisConfig,
                                                 EmbeddedAnalysisResultLog)
     old_results = getattr(self.unsupported_attrs, 'analysis', None)
@@ -27,7 +27,7 @@ def migrate_analysis_results(self):
                     ar.log.append(le)
                 del result['log']
             ar.merge(arg_dict=result)
-            ar.object_type = self._meta['crits_type']
+            ar.object_type = self._meta['cripts_type']
             ar.object_id = str(self.id)
             ar.save()
     try:

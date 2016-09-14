@@ -1,6 +1,6 @@
-class CRITsBaseScript():
+class CRIPTsBaseScript():
     """
-    Base class for all CRITs scripts to inherit.
+    Base class for all CRIPTs scripts to inherit.
     """
 
     username = None

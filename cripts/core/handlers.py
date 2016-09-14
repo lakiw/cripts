@@ -30,43 +30,28 @@ except ImportError:
 
 from operator import itemgetter
 
-from crits.config.config import CRITsConfig
-from crits.core.audit import AuditLog
-from crits.core.bucket import Bucket
-from crits.core.class_mapper import class_from_id, class_from_type, key_descriptor_from_obj_type
-from crits.core.crits_mongoengine import Action, Releasability, json_handler
-from crits.core.crits_mongoengine import CritsSourceDocument
-from crits.core.crits_mongoengine import EmbeddedPreferredAction
-from crits.core.source_access import SourceAccess
-from crits.core.data_tools import create_zip, format_file
-from crits.core.mongo_tools import mongo_connector, get_file
-from crits.core.sector import Sector
-from crits.core.user import CRITsUser, EmbeddedSubscriptions
-from crits.core.user import EmbeddedLoginAttempt
-from crits.core.user_tools import user_sources, is_admin
-from crits.core.user_tools import save_user_secret
-from crits.core.user_tools import get_user_email_notification
+from cripts.config.config import CRIPTsConfig
+from cripts.core.audit import AuditLog
+from cripts.core.bucket import Bucket
+from cripts.core.class_mapper import class_from_id, class_from_type, key_descriptor_from_obj_type
+from cripts.core.cripts_mongoengine import Action, Releasability, json_handler
+from cripts.core.cripts_mongoengine import CriptsSourceDocument
+from cripts.core.cripts_mongoengine import EmbeddedPreferredAction
+from cripts.core.source_access import SourceAccess
+from cripts.core.data_tools import create_zip, format_file
+from cripts.core.mongo_tools import mongo_connector, get_file
+from cripts.core.sector import Sector
+from cripts.core.user import CRIPTsUser, EmbeddedSubscriptions
+from cripts.core.user import EmbeddedLoginAttempt
+from cripts.core.user_tools import user_sources, is_admin
+from cripts.core.user_tools import save_user_secret
+from cripts.core.user_tools import get_user_email_notification
 
-from crits.actors.actor import Actor
-from crits.backdoors.backdoor import Backdoor
-from crits.campaigns.campaign import Campaign
-from crits.certificates.certificate import Certificate
-from crits.comments.comment import Comment
-from crits.domains.domain import Domain
-from crits.events.event import Event
-from crits.exploits.exploit import Exploit
-from crits.ips.ip import IP
-from crits.notifications.handlers import get_user_notifications, generate_audit_notification
-from crits.pcaps.pcap import PCAP
-from crits.raw_data.raw_data import RawData
-from crits.emails.email import Email
-from crits.samples.sample import Sample
-from crits.screenshots.screenshot import Screenshot
-from crits.signatures.signature import Signature
-from crits.targets.target import Target
-from crits.indicators.indicator import Indicator
+from cripts.comments.comment import Comment
+from cripts.events.event import Event
+from cripts.notifications.handlers import get_user_notifications, generate_audit_notification
 
-from crits.core.totp import valid_totp
+from cripts.core.totp import valid_totp
 
 
 logger = logging.getLogger(__name__)
@@ -197,7 +182,7 @@ def description_update(type_, id_, description, user, **kwargs):
     """
     Change the description of a top-level object.
 
-    :param type_: The CRITs type of the top-level object.
+    :param type_: The CRIPTs type of the top-level object.
     :type type_: str
     :param id_: The ObjectId to search for.
     :type id_: str
@@ -235,7 +220,7 @@ def data_update(type_, id_, data, analyst):
     """
     Change the data of a top-level object.
 
-    :param type_: The CRITs type of the top-level object.
+    :param type_: The CRIPTs type of the top-level object.
     :type type_: str
     :param id_: The ObjectId to search for.
     :type id_: str
@@ -278,7 +263,7 @@ def get_favorites(analyst):
     :returns: dict with keys "success" (boolean) and "results" (string)
     """
 
-    user = CRITsUser.objects(username=analyst).first()
+    user = CRIPTsUser.objects(username=analyst).first()
     if not user:
         return {'success': False, 'message': '<div id="favorites_results">Could not find user.</div>'}
 
@@ -318,7 +303,7 @@ def get_favorites(analyst):
             for obj in objs:
                 obj_attr = getattr(obj, attr)
                 results += '<tr><td>%s</td><td><a href="%s">%s</a></td>' % (type_,
-                    reverse('crits.core.views.details',
+                    reverse('cripts.core.views.details',
                              args=(type_, str(obj.id))),
                     obj_attr)
                 results += '<td><span class="ui-icon ui-icon-trash remove_favorite favorites_icon_active" '
@@ -332,7 +317,7 @@ def favorite_update(type_, id_, analyst):
     """
     Toggle the favorite of a top-level object in a user profile on or off.
 
-    :param type_: The CRITs type of the top-level object.
+    :param type_: The CRIPTs type of the top-level object.
     :type type_: str
     :param id_: The ObjectId to search for.
     :type id_: str
@@ -341,7 +326,7 @@ def favorite_update(type_, id_, analyst):
     :returns: dict with keys "success" (boolean) and "message" (str)
     """
 
-    user = CRITsUser.objects(username=analyst).first()
+    user = CRIPTsUser.objects(username=analyst).first()
     if not user:
         return {'success': False, 'message': 'Could not find user.'}
 
@@ -362,7 +347,7 @@ def status_update(type_, id_, value="In Progress", user=None, **kwargs):
     """
     Update the status of a top-level object.
 
-    :param type_: The CRITs type of the top-level object.
+    :param type_: The CRIPTs type of the top-level object.
     :type type_: str
     :param id_: The ObjectId to search for.
     :type id_: str
@@ -446,7 +431,7 @@ def add_releasability(type_, id_, name, user, **kwargs):
     """
     Add releasability to a top-level object.
 
-    :param type_: The CRITs type of the top-level object.
+    :param type_: The CRIPTs type of the top-level object.
     :type type_: str
     :param id_: The ObjectId to search for.
     :type id_: str
@@ -475,7 +460,7 @@ def add_releasability_instance(type_, _id, name, analyst, note=None):
     """
     Add releasability instance to a top-level object.
 
-    :param type_: The CRITs type of the top-level object.
+    :param type_: The CRIPTs type of the top-level object.
     :type type_: str
     :param id_: The ObjectId to search for.
     :type id_: str
@@ -508,7 +493,7 @@ def remove_releasability_instance(type_, _id, name, date, analyst):
     """
     Remove releasability instance from a top-level object.
 
-    :param type_: The CRITs type of the top-level object.
+    :param type_: The CRIPTs type of the top-level object.
     :type type_: str
     :param id_: The ObjectId to search for.
     :type id_: str
@@ -539,7 +524,7 @@ def remove_releasability(type_, _id, name, analyst):
     """
     Remove releasability from a top-level object.
 
-    :param type_: The CRITs type of the top-level object.
+    :param type_: The CRIPTs type of the top-level object.
     :type type_: str
     :param id_: The ObjectId to search for.
     :type id_: str
@@ -612,7 +597,7 @@ def does_source_exist(source, active=False):
 
 def add_new_source(source, analyst):
     """
-    Add a new source to CRITs.
+    Add a new source to CRIPTs.
 
     :param source: The name of the new source.
     :type source: str
@@ -674,7 +659,7 @@ def source_add_update(type_, id_, action_type, source, method='',
     """
     Add or update a source for a top-level object.
 
-    :param type_: The CRITs type of the top-level object.
+    :param type_: The CRIPTs type of the top-level object.
     :type type_: str
     :param obj_id: The ObjectId to search for.
     :type obj_id: str
@@ -694,7 +679,7 @@ def source_add_update(type_, id_, action_type, source, method='',
               "success" (boolean),
               "message" (str),
               "object" (if successful)
-                :class:`crits.core.crits_mongoengine.EmbeddedSource.SourceInstance`
+                :class:`cripts.core.cripts_mongoengine.EmbeddedSource.SourceInstance`
     """
 
     obj = class_from_id(type_, id_)
@@ -746,7 +731,7 @@ def source_remove(type_, id_, name, date, user=None, **kwargs):
     """
     Remove a source instance from a top-level object.
 
-    :param type_: The CRITs type of the top-level object.
+    :param type_: The CRIPTs type of the top-level object.
     :type type_: str
     :param id_: The ObjectId to search for.
     :type id_: str
@@ -776,7 +761,7 @@ def source_remove_all(obj_type, obj_id, name, analyst=None):
     """
     Remove a source from a top-level object.
 
-    :param obj_type: The CRITs type of the top-level object.
+    :param obj_type: The CRIPTs type of the top-level object.
     :type obj_type: str
     :param obj_id: The ObjectId to search for.
     :type obj_id: str
@@ -803,7 +788,7 @@ def get_sources(obj_type, obj_id, analyst):
     """
     Get a list of sources for a top-level object.
 
-    :param obj_type: The CRITs type of the top-level object.
+    :param obj_type: The CRIPTs type of the top-level object.
     :type obj_type: str
     :param obj_id: The ObjectId to search for.
     :type obj_id: str
@@ -822,7 +807,7 @@ def get_sources(obj_type, obj_id, analyst):
 
 def get_source_names(active=False, limited=False, username=None):
     """
-    Get a list of available sources in CRITs sorted alphabetically.
+    Get a list of available sources in CRIPTs sorted alphabetically.
 
     :param active: Whether or not the sources returned should be active.
     :type active: boolean
@@ -854,7 +839,7 @@ def get_action_types_for_tlo(obj_type):
 
 def get_item_names(obj, active=None):
     """
-    Get a list of item names for a specific item in CRITs.
+    Get a list of item names for a specific item in CRIPTs.
 
     :param obj: The class representing the item to get names for.
     :type obj: class
@@ -863,7 +848,7 @@ def get_item_names(obj, active=None):
                    True: active items.
                    False: inactive items.
     :type active: boolean
-    :returns: :class:`crits.core.crits_mongoengine.CritsQuerySet`
+    :returns: :class:`cripts.core.cripts_mongoengine.CriptsQuerySet`
     """
 
     # Don't use this to get sources.
@@ -900,27 +885,8 @@ def promote_bucket_list(bucket, confidence, name, related, description, analyst)
     :returns: dict with keys "success" (boolean) and "message" (str)
     """
 
-    from crits.campaigns.handlers import campaign_add
-
-    bucket = Bucket.objects(name=bucket).first()
-    if not bucket:
-        return {'success': False, 'message': 'Unable to find bucket.'}
-
-    for ctype in [k for k in Bucket._meta['schema_doc'].keys() if k != 'name' and k != 'Campaign']:
-        # Don't bother if the count for this type is 0
-        if getattr(bucket, ctype, 0) == 0:
-            continue
-
-        klass = class_from_type(ctype)
-        if not klass:
-            continue
-
-        objs = klass.objects(bucket_list=bucket.name)
-        for obj in objs:
-            campaign_add(name, confidence, description, related, analyst, obj=obj)
-
-    return {'success': True,
-            'message': 'Bucket successfully promoted. <a href="%s">View campaign.</a>' % reverse('crits.campaigns.views.campaign_details', args=(name,))}
+    return {'success': False,
+            'message': 'Feature not implimented in CRIPTS yet -Lakiw'}
 
 def alter_bucket_list(obj, buckets, val):
     """
@@ -930,7 +896,7 @@ def alter_bucket_list(obj, buckets, val):
 
     :param obj: The top-level object instantiated class.
     :type obj: class which inherits from
-               :class:`crits.core.crits_mongoengine.CritsBaseAttributes`.
+               :class:`cripts.core.cripts_mongoengine.CriptsBaseAttributes`.
     :param buckets: List of buckets.
     :type buckets: list
     :param val: The amount to change the count by.
@@ -940,8 +906,8 @@ def alter_bucket_list(obj, buckets, val):
     # This dictionary is used to set values on insert only.
     # I haven't found a way to get mongoengine to use the defaults
     # when doing update_one() on the queryset.
-    from crits.core.bucket import Bucket
-    soi = { k: 0 for k in Bucket._meta['schema_doc'].keys() if k != 'name' and k != obj._meta['crits_type'] }
+    from cripts.core.bucket import Bucket
+    soi = { k: 0 for k in Bucket._meta['schema_doc'].keys() if k != 'name' and k != obj._meta['cripts_type'] }
     soi['schema_version'] = Bucket._meta['latest_schema_version']
 
     # We are using mongo_connector here because mongoengine does not have
@@ -950,7 +916,7 @@ def alter_bucket_list(obj, buckets, val):
     buckets_col = mongo_connector(settings.COL_BUCKET_LISTS)
     for name in buckets:
         buckets_col.update({'name': name},
-                           {'$inc': {obj._meta['crits_type']: val},
+                           {'$inc': {obj._meta['cripts_type']: val},
                             '$setOnInsert': soi},
                            upsert=True)
 
@@ -996,38 +962,23 @@ def generate_bucket_jtable(request, option):
     """
 
     if option == 'jtlist':
-        details_url = 'crits.core.views.bucket_list'
+        details_url = 'cripts.core.views.bucket_list'
         details_key = 'name'
         response = jtable_ajax_list(Bucket,
                                     details_url,
                                     details_key,
                                     request,
                                     includes=['name',
-                                              'Actor',
-                                              'Backdoor',
-                                              'Campaign',
-                                              'Certificate',
-                                              'Domain',
-                                              'Email',
                                               'Event',
-                                              'Exploit',
-                                              'Indicator',
-                                              'IP',
-                                              'PCAP',
-                                              'RawData',
-                                              'Sample',
-                                              'Signature',
-                                              'Target'])
+                                              ])
         return HttpResponse(json.dumps(response, default=json_handler),
                             content_type='application/json')
 
-    fields = ['name', 'Actor', 'Backdoor', 'Campaign', 'Certificate', 'Domain',
-              'Email', 'Event', 'Exploit', 'Indicator', 'IP', 'PCAP', 'RawData',
-              'Sample', 'Signature', 'Target', 'Promote']
+    fields = ['name', 'Event', 'Promote']
     jtopts = {'title': 'Buckets',
               'fields': fields,
               'listurl': 'jtlist',
-              'searchurl': reverse('crits.core.views.global_search_listing'),
+              'searchurl': reverse('cripts.core.views.global_search_listing'),
               'default_sort': 'name ASC',
               'no_sort': ['Promote'],
               'details_link': ''}
@@ -1036,16 +987,16 @@ def generate_bucket_jtable(request, option):
         if ctype == 'id':
             continue
         elif ctype == 'name':
-            url = reverse('crits.core.views.global_search_listing') + '?search_type=bucket_list&search=Search&force_full=1'
+            url = reverse('cripts.core.views.global_search_listing') + '?search_type=bucket_list&search=Search&force_full=1'
         elif ctype == 'Promote':
-            url = reverse('crits.core.views.bucket_promote')
+            url = reverse('cripts.core.views.bucket_promote')
         else:
             lower = ctype.lower()
             if lower != "rawdata":
-                url = reverse('crits.%ss.views.%ss_listing' % (lower, lower))
+                url = reverse('cripts.%ss.views.%ss_listing' % (lower, lower))
             else:
                 lower = "raw_data"
-                url = reverse('crits.%s.views.%s_listing' % (lower, lower))
+                url = reverse('cripts.%s.views.%s_listing' % (lower, lower))
 
         for field in jtable['fields']:
             if field['fieldname'].startswith("'" + ctype):
@@ -1078,7 +1029,7 @@ def modify_bucket_list(itype, oid, tags, analyst):
     """
     Modify the bucket list for a top-level object.
 
-    :param itype: The CRITs type of the top-level object to modify.
+    :param itype: The CRIPTs type of the top-level object to modify.
     :type itype: str
     :param oid: The ObjectId to search for.
     :type oid: str
@@ -1154,9 +1105,9 @@ def download_object_handler(total_limit, depth_limit, rel_limit, rst_fmt,
         # collected objects and convert binary data to bin_fmt specified, then
         # add to the list of data to zip up
         for (oid, (otype, obj)) in new_objects.items():
-            if ((otype == PCAP._meta['crits_type'] or
-                 otype == Sample._meta['crits_type'] or
-                 otype == Certificate._meta['crits_type']) and
+            if ((otype == PCAP._meta['cripts_type'] or
+                 otype == Sample._meta['cripts_type'] or
+                 otype == Certificate._meta['cripts_type']) and
                rst_fmt == 'zip'):
                 if obj.filedata: # if data is available
                     if bin_fmt == 'raw':
@@ -1175,9 +1126,9 @@ def download_object_handler(total_limit, depth_limit, rel_limit, rst_fmt,
 
     stamp = datetime.datetime.now().strftime("%Y%m%d%H%M%S")
     if len(objs) == 1:
-        fname = "CRITs_%s_%s_%s" % (obj_type, obj_id, stamp)
+        fname = "CRIPTs_%s_%s_%s" % (obj_type, obj_id, stamp)
     else:
-        fname = "CRITs_%s" % stamp
+        fname = "CRIPTs_%s" % stamp
     if rst_fmt != 'zip': # JSON File
         return {'success': True,
                 'data': "[%s]" % ",".join(doc[2] for doc in json_docs),
@@ -1213,12 +1164,12 @@ def collect_objects(obj_type, obj_id, depth_limit, total_limit, rel_limit,
 
     Objects are returned as a dictionary with the following key/value
     mapping:
-    _id: (obj_type, crits_obj)
+    _id: (obj_type, cripts_obj)
 
     Sources should be a list of the names of the sources the user has
     permission to access.
 
-    :param obj_type: The CRITs top-level object type to work with.
+    :param obj_type: The CRIPTs top-level object type to work with.
     :type obj_type: str
     :param obj_id: The ObjectId to search for.
     :type obj_id: str
@@ -1341,9 +1292,9 @@ def modify_source_access(analyst, data):
     :returns: dict with keys "success" (boolean) and "message" (str) if failed.
     """
 
-    user = CRITsUser.objects(username=data['username']).first()
+    user = CRIPTsUser.objects(username=data['username']).first()
     if not user:
-        user = CRITsUser.create_user(
+        user = CRIPTsUser.create_user(
             data.get('username', ''),
             data.get('password', ''),
             data.get('email') )
@@ -1360,7 +1311,7 @@ def modify_source_access(analyst, data):
     user.secret = data['secret']
     if len(data.get('password', '')) > 1:
         if user.set_password(data['password']) == False:
-            config = CRITsConfig.objects().first()
+            config = CRIPTsConfig.objects().first()
             pc = config.password_complexity_desc
             return {'success': False,
                     'message': 'Password does not meet complexity policy: %s' % pc}
@@ -1411,7 +1362,7 @@ def toggle_item_state(type_, oid, analyst):
     """
     Toggle an item active/inactive.
 
-    :param type_: The CRITs type for this item.
+    :param type_: The CRIPTs type for this item.
     :type type_: str
     :param oid: The ObjectId to search for.
     :type oid: str
@@ -1508,7 +1459,7 @@ def get_item_state(type_, name):
     """
     Get the state of an item.
 
-    :param type_: The CRITs type for this item.
+    :param type_: The CRIPTs type for this item.
     :type type_: str
     :param name: The name of the item.
     :type name: str
@@ -1615,9 +1566,9 @@ def gen_global_query(obj,user,term,search_type="global",force_full=False):
     """
     Generate a search query.  Also calls :func:`check_query` for validation.
 
-    :param obj: CRITs Document Object
-    :type obj: :class:`crits.core.crits_mongoengine.CritsDocument`
-    :param user: CRITs user
+    :param obj: CRIPTs Document Object
+    :type obj: :class:`cripts.core.cripts_mongoengine.CriptsDocument`
+    :param user: CRIPTs user
     :type user: str
     :param term: Search term
     :type term: str
@@ -1626,7 +1577,7 @@ def gen_global_query(obj,user,term,search_type="global",force_full=False):
     :returns: dict -- The validated query dictionary
     """
 
-    type_ = obj._meta['crits_type']
+    type_ = obj._meta['cripts_type']
     search_list = []
     query = {}
     # Some terms, regardless of the query, will want to be full search terms and
@@ -1654,7 +1605,7 @@ def gen_global_query(obj,user,term,search_type="global",force_full=False):
         t = class_from_type(parsed_search['type'])
         if t:
             type_ = parsed_search['type']
-            if obj._meta['crits_type'] != type_:
+            if obj._meta['cripts_type'] != type_:
                 return {'success': False,
                         'ignore': True,
                         'error': 'This type is being ignored.'}
@@ -1881,10 +1832,10 @@ def check_query(qparams,user,obj):
 
     :param qparams: MongoDB query
     :type qparams: dict
-    :param user: CRITs user
+    :param user: CRIPTs user
     :type user: str
-    :param obj: CRITs Document Object
-    :type obj: :class:`crits.core.crits_mongoengine.CritsDocument`
+    :param obj: CRIPTs Document Object
+    :type obj: :class:`cripts.core.cripts_mongoengine.CriptsDocument`
     :returns: dict -- The validated query dictionary
     """
 
@@ -1935,8 +1886,8 @@ def data_query(col_obj, user, limit=25, skip=0, sort=[], query={},
     Basic query function
 
     :param col_obj: MongoEngine collection object (Required)
-    :type col_obj: :class:`crits.core.crits_mongoengine.CritsDocument`
-    :param user: CRITs user (Required)
+    :type col_obj: :class:`cripts.core.cripts_mongoengine.CriptsDocument`
+    :param user: CRIPTs user (Required)
     :type user: str
     :param limit: Limit on returned rows
     :type limit: int `(25)`
@@ -1948,15 +1899,15 @@ def data_query(col_obj, user, limit=25, skip=0, sort=[], query={},
     :type query: dict
     :param projection: Projection filter to apply to query
     :type projection: list
-    :returns: dict -- Keys are result, data, count, msg, crits_type.  'data'
-        contains a :class:`crits.core.crits_mongoengine.CritsQuerySet` object.
+    :returns: dict -- Keys are result, data, count, msg, cripts_type.  'data'
+        contains a :class:`cripts.core.cripts_mongoengine.CriptsQuerySet` object.
     """
 
     results = {'result':'ERROR'}
     results['data'] = []
     results['count'] = 0
     results['msg'] = ""
-    results['crits_type'] = col_obj._meta['crits_type']
+    results['cripts_type'] = col_obj._meta['cripts_type']
     sourcefilt = user_sources(user)
     if isinstance(sort,basestring):
         sort = sort.split(',')
@@ -1964,12 +1915,12 @@ def data_query(col_obj, user, limit=25, skip=0, sort=[], query={},
         projection = projection.split(',')
     docs = None
     try:
-        if not issubclass(col_obj,CritsSourceDocument):
+        if not issubclass(col_obj,CriptsSourceDocument):
             results['count'] = col_obj.objects(__raw__=query).count()
             if count:
                 results['result'] = "OK"
                 return results
-            if col_obj._meta['crits_type'] == 'User':
+            if col_obj._meta['cripts_type'] == 'User':
                 docs = col_obj.objects(__raw__=query).exclude('password',
                                               'password_reset',
                                               'api_keys').\
@@ -2005,8 +1956,8 @@ def csv_query(col_obj,user,fields=[],limit=10000,skip=0,sort=[],query={}):
     Runs query and returns items in CSV format with fields as row headers
 
     :param col_obj: MongoEngine collection object (Required)
-    :type col_obj: :class:`crits.core.crits_mongoengine.CritsDocument`
-    :param user: CRITs user (Required)
+    :type col_obj: :class:`cripts.core.cripts_mongoengine.CriptsDocument`
+    :param user: CRIPTs user (Required)
     :type user: str
     :param fields: Fields to return in the CSV
     :type fields: list
@@ -2081,7 +2032,7 @@ def csv_export(request, col_obj, query={}):
     :param request: Django request object (Required)
     :type request: :class:`django.http.HttpRequest`
     :param col_obj: MongoEngine collection object (Required)
-    :type col_obj: :class:`crits.core.crits_mongoengine.CritsDocument`
+    :type col_obj: :class:`cripts.core.cripts_mongoengine.CriptsDocument`
     :param query: MongoDB query
     :type query: dict
     :returns: :class:`django.http.HttpResponse` -- CSV download response
@@ -2102,7 +2053,7 @@ def csv_export(request, col_obj, query={}):
                         skip=opts['skip'])
     if isinstance(result, basestring):
         response = HttpResponse(result, content_type="text/csv")
-        response['Content-Disposition'] = "attachment;filename=crits-%s-export.csv" % col_obj._meta['crits_type']
+        response['Content-Disposition'] = "attachment;filename=cripts-%s-export.csv" % col_obj._meta['cripts_type']
     else:
         response = render_to_response("error.html",
                                       {"error" : result },
@@ -2114,7 +2065,7 @@ def get_query(col_obj,request):
     Pull out a query from a request object
 
     :param col_obj: MongoEngine collection object (Required)
-    :type col_obj: :class:`crits.core.crits_mongoengine.CritsDocument`
+    :type col_obj: :class:`cripts.core.cripts_mongoengine.CriptsDocument`
     :param request: Django request object (Required)
     :type request: :class:`django.http.HttpRequest`
     :returns: dict -- The MongoDB query
@@ -2204,8 +2155,8 @@ def jtable_ajax_list(col_obj,url,urlfieldparam,request,excludes=[],includes=[],q
     Handles jTable listing POST requests
 
     :param col_obj: MongoEngine collection object (Required)
-    :type col_obj: :class:`crits.core.crits_mongoengine.CritsDocument`
-    :param url: Base URL for objects. Ex ``crits.domains.views.domain_detail``
+    :type col_obj: :class:`cripts.core.cripts_mongoengine.CriptsDocument`
+    :param url: Base URL for objects. Ex ``cripts.domains.views.domain_detail``
     :type url: str
     :param urlfieldparam: Field to use for the item detail's URL key.  Passed
         as arg with ``url`` to :func:`django.core.urlresolvers.reverse`
@@ -2269,7 +2220,7 @@ def jtable_ajax_list(col_obj,url,urlfieldparam,request,excludes=[],includes=[],q
                               projection=includes)
         if response['result'] == "ERROR":
             return {'Result': "ERROR", 'Message': response['msg']}
-        response['crits_type'] = col_obj._meta['crits_type']
+        response['cripts_type'] = col_obj._meta['cripts_type']
         # Escape term for rendering in the UI.
         response['term'] = cgi.escape(term)
         response['data'] = response['data'].to_dict(excludes, includes)
@@ -2330,24 +2281,13 @@ def jtable_ajax_list(col_obj,url,urlfieldparam,request,excludes=[],includes=[],q
                     else:
                         doc[key] = ""
                 doc[key] = html_escape(doc[key])
-            if col_obj._meta['crits_type'] == "Comment":
+            if col_obj._meta['cripts_type'] == "Comment":
                 mapper = {
-                    "Actor": 'crits.actors.views.actor_detail',
-                    "Campaign": 'crits.campaigns.views.campaign_details',
-                    "Certificate": 'crits.certificates.views.certificate_details',
-                    "Domain": 'crits.domains.views.domain_detail',
-                    "Email": 'crits.emails.views.email_detail',
-                    "Event": 'crits.events.views.view_event',
-                    "Indicator": 'crits.indicators.views.indicator',
-                    "IP": 'crits.ips.views.ip_detail',
-                    "PCAP": 'crits.pcaps.views.pcap_details',
-                    "RawData": 'crits.raw_data.views.raw_data_details',
-                    "Sample": 'crits.samples.views.detail',
-                    "Signature": 'crits.signatures.views.detail',
+                    "Event": 'cripts.events.views.view_event',
                 }
                 doc['url'] = reverse(mapper[doc['obj_type']],
                                     args=(doc['url_key'],))
-            elif col_obj._meta['crits_type'] == "AuditLog":
+            elif col_obj._meta['cripts_type'] == "AuditLog":
                 if doc.get('method', 'delete()') != 'delete()':
                     doc['url'] = details_from_id(doc['type'],
                                                  doc.get('target_id', None))
@@ -2362,7 +2302,7 @@ def jtable_ajax_delete(obj,request):
     Delete a document specified in the jTable POST.
 
     :param obj: MongoEngine collection object (Required)
-    :type obj: :class:`crits.core.crits_mongoengine.CritsDocument`
+    :type obj: :class:`cripts.core.cripts_mongoengine.CriptsDocument`
     :param request: Django request object (Required)
     :type request: :class:`django.http.HttpRequest`
     :returns: bool -- True if item was deleted
@@ -2564,10 +2504,6 @@ def build_jtable(jtopts, request):
             fdict['display'] = """function (data) { return '<div class="icon-container"><span id="'+data.record.id+'" class="favorites_icon_jtable ui-icon ui-icon-star"></span></div>';}"""
         if field == "actions":
             fdict['display'] = """function (data) { return '<div class="icon-container"><span data-id="'+data.record.id+'" id="'+data.record.id+'" class="preferred_actions_jtable ui-icon ui-icon-heart"></span></div>';}"""
-        if field == "thumb":
-            fdict['display'] = """function (data) { return '<img src="%s'+data.record.id+'/thumb/" />';}""" % reverse('crits.screenshots.views.render_screenshot')
-        if field == "description" and jtable['title'] == "Screenshots":
-            fdict['display'] = """function (data) { return '<span class="edit_underline edit_ss_description" data-id="'+data.record.id+'">'+data.record.description+'</span>';}"""
         if 'no_sort' in jtopts and field in jtopts['no_sort']:
             fdict['sorting'] = "false"
         if 'hidden_fields' in jtopts and field in jtopts['hidden_fields']:
@@ -2575,7 +2511,7 @@ def build_jtable(jtopts, request):
             fdict['visibility'] = '"hidden"'
         # This creates links for certain jTable columns
         # It will link anything listed in 'linked_fields'
-        campbase = reverse('crits.campaigns.views.campaign_details',args=('__CAMPAIGN__',))
+        campbase = ""
 
         # If linked_fields is not specified lets link source and campaign
         # if they exist as fields in the jTable
@@ -2620,7 +2556,7 @@ def generate_items_jtable(request, itype, option):
 
     :param request: The request for this jtable.
     :type request: :class:`django.http.HttpRequest`
-    :param itype: The CRITs item we want to list.
+    :param itype: The CRIPTs item we want to list.
     :type itype: str
     :param option: Action to take.
     :type option: str of either 'jtlist', 'jtdelete', or 'inline'.
@@ -2672,7 +2608,7 @@ def generate_items_jtable(request, itype, option):
     jtopts = {
         'title': "%ss" % itype,
         'default_sort': 'name ASC',
-        'listurl': reverse('crits.core.views.items_listing',
+        'listurl': reverse('cripts.core.views.items_listing',
                            args=(itype, 'jtlist',)),
         'deleteurl': None,
         'searchurl': None,
@@ -2733,7 +2669,7 @@ def generate_users_jtable(request, option):
     :returns: :class:`django.http.HttpResponse`
     """
 
-    obj_type = CRITsUser
+    obj_type = CRIPTsUser
     if option == 'jtlist':
         details_url = None
         details_url_key = 'username'
@@ -2749,7 +2685,7 @@ def generate_users_jtable(request, option):
     jtopts = {
         'title': "Users",
         'default_sort': 'last_login DESC',
-        'listurl': reverse('crits.core.views.users_listing', args=('jtlist',)),
+        'listurl': reverse('cripts.core.views.users_listing', args=('jtlist',)),
         'deleteurl': None,
         'searchurl': None,
         'fields': ['username', 'first_name', 'last_name', 'email',
@@ -2797,165 +2733,10 @@ def generate_dashboard(request):
     :type request: :class:`django.http.HttpRequest`
     :returns: :class:`django.http.HttpResponse`
     """
-    from crits.dashboards.handlers import get_dashboard
+    from cripts.dashboards.handlers import get_dashboard
     args = get_dashboard(request.user)
     return render_to_response('dashboard.html', args, RequestContext(request))
 
-def dns_timeline(query, analyst, sources):
-    """
-    Query for domains, format that data for timeline view, and return them.
-
-    :param query: The query to use to find the Domains.
-    :type query: dict
-    :param analyst: The user requesting the timeline.
-    :type analyst: str
-    :param sources: List of user's sources.
-    :type sources: list
-    :returns: list of dictionaries.
-    """
-
-    domains = Domain.objects(__raw__=query)
-    offline = ['255.255.255.254', '127.0.0.1', '127.0.0.2', '0.0.0.0']
-    event_id = 0
-    events = []
-    for d in domains:
-        d.sanitize_sources(username=analyst,
-                           sources=sources)
-        domain = d.domain
-        state = "off"
-        ip_list = [r for r in d.relationships if r.rel_type == 'IP']
-        ip_list = sorted(ip_list, key=itemgetter('relationship_date'), reverse=False)
-        description = ""
-        e = {}
-        for ipl in ip_list:
-            ip = IP.objects(ip=ipl.object_id,
-                            source__name__in=sources).first()
-            if ipl['relationship_date'] is None:
-                continue
-            e['id'] = event_id
-            e['date_display'] = "hour"
-            e['importance'] = 20
-            e['icon'] = "halfcircle_blue.png"
-            event_id += 1
-            if ip and ip.ip in offline:
-                if state == "on":
-                    e['enddate'] = datetime.datetime.strftime(ipl['relationship_date'],
-                                                            settings.PY_DATETIME_FORMAT)
-                    e['description'] = description
-                    state = "off"
-                    events.append(e)
-                    description = ""
-                    e = {}
-                elif state == "off":
-                    pass
-            elif ip:
-                if state == "on":
-                    description += "<br /><b><a style=\"display: inline;\" href=\"%s\">%s</a>:</b> %s" % (reverse('crits.ips.views.ip_detail', args=[ip.ip]), ip.ip, ipl['relationship_date'])
-                elif state == "off":
-                    e['startdate'] = datetime.datetime.strftime(ipl['relationship_date'],
-                                                                settings.PY_DATETIME_FORMAT)
-                    e['title'] = domain
-                    description += "<br /><b><a style=\"display: inline;\" href=\"%s\">%s</a>:</b> %s" % (reverse('crits.ips.views.ip_detail', args=[ip.ip]), ip.ip, ipl['relationship_date'])
-                    state = "on"
-    return events
-
-def email_timeline(query, analyst, sources):
-    """
-    Query for emails, format that data for timeline view, and return them.
-
-    :param query: The query to use to find the Emails.
-    :type query: dict
-    :param analyst: The user requesting the timeline.
-    :type analyst: str
-    :param sources: List of user's sources.
-    :type sources: list
-    :returns: list of dictionaries.
-    """
-
-    emails = Email.objects(__raw__=query)
-    events = []
-    event_id = 0
-    for email in emails:
-        email.sanitize_sources(username=analyst,
-                                sources=sources)
-        email = email.to_dict()
-        if "source" in email and email["source"][0] is not None:
-            e = {}
-            e['title'] = ""
-            e['id'] = event_id
-            e['date_display'] = "hour"
-            e['importance'] = 20
-            e['icon'] = "halfcircle_blue.png"
-            event_id += 1
-            if "from" in email:
-                if email["from"]:
-                    e['title'] += email["from"]
-            if "campaign" in email:
-                try:
-                    if "name" in email["campaign"][0]:
-                        e['title'] += " (%s)" % email["campaign"][0]["name"]
-                except:
-                    pass
-            if "source" in email:
-                if "name" in email["source"][0]:
-                    e['title'] += " (%s)" % email["source"][0]["name"]
-            description = ""
-            sources = []
-            if "from" in email:
-                description += "<br /><b>%s</b>: <a style=\"display: inline;\" href=\"%s\">%s</a>" % \
-                               (email["from"],
-                                reverse('crits.emails.views.email_detail', args=[email['_id']]),
-                                email["from"])
-            if "isodate" in email:
-                e['startdate'] = "%s" % email["isodate"]
-            else:
-                if "source" in email:
-                    e['startdate'] = "%s" % email["source"][0]['instances'][0]["date"]
-            if "source" in email:
-                description += "<br /><hr><b>Source:</b>"
-                for source in email["source"]:
-                    if "name" in source and "instances" in source:
-                        description += "<br /><b>%s</b>: %s" % (source["name"],
-                                                                source['instances'][0]["date"])
-            e['description'] = description
-            events.append(e)
-    return events
-
-def indicator_timeline(query, analyst, sources):
-    """
-    Query for indicators, format that data for timeline view, and return them.
-
-    :param query: The query to use to find the Indicators.
-    :type query: dict
-    :param analyst: The user requesting the timeline.
-    :type analyst: str
-    :param sources: List of user's sources.
-    :type sources: list
-    :returns: list of dictionaries.
-    """
-
-    indicators = Indicator.objects(__raw__=query)
-    events = []
-    event_id = 0
-    for indicator in indicators:
-        indicator.sanitize_sources(username=analyst,
-                                   sources=sources)
-        indicator = indicator.to_dict()
-        e = {}
-        e['title'] = indicator['value']
-        e['id'] = event_id
-        e['date_display'] = "hour"
-        e['importance'] = 20
-        e['icon'] = "halfcircle_blue.png"
-        event_id += 1
-        e['startdate'] = indicator['created'].strftime("%Y-%m-%d %H:%M:%S.%Z")
-        description = ""
-        description += "<br /><b>Value</b>: <a style=\"display: inline;\" href=\"%s\">%s</a>" % (reverse('crits.indicators.views.indicator', args=[indicator['_id']]), indicator['value'])
-        description += "<br /><b>Type</b>: %s" % indicator['type']
-        description += "<br /><b>Created</b>: %s" % indicator['created']
-        e['description'] = description
-        events.append(e)
-    return events
 
 def generate_user_profile(username, request):
     """
@@ -2972,7 +2753,7 @@ def generate_user_profile(username, request):
     user_source_access.sort()
     limit = 5
 
-    user_info = CRITsUser.objects(username=username).first()
+    user_info = CRIPTsUser.objects(username=username).first()
     if not user_info:
         return {"status": "ERROR", "message": "User not found"}
 
@@ -3134,7 +2915,7 @@ def generate_user_profile(username, request):
         else:
             count = 0
         total_favorites += count
-        url = reverse('crits.core.views.favorites_list', args=(type_, 'inline'))
+        url = reverse('cripts.core.views.favorites_list', args=(type_, 'inline'))
         collected_favorites[type_] = {
                                        'count': count,
                                        'url': url
@@ -3167,7 +2948,7 @@ def generate_favorites_jtable(request, type_, option):
 
     :param request: The request for this jtable.
     :type request: :class:`django.http.HttpRequest`
-    :param type_: The type of CRITs object.
+    :param type_: The type of CRIPTs object.
     :type type_: str
     :returns: :class:`django.http.HttpResponse`
     """
@@ -3180,7 +2961,7 @@ def generate_favorites_jtable(request, type_, option):
         details_url_key = mapper['details_url_key']
         fields = mapper['fields']
 
-        user = CRITsUser.objects(username=request.user.username).only('favorites').first()
+        user = CRIPTsUser.objects(username=request.user.username).only('favorites').first()
         favorites = user.favorites.to_dict()
         ids = [ObjectId(s) for s in favorites[type_]]
         query = {'_id': {'$in': ids}}
@@ -3198,7 +2979,7 @@ def generate_favorites_jtable(request, type_, option):
     jtopts = {
         'title': type_ + 's',
         'default_sort': mapper['default_sort'],
-        'listurl': reverse('crits.core.views.favorites_list', args=(type_, 'jtlist')),
+        'listurl': reverse('cripts.core.views.favorites_list', args=(type_, 'jtlist')),
         'searchurl': reverse(mapper['searchurl']),
         'fields': mapper['jtopts_fields'],
         'hidden_fields': mapper['hidden_fields'],
@@ -3246,11 +3027,11 @@ def generate_user_preference(request,section=None,key=None,name=None):
     # Returned as an array to maintain the order
     # could also have a key/value and a ordered array
 
-    from crits.core.forms import PrefUIForm, NavMenuForm, ToastNotificationConfigForm
+    from cripts.core.forms import PrefUIForm, NavMenuForm, ToastNotificationConfigForm
 
     toast_notifications_title = "Toast Notifications"
 
-    config = CRITsConfig.objects().first()
+    config = CRIPTsConfig.objects().first()
     if not config.enable_toasts:
         toast_notifications_title += " (currently globally disabled by an admin)"
 
@@ -3322,7 +3103,7 @@ def reset_user_password(username=None, action=None, email=None,
         response = {'success': False, 'message': 'Invalid action'}
         return HttpResponse(json.dumps(response, default=json_handler),
                             content_type="application/json")
-    user = CRITsUser.objects(username=username, email=email).first()
+    user = CRIPTsUser.objects(username=username, email=email).first()
     if not user:
         # make it seem like this worked even if it didn't to prevent people
         # from brute forcing usernames and email addresses.
@@ -3331,14 +3112,14 @@ def reset_user_password(username=None, action=None, email=None,
                             content_type="application/json")
     if action == 'send_email':
         rcode = user.set_reset_code(analyst)
-        crits_config = CRITsConfig.objects().first()
-        if crits_config.crits_email_end_tag:
-            subject = "CRITs Password Reset" + crits_config.crits_email_subject_tag
+        cripts_config = CRIPTsConfig.objects().first()
+        if cripts_config.cripts_email_end_tag:
+            subject = "CRIPTs Password Reset" + cripts_config.cripts_email_subject_tag
         else:
-            subject = crits_config.crits_email_subject_tag + "CRITs Password Reset"
+            subject = cripts_config.cripts_email_subject_tag + "CRIPTs Password Reset"
         body = """You are receiving this email because someone has requested a
 password reset for your account. If it was not you, please log
-into CRITs immediately which will remove the reset code from your
+into CRIPTs immediately which will remove the reset code from your
 account. If it was you, here is your reset code:\n\n
 """
         body += "%s\n\n" % rcode
@@ -3434,17 +3215,17 @@ def login_user(username, password, next_url=None, user_agent=None,
 
     error = 'Unknown user or bad password.'
     response = {}
-    crits_config = CRITsConfig.objects().first()
-    if not crits_config:
+    cripts_config = CRIPTsConfig.objects().first()
+    if not cripts_config:
         response['success'] = False
         response['type'] = "login_failed"
         response['message'] = error
         return response
 
     if request:
-        totp = crits_config.totp_web
+        totp = cripts_config.totp_web
     else:
-        totp = crits_config.totp_cli
+        totp = cripts_config.totp_cli
 
     # Do the username and password authentication
     # TOTP is passed here so that authenticate() can check if
@@ -3459,7 +3240,7 @@ def login_user(username, password, next_url=None, user_agent=None,
     if user:
         if totp == 'Required' or (totp == 'Optional' and user.totp):
             # Remote user auth'd but has not seen TOTP screen yet
-            if crits_config.remote_user and not totp_pass:
+            if cripts_config.remote_user and not totp_pass:
                 response['success'] = False
                 response['type'] = "totp_required"
                 response['message'] = "TOTP required"
@@ -3477,7 +3258,7 @@ def login_user(username, password, next_url=None, user_agent=None,
             elif not secret and totp_pass:
                 response['success'] = False
                 response['type'] = "secret_generated"
-                res = save_user_secret(username, totp_pass, "crits", (200,200))
+                res = save_user_secret(username, totp_pass, "cripts", (200,200))
                 if res['success']:
                     user.reload()
                     secret = res['secret']
@@ -3509,8 +3290,8 @@ def login_user(username, password, next_url=None, user_agent=None,
             user.invalid_login_attempts = 0
             user.password_reset.reset_code = ""
             user.save()
-            if crits_config and request:
-                request.session.set_expiry(crits_config.session_timeout * 60 * 60)
+            if cripts_config and request:
+                request.session.set_expiry(cripts_config.session_timeout * 60 * 60)
             elif request:
                 request.session.set_expiry(settings.SESSION_TIMEOUT)
             if request:
@@ -3522,7 +3303,7 @@ def login_user(username, password, next_url=None, user_agent=None,
                 return response
             response['success'] = True
             if 'message' not in response:
-                response['message'] = reverse('crits.dashboards.views.dashboard')
+                response['message'] = reverse('cripts.dashboards.views.dashboard')
             return response
         else:
             logger.info("Attempted login to a disabled account detected: %s" %
@@ -3584,49 +3365,21 @@ def generate_global_search(request):
     searchtext = request.GET['q']
     if ObjectId.is_valid(searchtext):
         for obj_type, url, key in [
-                ['Actor', 'crits.actors.views.actor_detail', 'id'],
-                ['Backdoor', 'crits.backdoors.views.backdoor_detail', 'id'],
-                ['Campaign', 'crits.campaigns.views.campaign_details', 'name'],
-                ['Certificate', 'crits.certificates.views.certificate_details', 'md5'],
-                ['Domain', 'crits.domains.views.domain_detail', 'domain'],
-                ['Email', 'crits.emails.views.email_detail', 'id'],
-                ['Event', 'crits.events.views.view_event', 'id'],
-                ['Exploit', 'crits.exploits.views.exploit_detail', 'id'],
-                ['Indicator', 'crits.indicators.views.indicator', 'id'],
-                ['IP', 'crits.ips.views.ip_detail', 'ip'],
-                ['PCAP', 'crits.pcaps.views.pcap_details', 'md5'],
-                ['RawData', 'crits.raw_data.views.raw_data_details', 'id'],
-                ['Sample', 'crits.samples.views.detail', 'md5'],
-                ['Signature', 'crits.signatures.views.signature_detail', 'id'],
-                ['Target', 'crits.targets.views.target_info', 'email_address']]:
+                ['Event', 'cripts.events.views.view_event', 'id'],
+                ]:
             obj = class_from_id(obj_type, searchtext)
             if obj:
                 return {'url': url, 'key': obj[key]}
 
     # Importing here to prevent a circular import with Services and runscript.
-    from crits.services.analysis_result import AnalysisResult
+    from cripts.services.analysis_result import AnalysisResult
 
     results = []
     for col_obj,url in [
-                    [Actor, "crits.actors.views.actors_listing"],
-                    [AnalysisResult, "crits.services.views.analysis_results_listing"],
-                    [Backdoor, "crits.backdoors.views.backdoors_listing"],
-                    [Campaign, "crits.campaigns.views.campaigns_listing"],
-                    [Certificate, "crits.certificates.views.certificates_listing"],
-                    [Comment, "crits.comments.views.comments_listing"],
-                    [Domain, "crits.domains.views.domains_listing"],
-                    [Email, "crits.emails.views.emails_listing"],
-                    [Event, "crits.events.views.events_listing"],
-                    [Exploit, "crits.exploits.views.exploits_listing"],
-                    [Indicator,"crits.indicators.views.indicators_listing"],
-                    [IP, "crits.ips.views.ips_listing"],
-                    [PCAP, "crits.pcaps.views.pcaps_listing"],
-                    [RawData, "crits.raw_data.views.raw_data_listing"],
-                    [Sample, "crits.samples.views.samples_listing"],
-                    [Screenshot, "crits.screenshots.views.screenshots_listing"],
-                    [Signature, "crits.signatures.views.signatures_listing"],
-                    [Target, "crits.targets.views.targets_listing"]]:
-        ctype = col_obj._meta['crits_type']
+                    [AnalysisResult, "cripts.services.views.analysis_results_listing"],
+                    [Comment, "cripts.comments.views.comments_listing"],
+                    ]:
+        ctype = col_obj._meta['cripts_type']
         resp = get_query(col_obj, request)
         if resp['Result'] == "ERROR":
             return resp
@@ -3752,7 +3505,7 @@ def generate_audit_jtable(request, option):
     type_ = "audit"
     if option == "jtlist":
         # Sets display url
-        details_url = 'crits.core.views.details'
+        details_url = 'cripts.core.views.details'
         details_url_key = "target_id"
         response = jtable_ajax_list(obj_type,
                                     details_url,
@@ -3764,10 +3517,10 @@ def generate_audit_jtable(request, option):
     jtopts = {
         'title': "Audit Log Entries",
         'default_sort': "date DESC",
-        'listurl': reverse('crits.core.views.%s_listing' % type_,
+        'listurl': reverse('cripts.core.views.%s_listing' % type_,
                            args=('jtlist',)),
         'deleteurl': '',
-        'searchurl': reverse('crits.core.views.%s_listing' % type_),
+        'searchurl': reverse('cripts.core.views.%s_listing' % type_),
         'fields': ["details",
                    "user",
                    "type",
@@ -3799,59 +3552,21 @@ def details_from_id(type_, id_):
     """
     Determine the details URL based on type and ID and redirect there.
 
-    :param type_: The CRITs type to search for.
+    :param type_: The CRIPTs type to search for.
     :type type_: str
     :param id_: The ObjectId to search for.
     :type id_: str
     :returns: str
     """
 
-    type_map = {'Actor': 'crits.actors.views.actor_detail',
-                'Backdoor': 'crits.backdoors.views.backdoor_detail',
-                'Campaign': 'crits.campaigns.views.campaign_details',
-                'Certificate': 'crits.certificates.views.certificate_details',
-                'Domain': 'crits.domains.views.domain_detail',
-                'Email': 'crits.emails.views.email_detail',
-                'Event': 'crits.events.views.view_event',
-                'Exploit': 'crits.exploits.views.exploit_detail',
-                'Indicator': 'crits.indicators.views.indicator',
-                'IP': 'crits.ips.views.ip_detail',
-                'PCAP': 'crits.pcaps.views.pcap_details',
-                'RawData': 'crits.raw_data.views.raw_data_details',
-                'Sample': 'crits.samples.views.detail',
-                'Screenshot': 'crits.screenshots.views.render_screenshot',
-                'Signature': 'crits.signatures.views.signature_detail',
-                'Target': 'crits.targets.views.target_info',
+    type_map = {
+                'Event': 'cripts.events.views.view_event',
                 }
     if type_ in type_map and id_:
         if type_ == 'Campaign':
             arg = class_from_id(type_, id_)
             if arg:
                 arg = arg.name
-        elif type_ == 'Certificate':
-            arg = class_from_id(type_, id_)
-            if arg:
-                arg = arg.md5
-        elif type_ == 'Domain':
-            arg = class_from_id(type_, id_)
-            if arg:
-                arg = arg.domain
-        elif type_ == 'IP':
-            arg = class_from_id(type_, id_)
-            if arg:
-                arg = arg.ip
-        elif type_ == 'PCAP':
-            arg = class_from_id(type_, id_)
-            if arg:
-                arg = arg.md5
-        elif type_ == 'Sample':
-            arg = class_from_id(type_, id_)
-            if arg:
-                arg = arg.md5
-        elif type_ == 'Target':
-            arg = class_from_id(type_, id_)
-            if arg:
-                arg = arg.email_address
         else:
             arg = id_
 
@@ -3868,7 +3583,7 @@ def audit_entry(self, username, type_, new_doc=False):
 
     :param self: The object.
     :type self: class which inherits from
-                :class:`crits.core.crits_mongoengine.CritsBaseAttributes`
+                :class:`cripts.core.cripts_mongoengine.CriptsBaseAttributes`
     :param username: The user performing the action.
     :type username: str
     :param type_: The type of action being performed ("save", "delete").
@@ -3881,7 +3596,7 @@ def audit_entry(self, username, type_, new_doc=False):
         # If no username, skip the audit log
         return
 
-    my_type = self._meta['crits_type']
+    my_type = self._meta['cripts_type']
     # don't audit audits
     if my_type in ("AuditLog", "Service"):
         return
@@ -3934,7 +3649,7 @@ def ticket_add(type_, id_, ticket, user, **kwargs):
     """
     Add a ticket to a top-level object.
 
-    :param type_: The CRITs type of the top-level object.
+    :param type_: The CRIPTs type of the top-level object.
     :type type_: str
     :param id_: The ObjectId to search for.
     :type id_: str
@@ -3966,7 +3681,7 @@ def ticket_update(type_, id_, ticket, user=None, **kwargs):
     """
     Update a ticket for a top-level object.
 
-    :param type_: The CRITs type of the top-level object.
+    :param type_: The CRIPTs type of the top-level object.
     :type type_: str
     :param id_: The ObjectId to search for.
     :type id_: str
@@ -4000,7 +3715,7 @@ def ticket_remove(type_, id_, date, user, **kwargs):
     """
     Remove a ticket from a top-level object.
 
-    :param type_: The CRITs type of the top-level object.
+    :param type_: The CRIPTs type of the top-level object.
     :type type_: str
     :param id_: The ObjectId to search for.
     :type id_: str
@@ -4053,7 +3768,7 @@ def alter_sector_list(obj, sectors, val):
 
     :param obj: The top-level object instantiated class.
     :type obj: class which inherits from
-               :class:`crits.core.crits_mongoengine.CritsBaseAttributes`.
+               :class:`cripts.core.cripts_mongoengine.CriptsBaseAttributes`.
     :param sectors: List of sectors.
     :type sectors: list
     :param val: The amount to change the count by.
@@ -4063,7 +3778,7 @@ def alter_sector_list(obj, sectors, val):
     # This dictionary is used to set values on insert only.
     # I haven't found a way to get mongoengine to use the defaults
     # when doing update_one() on the queryset.
-    soi = { k: 0 for k in Sector._meta['schema_doc'].keys() if k != 'name' and k != obj._meta['crits_type'] }
+    soi = { k: 0 for k in Sector._meta['schema_doc'].keys() if k != 'name' and k != obj._meta['cripts_type'] }
     soi['schema_version'] = Sector._meta['latest_schema_version']
 
     # We are using mongo_connector here because mongoengine does not have
@@ -4072,7 +3787,7 @@ def alter_sector_list(obj, sectors, val):
     sectors_col = mongo_connector(settings.COL_SECTOR_LISTS)
     for name in sectors:
         sectors_col.update({'name': name},
-                           {'$inc': {obj._meta['crits_type']: val},
+                           {'$inc': {obj._meta['cripts_type']: val},
                             '$setOnInsert': soi},
                            upsert=True)
 
@@ -4116,28 +3831,15 @@ def generate_sector_jtable(request, option):
     """
 
     if option == 'jtlist':
-        details_url = 'crits.core.views.sector_list'
+        details_url = 'cripts.core.views.sector_list'
         details_key = 'name'
         response = jtable_ajax_list(Sector,
                                     details_url,
                                     details_key,
                                     request,
                                     includes=['name',
-                                              'Actor',
-                                              'Backdoor',
-                                              'Campaign',
-                                              'Certificate',
-                                              'Domain',
-                                              'Email',
                                               'Event',
-                                              'Exploit',
-                                              'Indicator',
-                                              'IP',
-                                              'PCAP',
-                                              'RawData',
-                                              'Sample',
-                                              'Signature',
-                                              'Target'])
+                                              ])
         return HttpResponse(json.dumps(response, default=json_handler),
                             content_type='application/json')
 
@@ -4147,7 +3849,7 @@ def generate_sector_jtable(request, option):
     jtopts = {'title': 'Sectors',
               'fields': fields,
               'listurl': 'jtlist',
-              'searchurl': reverse('crits.core.views.global_search_listing'),
+              'searchurl': reverse('cripts.core.views.global_search_listing'),
               'default_sort': 'name ASC',
               'no_sort': [],
               'details_link': ''}
@@ -4156,14 +3858,14 @@ def generate_sector_jtable(request, option):
         if ctype == 'id':
             continue
         elif ctype == 'name':
-            url = reverse('crits.core.views.global_search_listing') + '?search_type=sectors&search=Search&force_full=1'
+            url = reverse('cripts.core.views.global_search_listing') + '?search_type=sectors&search=Search&force_full=1'
         else:
             lower = ctype.lower()
             if lower != "rawdata":
-                url = reverse('crits.%ss.views.%ss_listing' % (lower, lower))
+                url = reverse('cripts.%ss.views.%ss_listing' % (lower, lower))
             else:
                 lower = "raw_data"
-                url = reverse('crits.%s.views.%s_listing' % (lower, lower))
+                url = reverse('cripts.%s.views.%s_listing' % (lower, lower))
 
         for field in jtable['fields']:
             if field['fieldname'].startswith("'" + ctype):
@@ -4186,7 +3888,7 @@ def modify_sector_list(itype, oid, sectors, analyst):
     """
     Modify the sector list for a top-level object.
 
-    :param itype: The CRITs type of the top-level object to modify.
+    :param itype: The CRIPTs type of the top-level object to modify.
     :type itype: str
     :param oid: The ObjectId to search for.
     :type oid: str
@@ -4222,9 +3924,9 @@ def get_bucket_autocomplete(term):
 
 def add_new_action(action, object_types, preferred, analyst):
     """
-    Add a new action to CRITs.
+    Add a new action to CRIPTs.
 
-    :param action: The action to add to CRITs.
+    :param action: The action to add to CRIPTs.
     :type action: str
     :param object_types: The TLOs this is for.
     :type object_types: list

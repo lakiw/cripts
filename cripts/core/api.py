@@ -14,13 +14,13 @@ from tastypie.authentication import SessionAuthentication, ApiKeyAuthentication
 from tastypie.utils.mime import build_content_type
 from tastypie_mongoengine.resources import MongoEngineResource
 
-from crits.core.data_tools import format_file, create_zip
-from crits.core.handlers import remove_quotes, generate_regex
-from crits.core.user_tools import user_sources
+from cripts.core.data_tools import format_file, create_zip
+from cripts.core.handlers import remove_quotes, generate_regex
+from critps.core.user_tools import user_sources
 
 
 # The following leverages code from the Tastypie library.
-class CRITsApiKeyAuthentication(ApiKeyAuthentication):
+class CRIPTsApiKeyAuthentication(ApiKeyAuthentication):
     """
     API Key Authentication Class.
     """
@@ -44,8 +44,8 @@ class CRITsApiKeyAuthentication(ApiKeyAuthentication):
             return self._unauthorized()
 
         try:
-            from crits.core.user import CRITsUser
-            user = CRITsUser.objects(username=username).first()
+            from cripts.core.user import CRIPTsUser
+            user = CRIPTsUser.objects(username=username).first()
         except:
             return self._unauthorized()
 
@@ -80,7 +80,7 @@ class CRITsApiKeyAuthentication(ApiKeyAuthentication):
         return False
 
 
-class CRITsSessionAuthentication(SessionAuthentication):
+class CRIPTsSessionAuthentication(SessionAuthentication):
     """
     API Authentication leveraging an existing Django browser session.
     """
@@ -97,9 +97,9 @@ class CRITsSessionAuthentication(SessionAuthentication):
         return request.user.username
 
 
-class CRITsSerializer(Serializer):
+class CRIPTsSerializer(Serializer):
     """
-    Custom serializer for CRITs.
+    Custom serializer for CRIPTs.
     """
 
     formats = ['json', 'xml', 'yaml', 'file']
@@ -286,15 +286,15 @@ class CRITsSerializer(Serializer):
         return data
 
 
-class CRITsAPIResource(MongoEngineResource):
+class CRIPTsAPIResource(MongoEngineResource):
     """
-    Standard CRITs API Resource.
+    Standard CRIPTs API Resource.
     """
 
     class Meta:
         default_format = "application/json"
 
-    def crits_response(self, content, status=200):
+    def cripts_response(self, content, status=200):
         """
         An amazing hack so we can return our own custom JSON response. Instead
         of having the ability to craft and return an HttpResponse, Tastypie
@@ -303,7 +303,7 @@ class CRITsAPIResource(MongoEngineResource):
         The content should be a dict with keys of:
 
             - return_code: 0 (success), 1 (failure), etc. for custom returns.
-            - type: The CRITs TLO type (Sample, Email, etc.)
+            - type: The CRIPTs TLO type (Hash, Email, etc.)
             - id: The ObjectId (as a string) of the TLO. (optional if not
                   available)
             - message: A custom message you wish to return.
@@ -392,7 +392,7 @@ class CRITsAPIResource(MongoEngineResource):
                 else:
                     raise BadRequest("Expected filehandle, got string.")
             return data
-        return super(CRITsAPIResource, self).deserialize(request, data, format)
+        return super(CRIPTsAPIResource, self).deserialize(request, data, format)
 
     def get_object_list(self, request, klass, sources=True):
         """
@@ -403,12 +403,12 @@ class CRITsAPIResource(MongoEngineResource):
 
         :param request: Django request object (Required)
         :type request: :class:`django.http.HttpRequest`
-        :param klass: The CRITs top-level object to get.
+        :param klass: The CRIPTs top-level object to get.
         :type klass: class which inherits from
-                     :class:`crits.core.crits_mongoengine.CritsBaseAttributes`
+                     :class:`cripts.core.cripts_mongoengine.CriptsBaseAttributes`
         :param sources: If we should limit by source.
         :type sources: boolean
-        :returns: :class:`crits.core.crits_mongoengine.CritsQuerySet`
+        :returns: :class:`cripts.core.cripts_mongoengine.CriptsQuerySet`
         """
 
         querydict = {}
@@ -542,18 +542,18 @@ class CRITsAPIResource(MongoEngineResource):
         Placeholder for overriding the default tastypie function in the future.
         """
 
-        return super(CRITsAPIResource, self).obj_get_list(bundle=bundle, **kwargs)
+        return super(CRIPTsAPIResource, self).obj_get_list(bundle=bundle, **kwargs)
 
     def obj_get(self, bundle, **kwargs):
         """
         Placeholder for overriding the default tastypie function in the future.
         """
 
-        return super(CRITsAPIResource, self).obj_get(bundle=bundle, **kwargs)
+        return super(CRIPTsAPIResource, self).obj_get(bundle=bundle, **kwargs)
 
     def obj_create(self, bundle, **kwargs):
         """
-        Create an object in CRITs. Should be overridden by each
+        Create an object in CRIPTs. Should be overridden by each
         individual top-level resource.
 
         :returns: NotImplementedError if the resource doesn't override.
@@ -563,19 +563,16 @@ class CRITsAPIResource(MongoEngineResource):
 
     def obj_update(self, bundle, **kwargs):
         """
-        Update an object in CRITs. Should be overridden by each
+        Update an object in CRIPTs. Should be overridden by each
         individual top-level resource.
 
         :returns: NotImplementedError if the resource doesn't override.
         """
 
-        import crits.actors.handlers as ah
-        import crits.core.handlers as coreh
-        import crits.objects.handlers as objh
-        import crits.relationships.handlers as relh
-        import crits.services.handlers as servh
-        import crits.signatures.handlers as sigh
-        import crits.indicators.handlers as indh
+        import cripts.core.handlers as coreh
+        import cripts.objects.handlers as objh
+        import cripts.relationships.handlers as relh
+        import cripts.services.handlers as servh
 
         actions = {
             'Common': {
@@ -658,7 +655,7 @@ class CRITsAPIResource(MongoEngineResource):
         if atype is None:
             content['return_code'] = 1
             content['message'] = "'%s' is not a valid resource." % type_
-            self.crits_response(content)
+            self.cripts_response(content)
         action_type = atype.get(action, None)
         if action_type is None:
             atype = actions.get('Common')
@@ -688,11 +685,11 @@ class CRITsAPIResource(MongoEngineResource):
         else:
             content['return_code'] = 1
             content['message'] = "'%s' is not a valid action." % action
-        self.crits_response(content)
+        self.cripts_response(content)
 
     def obj_delete_list(self, bundle, **kwargs):
         """
-        Delete list of objects in CRITs. Should be overridden by each
+        Delete list of objects in CRIPTs. Should be overridden by each
         individual top-level resource.
 
         :returns: NotImplementedError if the resource doesn't override.
@@ -702,7 +699,7 @@ class CRITsAPIResource(MongoEngineResource):
 
     def obj_delete(self, bundle, **kwargs):
         """
-        Delete an object in CRITs. Should be overridden by each
+        Delete an object in CRIPTs. Should be overridden by each
         individual top-level resource.
 
         :returns: NotImplementedError if the resource doesn't override.
@@ -710,19 +707,19 @@ class CRITsAPIResource(MongoEngineResource):
 
         raise NotImplementedError('You cannot currently delete this object through the API.')
 
-    def resource_name_from_type(self, crits_type):
+    def resource_name_from_type(self, cripts_type):
         """
-        Take a CRITs type and convert it to the appropriate API resource name.
+        Take a CRIPTs type and convert it to the appropriate API resource name.
 
-        :param crits_type: The CRITs type.
-        :type crits_type: str
+        :param cripts_type: The CRIPTs type.
+        :type cripts_type: str
         :returns: str
         """
 
-        if crits_type == "RawData":
+        if cripts_type == "RawData":
             return "raw_data"
         else:
-            return "%ss" % crits_type.lower()
+            return "%ss" % cripts_type.lower()
 
 
 def determine_format(request, serializer, default_format='application/json'):
@@ -735,7 +732,7 @@ def determine_format(request, serializer, default_format='application/json'):
     :param request: Django request object (Required)
     :type request: :class:`django.http.HttpRequest`
     :param serializer: The serializer being used.
-    :type serializer: :class:`crits.core.api.CRITsSerializer`
+    :type serializer: :class:`cripts.core.api.CRIPTsSerializer`
     :param default_format: The format to respond in.
     :type default_format: str
     :returns: str

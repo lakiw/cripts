@@ -1,6 +1,6 @@
 from django.conf import settings
 
-from crits.config.config import CRITsConfig
+from cripts.config.config import CRIPTsConfig
 
 def modify_configuration(forms, analyst):
     """
@@ -13,9 +13,9 @@ def modify_configuration(forms, analyst):
     :returns: dict with key "message"
     """
 
-    config = CRITsConfig.objects().first()
+    config = CRIPTsConfig.objects().first()
     if not config:
-        config = CRITsConfig()
+        config = CRIPTsConfig()
 
     data = None
     for form in forms:
