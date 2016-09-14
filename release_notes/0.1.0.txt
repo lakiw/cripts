@@ -1,0 +1,4 @@
+CRIPTs 0.1.0 Release Notes:
+
+Basically ripping things out of CRITs, renaming files, and trying to better understand the code.
+It is going to be a bit before this will even run, let alone be useful

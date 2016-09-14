@@ -1,0 +1,506 @@
+/* expand/collapse */
+
+span.error_page {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 500px;
+    height: 200px;
+    margin: -250px 0 0 -250px;
+    text-align: center;
+    font-size: large;
+}
+
+#notifications {
+    /* fixate the notifications div at the bottom right of the screen */
+    position: fixed;
+    bottom: 30px;
+    right: 20px;
+    padding-bottom: 10px;
+    padding-right: 10px;
+    text-align: center;
+    width: 350px;
+}
+
+#close_notifications, #notifications_count {
+    background-color: white;
+    border-style: solid;
+    border-width: thin;
+    padding-right: 40px;
+    padding-left: 40px;
+}
+
+span.noty_modified {
+    font-style: italic;
+}
+
+.noty_message {
+    font-size: 12px !important;
+}
+
+li.sf-firstrow a.sf-level0 {
+    border-width: 0;
+    background-color:inherit;
+    height: 10px;
+}
+
+table .collapsible {
+    padding: 0 0 3px 0;
+}
+
+table.chart tbody td.collapsible a { /*, th a#toggleAll {*/
+    margin: 2px;
+    display: block;
+    width: 15px;
+    height: 15px;
+    outline: 0;
+    /*background: url(/css/images/ui-icons_222222_256x240.png) no-repeat -32px -16px;  */
+}
+
+table.chart tbody td.collapsible a {
+    margin: 2px;
+    display: block;
+    width: 15px;
+    height: 15px;
+    outline: 0;
+/*  background: url(/css/images/ui-icons_222222_256x240.png) no-repeat -64px -16px;  */
+}
+
+table#source_listing tbody td span {
+    float: none;
+}
+
+table#source_listing tbody td span.heading {
+    font-weight:bold;
+}
+
+table.chart tbody td a.ui-icon, table.vertical tbody td a#toggleAll {
+    display: block;
+    float: right;
+}
+
+table.vertical tbody td.longtext {
+  word-break: normal;
+  white-space: pre-line;
+}
+
+.clearboth {
+    clear: both;
+}
+
+.center {
+	text-align:center;
+}
+.floatright, .right {
+    display: block;
+    float: right;
+}
+
+.floatleft, .left {
+    display: block;
+    float: left;
+}
+
+table.chart tbody td a.ui-icon.ui-icon-plusthick {
+    float:none;
+}
+
+ul.errorlist {
+    margin: 0 !important;
+    padding: 0 !important;
+}
+
+select:focus, input:focus, textarea:focus {
+    border-style:solid;
+    outline: none;
+    border-color: #9ecaed;
+    box-shadow: 0 0 10px #9ecaed;
+}
+
+#tabnav .ui-tabs-active:not(.ui-state-disabled) {
+    border: 1px solid #5583ed;
+    border-color:#5583ed;
+    box-shadow: 0 0 4px #5583ed;
+    border-bottom-color: #ddd;
+}
+
+#tabnav .ui-tabs-active a {
+    color: #5583ed;
+}
+
+td highlight span:hover {
+    color: #5583ed;
+}
+
+table.form .errorlist li {
+    // It might look nicer if these were positioned to the right of the input dialog
+    // Not sure how to do that..
+    float: none;
+}
+
+.errorlist li {
+    font-size: 12px !important;
+    padding: 4px 5px 4px 25px;
+    margin: 0 0 3px 0;
+    border: 1px solid red;
+    color: white;
+    background: red url(/static/admin/img/icon_alert.gif) 5px .3em no-repeat;
+}
+
+.errorlist li a {
+    color: white;
+    text-decoration: underline;
+}
+
+td ul.errorlist {
+    margin: 0 !important;
+    padding: 0 !important;
+}
+
+td ul.errorlist li {
+    margin: 0 !important;
+}
+
+/* mirrors div.content top: needed to overrides html.mm-opened from mm-menu */
+html.mm-opened .mm-page,
+html.mm-opened #mm-blocker {
+    top: 25px;
+}
+
+.mm-search {
+    top: 24px;
+    z-index: 3;
+}
+
+.shortcut_keys_table tbody tr:nth-child(even){ background-color:#add8e6; }
+
+.shortcut_keys_table tbody tr:nth-child(odd){ background-color:#ffffff; }
+
+.shortcut_keys_table table{
+    text-align: center;
+}
+
+.shortcut_keys_table{
+    text-align: center;
+}
+
+.shortcut_keys_table th{
+    font-size: 16px;
+    padding-top: 25px;
+    text-align: left;
+    background-color:#ffffff
+}
+
+.shortcut_keys_table td{
+    vertical-align:left;
+    text-align:left;
+    padding:4px;
+    font-size:12px;
+    font-family:Arial;
+    font-weight:normal;
+    color:#000000;
+}
+
+.shortcut_keys_table td:first-child{
+    text-align:right;
+    white-space:nowrap;
+}
+
+.textbox {
+    padding-left: 3px;
+}
+
+/* Following kdb CSS taken from and modified from:
+   https://github.com/michaelhue/keyscss (MIT License) */
+
+/* Base style, essential for every key. */
+kbd.light {
+    display: inline;
+    display: inline-block;
+    min-width: 1em;
+    padding: .2em .3em;
+    font: normal .85em/1 "Lucida Grande", Lucida, Arial, sans-serif;
+    text-align: center;
+    text-decoration: none;
+    -moz-border-radius: .3em;
+    -webkit-border-radius: .3em;
+    font-family:Courier;
+    border-radius: .3em;
+    font-size:18px;
+    border: none;
+    cursor: default;
+    -moz-user-select: none;
+    -webkit-user-select: none;
+    user-select: none;
+}
+
+kbd.light {
+    background: rgb(250, 250, 250);
+    background: -moz-linear-gradient(top, rgb(210, 210, 210), rgb(255, 255, 255));
+    background: -webkit-gradient(linear, left top, left bottom, from(rgb(210, 210, 210)), to(rgb(255, 255, 255)));
+    color:  rgb(50, 50, 50);
+    text-shadow: 0 0 2px rgb(255, 255, 255);
+    -moz-box-shadow: inset 0 0 1px rgb(255, 255, 255), inset 0 0 .4em rgb(200, 200, 200), 0 .1em 0 rgb(130, 130, 130), 0 .11em 0 rgba(0, 0, 0, .4), 0 .1em .11em rgba(0, 0, 0, .9);
+    -webkit-box-shadow: inset 0 0 1px rgb(255, 255, 255), inset 0 0 .4em rgb(200, 200, 200), 0 .1em 0 rgb(130, 130, 130), 0 .11em 0 rgba(0, 0, 0, .4), 0 .1em .11em rgba(0, 0, 0, .9);
+    box-shadow: inset 0 0 1px rgb(255, 255, 255), inset 0 0 .4em rgb(200, 200, 200), 0 .1em 0 rgb(130, 130, 130), 0 .11em 0 rgba(0, 0, 0, .4), 0 .1em .11em rgba(0, 0, 0, .9);
+}
+
+A.noclick {
+    cursor: default;
+}
+
+.customQtip {
+    background-color: #6f6f6f;
+    border-color: #464646;
+    border-radius:5px;
+}
+
+.customQtip a{
+    color:white;
+}
+
+.eventCountWidth {
+    width:40px;
+}
+
+.campaignWidth {
+    width:150px;
+}
+
+.relationship_confidence_edit {
+    width:75px;
+}
+div.ui-state-disabled {
+    opacity: 1 !important;
+}
+
+.w2ui-col-group {
+	background-color:#dbdbdb !important;
+}
+
+.draggable.ui-draggable-dragging,
+.draggable.is-positioning-post-drag {
+  z-index: 2;
+}
+
+.draggable.ui-draggable {
+	cursor: move !important;
+}
+.draggable.ui-draggable-disabled {
+	cursor: pointer !important;
+}
+
+span.right.link a:link{
+    color:white;
+}
+
+
+
+.sunny-theme {
+	color:red !important;
+}
+.sunny-theme .w2ui-even{
+	background-color: #feffdb !important;
+}
+.sunny-theme .w2ui-col-group, .sunny-theme .w2ui-col-group a, .sunny-theme .w2ui-tab{
+	background-color: #ff7400 !important;
+    color:#fff77d !important;
+}
+.sunny-theme .w2ui-col-header{
+	color:red !important;
+    background-color:#fff77d !important;
+}
+.sunny-theme td {
+	border-color: orange !important;
+}
+.sunny-theme .w2ui-grid {
+    border-color: orange !important;
+}
+
+.ocean-theme {
+    color:black !important;
+}
+.ocean-theme .w2ui-even{
+    background-color: #ECF9FF !important;
+}
+.ocean-theme .w2ui-col-group, .ocean-theme .w2ui-col-group a, .ocean-theme .w2ui-tab{
+    color:white !important;
+    background-color:#0245E0 !important;
+}
+.ocean-theme .w2ui-col-header{
+    background-color: #808080 !important;
+    color:white !important;
+}
+.ocean-theme td {
+    border-color: black !important;
+}
+.ocean-theme .w2ui-grid {
+    border-color: black !important;
+}
+
+.forest-theme {
+    color:green !important;
+}
+.forest-theme .w2ui-even{
+    background-color: #EDFCEF !important;
+}
+.forest-theme .w2ui-col-group, .forest-theme .w2ui-col-group a, .forest-theme .w2ui-tab{
+    color:yellow !important;
+    background-color:green !important;
+}
+.forest-theme .w2ui-col-header{
+    background-color: #2bb300 !important;
+    color:yellow !important;
+}
+.forest-theme td {
+    border-color: green !important;
+}
+.forest-theme .w2ui-grid {
+    border-color: green !important;
+}
+
+
+.valentine-theme {
+    color:#FF3D00 !important;
+}
+.valentine-theme .w2ui-even{
+    background-color: #ffe8e8 !important;
+}
+.valentine-theme .w2ui-col-group, .valentine-theme .w2ui-col-group a, .valentine-theme .w2ui-tab{
+    color:#6709b8 !important;
+    background-color:red !important;
+}
+.valentine-theme .w2ui-col-header{
+    background-color: #6709b8 !important;
+    color:red !important;
+}
+.valentine-theme td {
+    border-color: red !important;
+}
+.valentine-theme .w2ui-grid {
+    border-color: red !important;
+}
+.draggable.ui-draggable-disabled {
+	cursor: pointer !important;
+}
+.theme-picker {
+	text-align:center;
+	margin:5px;
+	padding:5px;
+    width:30px;
+    height:30px;
+    border: 3px solid;
+}
+.theme-picker-default {
+	background-image: linear-gradient(#f9f9f9,#e4e4e4);
+	border-color: #dbdbdb;
+}
+.theme-picker-valentine {
+    background-color:#6709b8;
+    border-color:red;
+    color:#FF3D00;
+}
+.theme-picker-forest {
+    background-color:#2bb300;
+    border-color:green;
+    color:yellow;
+}
+.theme-picker-ocean {
+    background-color:#808080;
+    border-color:#0245E0;
+    color:white;
+}
+.theme-picker-sunny {
+    background-color:#fff77d;
+    border-color:#ff7400;
+    color:red;
+}
+#dashId {
+	border:none!important;
+	font-size: 20px;
+	font-weight: 700;
+}
+.ui-tabs .ui-tabs-nav li.ui-tabs-active {
+	margin-bottom:-2px !important;
+}
+.divider {
+	border-left:1px solid #ababab;
+	display: inline-block;
+}
+.gridster>* {
+	margin:0 !important;
+}
+.gridster li {
+	list-style-type: none;
+	padding-top: 10px;
+	padding-bottom: 10px;
+}
+ul.gridster {
+    padding-left: 0px !important;
+}
+.top.responsive, .z-11 {
+	z-index:11;
+}
+.edit-button {
+    margin:5px;
+}
+.shadowed {
+    -webkit-box-shadow: 2px 3px 5px 1px #adadad;
+    -moz-box-shadow: 2px 3px 5px 1px #adadad;
+    box-shadow: 2px 3px 5px 1px #adadad;
+    z-index:12;
+}
+#buttonBar i, #buttonBar button{
+    cursor:pointer;
+}
+#buttonBar button {
+    min-width:20px;
+    -webkit-border-radius: 0px !important;
+}
+#other-searches-dropdown {
+	max-height:400px;
+	overflow-y:auto;
+	right:10px;
+	top:48px;
+	width:250px;
+	z-index:11;
+}
+#other-searches-dropdown .other-search {
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    overflow: hidden;
+}
+.dropdown-gray {
+	border:1px solid #adadad;
+    border-top:none;
+    display:none;
+    position:absolute;
+    border-radius:0 0 5px 5px;
+    background-color: #EEE;
+}
+.dropdown-gray-option {
+	cursor:pointer;
+	padding:5px;
+}
+.dropdown-gray-option:hover {
+	border-radius:5px;
+    background: -webkit-linear-gradient(#ddd, #dedede, #ddd); /* For Safari 5.1 to 6.0 */
+    background: -o-linear-gradient(#ddd, #dedede, #ddd); /* For Opera 11.1 to 12.0 */
+    background: -moz-linear-gradient(#ddd, #dedede, #ddd); /* For Firefox 3.6 to 15 */
+    background: linear-gradient(#ddd, #dedede, #ddd); /* Standard syntax (must be last) */
+    -webkit-box-shadow:    1px 1px 1px 1px #adadad;
+    -moz-box-shadow: 1px 1px 1px 1px #adadad;
+    box-shadow:    1px 1px 1px 1px #adadad;
+}
+.edit-button {
+	margin:5px;
+}
+.shadowed {
+    -webkit-box-shadow: 2px 3px 5px 1px #adadad;;
+    -moz-box-shadow: 2px 3px 5px 1px #adadad;;
+    box-shadow: 2px 3px 5px 1px #adadad;
+    z-index:12;
+}
+#buttonBar i, #buttonBar button{
+	cursor:pointer;
+}
