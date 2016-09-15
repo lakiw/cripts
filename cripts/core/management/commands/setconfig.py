@@ -4,7 +4,7 @@ import os
 from optparse import make_option
 from django.core.management.base import BaseCommand, CommandError as CE
 
-from crits.config.config import CRITsConfig
+from cripts.config.config import CRIPTsConfig
 
 RESET_CONFIG_VARIABLE = "reset_config"
 CREATE_CONFIG_VARIABLE = "create_config"
@@ -20,7 +20,7 @@ class Command(BaseCommand):
                     action='store_true',
                     dest=RESET_CONFIG_VARIABLE,
                     default=False,
-                    help='Forces a reset of ALL CRITs configuration ' +
+                    help='Forces a reset of ALL CRIPTs configuration ' +
                             'settings by dropping the config collection ' +
                             'and then setting the to default values in the ' +
                             'target DB instance. This has the highest ' +
@@ -29,7 +29,7 @@ class Command(BaseCommand):
                     action='store_true',
                     dest=CREATE_CONFIG_VARIABLE,
                     default=False,
-                    help='Creates a new default CRITs config only if there ' +
+                    help='Creates a new default CRIPTs config only if there ' +
                             'is no default configuration in the target ' +
                             'DB instance. This has the second highest ' +
                             'precedence over other options.'),
@@ -37,8 +37,8 @@ class Command(BaseCommand):
                     action='store_true',
                     dest=REINSERT_CONFIG_VARIABLE,
                     default=False,
-                    help='Copies the old CRITs_config, inserts the copy, ' +
-                    'and then deletes the old CRITsConfig ' +
+                    help='Copies the old CRIPTs_config, inserts the copy, ' +
+                    'and then deletes the old CRIPTsConfig ' +
                     'This allows a document to "refresh" or explicitly ' +
                     'write the config fields to the database -- this ' +
                     'is due to the fact that variables are not written to ' +
@@ -58,11 +58,11 @@ class Command(BaseCommand):
            classification:\t\t<string> (ex: "unclassified")
            company_name:\t\t<string>
            create_unknown_user:\t\t<boolean> (ex: True, true, yes, or 1)
-           crits_message:\t\t<Login screen message string>
-           crits_email:\t\t\t<email address string>
-           crits_email_subject_tag:\t<string>
-           crits_email_end_tag:\t\t<boolean> (ex: True, true, yes, or 1)
-           crits_version:\t\t<X.X.X string>
+           cripts_message:\t\t<Login screen message string>
+           cripts_email:\t\t\t<email address string>
+           cripts_email_subject_tag:\t<string>
+           cripts_email_end_tag:\t\t<boolean> (ex: True, true, yes, or 1)
+           cripts_version:\t\t<X.X.X string>
            debug:\t\t\t<boolean> (ex: True, true, yes, or 1)
            depth_max:\t\t\t<integer>
            email_host:\t\t\t<string>
@@ -102,8 +102,8 @@ class Command(BaseCommand):
            totp_cli:\t\t\t<string> (ex: Disabled, Required, Optional)
            totp_web:\t\t\t<string> (ex: Disabled, Required, Optional)
            zip7_path:\t\t\t<full file path>
-           zip7_password:\t\t\t<string> (ex: infected)"""
-    help = 'Set a CRITs configuration option.'
+           zip7_password:\t\t\t<string> (ex: hashed)"""
+    help = 'Set a CRIPTs configuration option.'
 
     def handle(self, *args, **options):
         """
@@ -121,23 +121,23 @@ class Command(BaseCommand):
 
         if len(args) == 2 or reinsert_config_option == True:
             # Get the config
-            crits_config = create_config_if_not_exist();
+            cripts_config = create_config_if_not_exist();
 
             if len(args) == 2:
                 attr = args[0]
                 value = args[1]
 
                 # Check to make sure the attribute is a known attribute
-                if set_config_attribute(crits_config, attr, value) == False:
-                    raise CE('CRITs has no configuration option %s.' % attr)
+                if set_config_attribute(cripts_config, attr, value) == False:
+                    raise CE('CRIPTs has no configuration option %s.' % attr)
 
             # Save the config to the database
             if reinsert_config_option == True:
-                print "Performing a reinsert of the CRITs configuration."
-                reinsert_config(crits_config)
+                print "Performing a reinsert of the CRIPTs configuration."
+                reinsert_config(cripts_config)
             else:
-                print "Saving CRITs configuration."
-                crits_config.save()
+                print "Saving CRIPTs configuration."
+                cripts_config.save()
 
         elif reset_config_option == False and create_config_option == False and reinsert_config_option == False:
             raise CE('setconfig: Invalid Parameters! Only takes two ' +
@@ -145,27 +145,27 @@ class Command(BaseCommand):
 
 def create_config_if_not_exist():
     """
-    If the CRITsConfig already exists then the CRITsConfig is returned,
-    otherwise a new CRITsConfig will be created, saved, and returned.
+    If the CRIPTsConfig already exists then the CRIPTsConfig is returned,
+    otherwise a new CRIPTsConfig will be created, saved, and returned.
 
     Returns:
-        Returns the CRITsConfig if it already exists, otherwise a
-        default CRITsConfig is returned.
+        Returns the CRIPTsConfig if it already exists, otherwise a
+        default CRIPTsConfig is returned.
     """
 
-    crits_config = CRITsConfig.objects().first()
-    if not crits_config:
-        print "Creating a new CRITs configuration."
-        crits_config = CRITsConfig()
-        crits_config.save()
+    cripts_config = CRIPTsConfig.objects().first()
+    if not cripts_config:
+        print "Creating a new CRIPTs configuration."
+        cripts_config = CRIPTsConfig()
+        cripts_config.save()
     else:
-        print "A CRITs configuration already exists. Skipping default creation."
+        print "A CRPTs configuration already exists. Skipping default creation."
 
-    return crits_config
+    return cripts_config
 
 def reinsert_config(old_config):
     """
-    Copies old_config, inserts the copy, and then deletes the old CRITsConfig
+    Copies old_config, inserts the copy, and then deletes the old CRIPTsConfig
 
     This allows a document to "refresh" or explicitly write the config fields to
     the database -- this is due to the fact that variables are not written to
@@ -175,7 +175,7 @@ def reinsert_config(old_config):
     correct.
 
     Args:
-        crits_config: The CRITsConfig to copy, insert and delete
+        cripts_config: The CRIPTsConfig to copy, insert and delete
     """
 
     new_config = copy.deepcopy(old_config)
@@ -185,23 +185,23 @@ def reinsert_config(old_config):
 
 def force_reset_config():
     """
-    Resets the values for the CRITsConfig class by dropping the
-    database collection and then saving a new default CRITsConfig.
+    Resets the values for the CRIPTsConfig class by dropping the
+    database collection and then saving a new default CRIPTsConfig.
     """
 
-    print "Resetting CRITs configuration settings."
-    CRITsConfig.drop_collection();
+    print "Resetting CRIPTs configuration settings."
+    CRIPTsConfig.drop_collection();
 
-    crits_config = CRITsConfig();
-    crits_config.save();
+    cripts_config = CRIPTsConfig();
+    cripts_config.save();
 
-def set_config_attribute(crits_config, attr, value):
+def set_config_attribute(cripts_config, attr, value):
     """
-    Sets the value for the attribute for the input CRITsConfig. If the
+    Sets the value for the attribute for the input CRIPTsConfig. If the
     attribute doesn't exist then nothing happens.
 
     Args:
-        crits_config: The CRITsConfig to copy
+        cripts_config: The CRIPTsConfig to copy
         attr: The attribute to set
         value: The value to set for the input attribute
 
@@ -211,11 +211,11 @@ def set_config_attribute(crits_config, attr, value):
 
     is_successful = False;
 
-    if hasattr(crits_config, attr):
+    if hasattr(cripts_config, attr):
         if attr in ("enable_api", "create_unknown_user", "debug", "ldap_auth",
                     "ldap_tls", "remote_user", "secure_cookie", "enable_toasts",
                     "ldap_update_on_login", "query_caching",
-                    "crits_email_end_tag"):
+                    "cripts_email_end_tag"):
             if value in ('True', 'true', 'yes', '1'):
                 value = True
             elif value in ('False', 'false', 'no', '0'):
@@ -251,7 +251,7 @@ def set_config_attribute(crits_config, attr, value):
                 raise CE('totp_web/cli must be Optional, Required, or Disabled')
 
         print "Setting [" + str(attr) + "] to a value of [" + str(value) + "]"
-        setattr(crits_config, attr, value)
+        setattr(cripts_config, attr, value)
 
         is_successful = True
 

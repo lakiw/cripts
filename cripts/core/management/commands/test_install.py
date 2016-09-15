@@ -15,7 +15,7 @@ class Command(BaseCommand):
     Script Class.
     """
 
-    help = 'Check the CRITs install for necessary modules and configurations.'
+    help = 'Check the CRIPTs install for necessary modules and configurations.'
 
     def handle(self, *args, **options):
         """
@@ -28,7 +28,7 @@ class Command(BaseCommand):
         # Test python imports
         imports = [ 'anyjson',
                    'bson',
-                   'crits',
+                   'cripts',
                    'dateutil',
                    'gridfs',
                    'importlib',
@@ -52,7 +52,7 @@ class Command(BaseCommand):
                 print CE('Could not import %s. Is it installed properly?' % i)
                 # Required to continue script, so totally fail if these
                 # are missing.
-                if i in ('mongoengine', 'crits', 'pymongo'):
+                if i in ('mongoengine', 'cripts', 'pymongo'):
                     fail = True
 
         if fail:
@@ -103,24 +103,24 @@ class Command(BaseCommand):
                                     ssl=settings.MONGO_SSL)
         except:
             raise CE('Could not connect to Mongo Database. Is it running'
-                     ' and is CRITs configured to connect to it properly?')
+                     ' and is CRIPTs configured to connect to it properly?')
 
 
         # Check Configurations
-        import crits
-        config = crits.config.config.CRITsConfig.objects().first()
+        import cripts
+        config = cripts.config.config.CRIPTsConfig.objects().first()
         ld = config.log_directory
         if not os.path.exists(ld) and len(ld) > 0:
-            print CE('Configured CRITs log directory does not exist: %s' % ld)
+            print CE('Configured CRIPTs log directory does not exist: %s' % ld)
         td = config.temp_dir
         if not os.path.exists(td):
-            print CE('Configured CRITs temp directory does not exist: %s' % td)
+            print CE('Configured CRIPTs temp directory does not exist: %s' % td)
         zp = config.zip7_path
         if not os.path.exists(zp):
-            print CE('Configured CRITs zip path does not exist: %s' % zp)
+            print CE('Configured CRIPTs zip path does not exist: %s' % zp)
         for i in config.service_dirs:
             if not os.path.exists(i):
-                print CE('Configured CRITs service directory does not exist: %s' % i)
+                print CE('Configured CRIPTs service directory does not exist: %s' % i)
 
         print ("Installation check completed. Please fix any above errors before"
-               " attempting to use CRITs!")
+               " attempting to use CRIPTs!")

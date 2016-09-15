@@ -1,6 +1,6 @@
 from django.core.management.base import BaseCommand
 from optparse import make_option
-from crits.dashboards.dashboard import SavedSearch
+from cripts.dashboards.dashboard import SavedSearch
 
 class Command(BaseCommand):
     """
@@ -32,28 +32,14 @@ def migrate_all_searches():
 def convert_default_searches(search, field):
     title = search.name
     if field == "width":
-        if title == "Counts" or title == "Top Backdoors":
+        if title == "Counts":
             search.sizex = 10
-        elif title == "Top Campaigns":
-            search.sizex = 25
         else:
             search.sizex = 50
     elif field == "left":
-        if title == "Top Backdoors":
-            search.col = 10
-        elif title == "Top Campaigns":
-            search.col = 20
-        else:
-            search.col = 1
+        search.col = 1
     elif field == "top":
-        if title == "Recent Indicators":
-            search.row = 15
-        elif title == "Recent Emails":
-            search.row = 23
-        elif title == "Recent Samples":
-            search.row = 31
-        else:
-            search.row = 1
+        search.row = 1
         if title == "Counts":
             search.sizey == 13
          

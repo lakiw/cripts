@@ -1,10 +1,10 @@
 from django.core.mail import send_mail
 from django.core.management.base import BaseCommand
 from django.core.urlresolvers import reverse
-from crits.config.config import CRITsConfig
-from crits.notifications.notification import Notification
+from cripts.config.config import CRIPTsConfig
+from cripts.notifications.notification import Notification
 
-from crits.core.user import CRITsUser
+from cripts.core.user import CRIPTsUser
 
 class EmailNotification(object):
 
@@ -24,24 +24,24 @@ class EmailNotification(object):
         self.username = username
         self.email = email
 
-        # grab the CRITs url to use for links
-        crits_config = CRITsConfig.objects().first()
-        self.instance_url = crits_config.instance_url
+        # grab the CRIPTs url to use for links
+        cripts_config = CRIPTsConfig.objects().first()
+        self.instance_url = cripts_config.instance_url
         if self.instance_url.endswith("/"):
             self.instance_url = self.instance_url[:-1]
 
         # set the email address to send this email from
-        self.from_address = crits_config.crits_email
+        self.from_address = cripts_config.cripts_email
 
         # setup the email subject
-        if crits_config.crits_email_end_tag:
-            self.subject = "CRITs: Subscriptions and Notifications" + crits_config.crits_email_subject_tag
+        if cripts_config.cripts_email_end_tag:
+            self.subject = "CRIPTs: Subscriptions and Notifications" + cripts_config.cripts_email_subject_tag
         else:
-            self.subject = crits_config.crits_email_subject_tag + "CRITs: Subscriptions and Notifications"
+            self.subject = cripts_config.cripts_email_subject_tag + "CRIPTs: Subscriptions and Notifications"
 
         # start the body of the email
-        comments_url = self.instance_url + reverse('crits.comments.views.activity')
-        self.body = "Here's info on the latest comments and updates to CRITs that you are subscribed to!\n\n"
+        comments_url = self.instance_url + reverse('cripts.comments.views.activity')
+        self.body = "Here's info on the latest comments and updates to CRIPTs that you are subscribed to!\n\n"
         self.body += "For more info, check out the Activity page: %s\n\n" % comments_url
 
     def add_to_body(self, value):
@@ -69,7 +69,7 @@ class EmailNotification(object):
         Create an email entry for a notification.
 
         :param notification: The notification to deal with.
-        :type notification: :class:`crits.notifications.notification.Notification`
+        :type notification: :class:`cripts.notifications.notification.Notification`
         :returns: str
         """
         url = "%s/details/%s/%s/" % (self.instance_url,
@@ -98,7 +98,7 @@ class Command(BaseCommand):
         """
 
         # only look for active users who want email notifications
-        users = CRITsUser.objects(is_active=True,
+        users = CRIPTsUser.objects(is_active=True,
                                   prefs__notify__email=True)
         # only get the unprocessed notifications
         notifications = Notification.objects(status='new')

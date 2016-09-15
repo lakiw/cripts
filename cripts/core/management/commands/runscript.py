@@ -2,12 +2,12 @@ import getpass
 import os
 import socket
 
-from crits.settings import crits_config
+from cripts.settings import cripts_config
 from django.core.management.base import BaseCommand, CommandError
-from crits.core.user import CRITsUser
+from cripts.core.user import CRIPTsUser
 from optparse import make_option
 
-from crits.core.handlers import login_user
+from cripts.core.handlers import login_user
 
 class Command(BaseCommand):
     """
@@ -17,7 +17,7 @@ class Command(BaseCommand):
     option_list = BaseCommand.option_list + (
         make_option("-e", "--environ-auth", action="store_true", dest='environ',
                     default=False,
-                    help=("Authenticate using 'CRITS_USER' and 'CRITS_PASSWORD'"
+                    help=("Authenticate using 'CRIPTS_USER' and 'CRIPTS_PASSWORD'"
                           " environment variables (overrides -u and -p).")),
         make_option("-u", "--username", dest='username', default=None,
                     help="Username to log in with (will prompt if not provided)."),
@@ -25,8 +25,8 @@ class Command(BaseCommand):
                     help="Password to log in with (will prompt if not provided)."),
     )
     args = '<location> <script> -- <script argument 1> ...'
-    help = ('Runs scripts using the CRITs environment.\n'
-            '<location>:\t"crits_scripts" (without quotes) to run a CRITs script '
+    help = ('Runs scripts using the CRIPTs environment.\n'
+            '<location>:\t"cripts_scripts" (without quotes) to run a CRIPTs script '
             '\n\t\tor "foo" (without quotes) where foo is the name of a service.\n'
             '<script>:\tthe name of the script to run.\n')
 
@@ -38,7 +38,7 @@ class Command(BaseCommand):
         if len(args) < 2:
             raise CommandError(('Not enough arguments specified (see -h).'))
 
-        class_name = 'CRITsScript'
+        class_name = 'CRIPTsScript'
         try:
             tmp_ = __import__('%s.scripts.%s' % (args[0], args[1]),
                               globals(),
@@ -53,10 +53,10 @@ class Command(BaseCommand):
         if len(args) > 2:
             arg_list = list(args)[2:]
 
-        # authenticate user with CRITs
+        # authenticate user with CRIPTs
         if options.get('environ'):
-            username = os.environ.get('CRITS_USER', None)
-            password = os.environ.get('CRITS_PASSWORD', None)
+            username = os.environ.get('CRIPTS_USER', None)
+            password = os.environ.get('CRIPTS_PASSWORD', None)
         else:
             username = options.get('username')
             password = options.get('password')
@@ -66,17 +66,17 @@ class Command(BaseCommand):
             password = getpass.getpass("Password: ")
 
         # see if user exists for totp check
-        u = CRITsUser.objects(username=username).first()
+        u = CRIPTsUser.objects(username=username).first()
         totp_pass = None
         if u:
-            totp_enabled = crits_config.get('totp_cli', 'Disabled')
+            totp_enabled = cripts_config.get('totp_cli', 'Disabled')
             if (totp_enabled == 'Required' or
                 (u.totp and totp_enabled == 'Optional')):
                 print ("TOTP is enabled. If you are setting up TOTP for the "
                        "first time, enter a PIN only.")
                 totp_pass = getpass.getpass("TOTP: ")
 
-        user_agent = "CRITs %s runscript: %s/%s by %s" % (crits_config['crits_version'],
+        user_agent = "CRIPTs %s runscript: %s/%s by %s" % (cripts_config['cripts_version'],
                                                           args[0], args[1],
                                                           getpass.getuser())
         remote_addr = socket.gethostname()

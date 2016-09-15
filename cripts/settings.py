@@ -116,6 +116,7 @@ MONGO_READ_PREFERENCE = ReadPreference.PRIMARY
 
 
 # MongoDB default collections
+COL_ANALYSIS_RESULTS = "analysis_results"                 # analysis results
 COL_AUDIT_LOG = "audit_log"                               # audit log entries
 COL_BUCKET_LISTS = "bucket_lists"                         # bucketlist information
 COL_COMMENTS = "comments"                                 # comments collection
@@ -155,13 +156,13 @@ if not cripts_config:
 #       than setting DEBUG to True). This is done because we can't anticipate
 #       the host header for every CRIPTs install and this should work "out of
 #       the box".
-ALLOWED_HOSTS =             critps_config.get('allowed_hosts', ['*'])
-COMPANY_NAME =              critps_config.get('company_name', 'My Company')
-CLASSIFICATION =            critps_config.get('classification', 'unclassified')
-CRIPTS_EMAIL =              critps_config.get('cripts_email', '')
-CRIPTS_EMAIL_SUBJECT_TAG =  critps_config.get('cripts_email_subject_tag', '')
-CRIPTS_EMAIL_END_TAG =      critps_config.get('cripts_email_end_tag', True)
-DEBUG =                     critps_config.get('debug', True)
+ALLOWED_HOSTS =             cripts_config.get('allowed_hosts', ['*'])
+COMPANY_NAME =              cripts_config.get('company_name', 'My Company')
+CLASSIFICATION =            cripts_config.get('classification', 'unclassified')
+CRIPTS_EMAIL =              cripts_config.get('cripts_email', '')
+CRIPTS_EMAIL_SUBJECT_TAG =  cripts_config.get('cripts_email_subject_tag', '')
+CRIPTS_EMAIL_END_TAG =      cripts_config.get('cripts_email_end_tag', True)
+DEBUG =                     cripts_config.get('debug', True)
 if cripts_config.get('email_host', None):
     EMAIL_HOST =            cripts_config.get('email_host', None)
 if cripts_config.get('email_port', None):

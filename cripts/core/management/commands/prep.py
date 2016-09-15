@@ -4,8 +4,8 @@ import pymongo
 from django.conf import settings
 from django.core.management.base import BaseCommand
 
-from crits.config.config import CRITsConfig
-from crits.core.mongo_tools import mongo_update, mongo_remove, mongo_connector
+from cripts.config.config import CRIPTsConfig
+from cripts.core.mongo_tools import mongo_update, mongo_remove, mongo_connector
 
 
 
@@ -32,20 +32,6 @@ def prep_audit_log():
 
     pass
 
-def prep_backdoors():
-    """
-    Migrate backdoors.
-    """
-
-    pass
-
-def prep_campaigns():
-    """
-    Migrate campaigns.
-    """
-
-    pass
-
 def prep_comments():
     """
     Migrate comments.
@@ -67,41 +53,6 @@ def prep_events():
 
     pass
 
-def prep_exploits():
-    """
-    Migrate exploits.
-    """
-
-    pass
-
-def prep_indicator_actions():
-    """
-    Migrate indicator actions.
-    """
-
-    pass
-
-def prep_indicators():
-    """
-    Migrate indicators.
-    """
-
-    pass
-
-def prep_pcaps():
-    """
-    Migrate pcaps.
-    """
-
-    pass
-
-def prep_targets():
-    """
-    Migrate targets.
-    """
-
-    pass
-
 def prep_objects():
     """
     Migrate objects.
@@ -116,13 +67,6 @@ def prep_relationships():
 
     pass
 
-def prep_signature():
-    """
-    Migrate signatures.
-    """
-
-    pass
-
 def prep_sources():
     """
     Migrate sources.
@@ -133,13 +77,6 @@ def prep_sources():
 def prep_user_roles():
     """
     Migrate user roles.
-    """
-
-    pass
-
-def prep_yarahits():
-    """
-    Migrate yara hits.
     """
 
     pass
@@ -167,8 +104,8 @@ def prep_indexes():
 
 def update_database_version():
 
-    c = CRITsConfig.objects().first()
-    c.crits_version = "3.1.0"
+    c = CRIPsConfig.objects().first()
+    c.crips_version = "0.1.0"
     c.save()
 
 def prep_database():

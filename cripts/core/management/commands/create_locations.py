@@ -4,7 +4,7 @@ import os
 from django.conf import settings
 from django.core.management.base import BaseCommand
 
-from crits.locations.location import Location
+from cripts.locations.location import Location
 
 class Command(BaseCommand):
     """

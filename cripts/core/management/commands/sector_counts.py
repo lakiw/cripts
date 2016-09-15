@@ -1,7 +1,7 @@
 from django.core.management.base import BaseCommand
 
-from crits.core.sector import Sector
-from crits.core.class_mapper import class_from_type
+from cripts.core.sector import Sector
+from cripts.core.class_mapper import class_from_type
 
 class Command(BaseCommand):
     """
@@ -15,8 +15,8 @@ class Command(BaseCommand):
 
         sectors = {}
 
-        types = ['Actor', 'Campaign', 'Certificate', 'Domain', 'Email', 'Event',
-                 'Indicator', 'IP', 'PCAP', 'RawData', 'Sample', 'Signature', 'Target']
+        types = ['Event',
+                 ]
 
         for otype in types:
             klass = class_from_type(otype)
