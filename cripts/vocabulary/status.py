@@ -1,4 +1,4 @@
-from crits.vocabulary.vocab import vocab
+from cripts.vocabulary.vocab import vocab
 
 class Status(vocab):
     """

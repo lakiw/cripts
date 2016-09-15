@@ -2,15 +2,15 @@ from django.core.urlresolvers import reverse
 from tastypie import authorization
 from tastypie.authentication import MultiAuthentication
 
-from crits.events.event import Event
-from crits.events.handlers import add_new_event
-from crits.core.api import CRITsApiKeyAuthentication, CRITsSessionAuthentication
-from crits.core.api import CRITsSerializer, CRITsAPIResource
+from cripts.events.event import Event
+from cripts.events.handlers import add_new_event
+from cripts.core.api import CRIPTsApiKeyAuthentication, CRIPTsSessionAuthentication
+from cripts.core.api import CRIPTsSerializer, CRIPTsAPIResource
 
-from crits.vocabulary.events import EventTypes
+from cripts.vocabulary.events import EventTypes
 
 
-class EventResource(CRITsAPIResource):
+class EventResource(CRIPTsAPIResource):
     """
     Class to handle everything related to the Event API.
 
@@ -21,14 +21,14 @@ class EventResource(CRITsAPIResource):
         object_class = Event
         allowed_methods = ('get', 'post', 'patch')
         resource_name = "events"
-        authentication = MultiAuthentication(CRITsApiKeyAuthentication(),
-                                             CRITsSessionAuthentication())
+        authentication = MultiAuthentication(CRIPTsApiKeyAuthentication(),
+                                             CRIPTsSessionAuthentication())
         authorization = authorization.Authorization()
-        serializer = CRITsSerializer()
+        serializer = CRIPTsSerializer()
 
     def get_object_list(self, request):
         """
-        Use the CRITsAPIResource to get our objects but provide the class to get
+        Use the CRIPTsAPIResource to get our objects but provide the class to get
         the objects from.
 
         :param request: The incoming request.
@@ -64,10 +64,10 @@ class EventResource(CRITsAPIResource):
                    'type': 'Event'}
         if not title or not event_type or not source or not description:
             content['message'] = 'Must provide a title, event_type, source, and description.'
-            self.crits_response(content)
+            self.cripts_response(content)
         if event_type not in EventTypes.values():
             content['message'] = 'Not a valid Event Type.'
-            self.crits_response(content)
+            self.cripts_response(content)
 
         result = add_new_event(title,
                                description,
@@ -79,8 +79,7 @@ class EventResource(CRITsAPIResource):
                                analyst,
                                bucket_list,
                                ticket,
-                               campaign,
-                               campaign_confidence)
+                               )
 
         if result.get('message'):
             content['message'] = result.get('message')
@@ -95,4 +94,4 @@ class EventResource(CRITsAPIResource):
             content['return_code'] = 0
         else:
             content['return_code'] = 1
-        self.crits_response(content)
+        self.cripts_response(content)

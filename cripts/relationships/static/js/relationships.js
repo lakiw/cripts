@@ -96,8 +96,8 @@ $(document).ready(function() {
             $('<button>Get Clipboard</button>').click(function(e) {
                 e.preventDefault();
                 get_stored_item_data(get_item_data_url);
-                $('input#id_dest_id').val(readCookie('crits_rel_id'));
-                $('select#id_reverse_type').val(readCookie('crits_rel_type'));
+                $('input#id_dest_id').val(readCookie('cripts_rel_id'));
+                $('select#id_reverse_type').val(readCookie('cripts_rel_type'));
             })
             .insertAfter("#id_dest_id");
             if (widget) {

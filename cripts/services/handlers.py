@@ -20,17 +20,17 @@ from django.conf import settings
 from django.shortcuts import render_to_response
 from django.template import RequestContext
 
-import crits.services
+import cripts.services
 
-from crits.core.class_mapper import class_from_type, class_from_id
-from crits.core.crits_mongoengine import json_handler
-from crits.core.handlers import build_jtable, csv_export
-from crits.core.handlers import jtable_ajax_list, jtable_ajax_delete
-from crits.core.user_tools import user_sources
-from crits.services.analysis_result import AnalysisResult, AnalysisConfig
-from crits.services.analysis_result import EmbeddedAnalysisResultLog
-from crits.services.core import ServiceConfigError, AnalysisTask
-from crits.services.service import CRITsService
+from cripts.core.class_mapper import class_from_type, class_from_id
+from cripts.core.cripts_mongoengine import json_handler
+from cripts.core.handlers import build_jtable, csv_export
+from cripts.core.handlers import jtable_ajax_list, jtable_ajax_delete
+from cripts.core.user_tools import user_sources
+from cripts.services.analysis_result import AnalysisResult, AnalysisConfig
+from cripts.services.analysis_result import EmbeddedAnalysisResultLog
+from cripts.services.core import ServiceConfigError, AnalysisTask
+from cripts.services.service import CRIPTsService
 
 logger = logging.getLogger(__name__)
 
@@ -83,9 +83,9 @@ def generate_analysis_results_jtable(request, option):
     jtopts = {
         'title': "Analysis Results",
         'default_sort': mapper['default_sort'],
-        'listurl': reverse('crits.services.views.%ss_listing' % type_,
+        'listurl': reverse('cripts.services.views.%ss_listing' % type_,
                            args=('jtlist',)),
-        'deleteurl': reverse('crits.services.views.%ss_listing' % type_,
+        'deleteurl': reverse('cripts.services.views.%ss_listing' % type_,
                              args=('jtdelete',)),
         'searchurl': reverse(mapper['searchurl']),
         'fields': mapper['jtopts_fields'],
@@ -118,7 +118,7 @@ def service_work_handler(service_instance, final_config):
     instance method.
 
     :param service_instance: The service instance that the work will be performed in
-    :type service_instance: crits.services.core.Service
+    :type service_instance: cripts.services.core.Service
     :param service_instance: The service's configuration settings
     :type service_instance: dict
     """
@@ -139,8 +139,8 @@ def run_service(name, type_, id_, user, obj=None,
     :type id_: str
     :param user: The user running the service.
     :type user: str
-    :param obj: The CRITs object, if given this overrides crits_type and identifier.
-    :type obj: CRITs object.
+    :param obj: The CRIPTs object, if given this overrides cripts_type and identifier.
+    :type obj: CRIPTs object.
     :param analyst: The user updating the results.
     :type analyst: str
     :param execute: The execution type.
@@ -150,15 +150,15 @@ def run_service(name, type_, id_, user, obj=None,
     """
 
     result = {'success': False}
-    if type_ not in settings.CRITS_TYPES:
-        result['html'] = "Unknown CRITs type."
+    if type_ not in settings.CRIPTS_TYPES:
+        result['html'] = "Unknown CRIPTs type."
         return result
 
     if name not in enabled_services():
         result['html'] = "Service %s is unknown or not enabled." % name
         return result
 
-    service_class = crits.services.manager.get_service_class(name)
+    service_class = cripts.services.manager.get_service_class(name)
     if not service_class:
         result['html'] = "Unable to get service class."
         return result
@@ -169,7 +169,7 @@ def run_service(name, type_, id_, user, obj=None,
             result['html'] = 'Could not find object.'
             return result
 
-    service = CRITsService.objects(name=name).first()
+    service = CRIPTsService.objects(name=name).first()
     if not service:
         result['html'] = "Unable to find service in database."
         return result
@@ -281,9 +281,9 @@ def run_triage(obj, user):
     """
     Run all services marked as triage against this top-level object.
 
-    :param obj: The CRITs top-level object class.
+    :param obj: The CRIPTs top-level object class.
     :type obj: Class which inherits from
-               :class:`crits.core.crits_mongoengine.CritsBaseAttributes`
+               :class:`cripts.core.cripts_mongoengine.CriptsBaseAttributes`
     :param user: The user requesting the services to be run.
     :type user: str
     """
@@ -292,7 +292,7 @@ def run_triage(obj, user):
     for service_name in services:
         try:
             run_service(service_name,
-                        obj._meta['crits_type'],
+                        obj._meta['cripts_type'],
                         obj.id,
                         user,
                         obj=obj,
@@ -487,7 +487,7 @@ def update_config(service_name, config, analyst):
     Update the configuration for a service.
     """
 
-    service = CRITsService.objects(name=service_name).first()
+    service = CRIPTsService.objects(name=service_name).first()
     service.config = AnalysisConfig(**config)
     try:
         #TODO: get/validate the config from service author to set status
@@ -499,13 +499,13 @@ def update_config(service_name, config, analyst):
 
 def get_service_config(name):
     status = {'success': False}
-    service = CRITsService.objects(name=name, status__ne="unavailable").first()
+    service = CRIPTsService.objects(name=name, status__ne="unavailable").first()
     if not service:
         status['error'] = 'Service "%s" is unavailable. Please review error logs.' % name
         return status
 
     config = service.config.to_dict()
-    service_class = crits.services.manager.get_service_class(name)
+    service_class = cripts.services.manager.get_service_class(name)
     if not service_class:
         status['error'] = 'Service "%s" is unavilable. Please review error logs.' % name
         return status
@@ -532,7 +532,7 @@ def _get_config_error(service):
     name = service['name']
     config = service['config']
     if service['status'] == 'misconfigured':
-        service_class = crits.services.manager.get_service_class(name)
+        service_class = cripts.services.manager.get_service_class(name)
         try:
             service_class.parse_config(config.to_dict())
         except Exception as e:
@@ -542,7 +542,7 @@ def _get_config_error(service):
 
 def do_edit_config(name, analyst, post_data=None):
     status = {'success': False}
-    service = CRITsService.objects(name=name, status__ne="unavailable").first()
+    service = CRIPTsService.objects(name=name, status__ne="unavailable").first()
     if not service:
         status['config_error'] = 'Service "%s" is unavailable. Please review error logs.' % name
         status['form'] = ''
@@ -550,7 +550,7 @@ def do_edit_config(name, analyst, post_data=None):
         return status
 
     # Get the class that implements this service.
-    service_class = crits.services.manager.get_service_class(name)
+    service_class = cripts.services.manager.get_service_class(name)
 
     config = service.config.to_dict()
     cfg_form, html = service_class.generate_config_form(config)
@@ -589,7 +589,7 @@ def get_config(service_name):
     Get the configuration for a service.
     """
 
-    service = CRITsService.objects(name=service_name).first()
+    service = CRIPTsService.objects(name=service_name).first()
     if not service:
         return None
 
@@ -597,22 +597,22 @@ def get_config(service_name):
 
 def set_enabled(service_name, enabled=True, analyst=None):
     """
-    Enable/disable a service in CRITs.
+    Enable/disable a service in CRIPTs.
     """
 
     if enabled:
         logger.info("Enabling: %s" % service_name)
     else:
         logger.info("Disabling: %s" % service_name)
-    service = CRITsService.objects(name=service_name).first()
+    service = CRIPTsService.objects(name=service_name).first()
     service.enabled = enabled
 
     try:
         service.save(username=analyst)
         if enabled:
-            url = reverse('crits.services.views.disable', args=(service_name,))
+            url = reverse('cripts.services.views.disable', args=(service_name,))
         else:
-            url = reverse('crits.services.views.enable', args=(service_name,))
+            url = reverse('cripts.services.views.enable', args=(service_name,))
         return {'success': True, 'url': url}
     except ValidationError, e:
         return {'success': False, 'message': e}
@@ -626,15 +626,15 @@ def set_triage(service_name, enabled=True, analyst=None):
         logger.info("Enabling triage: %s" % service_name)
     else:
         logger.info("Disabling triage: %s" % service_name)
-    service = CRITsService.objects(name=service_name).first()
+    service = CRIPTsService.objects(name=service_name).first()
     service.run_on_triage = enabled
     try:
         service.save(username=analyst)
         if enabled:
-            url = reverse('crits.services.views.disable_triage',
+            url = reverse('cripts.services.views.disable_triage',
                           args=(service_name,))
         else:
-            url = reverse('crits.services.views.enable_triage',
+            url = reverse('cripts.services.views.enable_triage',
                           args=(service_name,))
         return {'success': True, 'url': url}
     except ValidationError, e:
@@ -647,20 +647,20 @@ def enabled_services(status=True):
     """
 
     if status:
-        services = CRITsService.objects(enabled=True,
+        services = CRIPTsService.objects(enabled=True,
                                         status="available")
     else:
-        services = CRITsService.objects(enabled=True)
+        services = CRIPTsService.objects(enabled=True)
     return [s.name for s in services]
 
-def get_supported_services(crits_type):
+def get_supported_services(cripts_type):
     """
     Get the supported services for a type.
     """
 
-    services = CRITsService.objects(enabled=True)
+    services = CRIPTsService.objects(enabled=True)
     for s in services:
-        if s.supported_types == 'all' or crits_type in s.supported_types:
+        if s.supported_types == 'all' or cripts_type in s.supported_types:
             yield s.name
 
 def triage_services(status=True):
@@ -669,10 +669,10 @@ def triage_services(status=True):
     """
 
     if status:
-        services = CRITsService.objects(run_on_triage=True,
+        services = CRIPTsService.objects(run_on_triage=True,
                                         status="available")
     else:
-        services = CRITsService.objects(run_on_triage=True)
+        services = CRIPTsService.objects(run_on_triage=True)
     return [s.name for s in services]
 
 def delete_analysis(task_id, analyst):

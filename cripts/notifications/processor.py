@@ -262,7 +262,7 @@ class ChangeParser():
 
         :param obj: The object.
         :type obj: class which inherits from
-                   :class:`crits.core.crits_mongoengine.CritsBaseAttributes`
+                   :class:`cripts.core.cripts_mongoengine.CriptsBaseAttributes`
         :type summary_handler: A summary handler function that will be used
                                to generate the short name, if not None.
         :param summary_handler: function
@@ -337,20 +337,8 @@ class ChangeParser():
         return "%s - %s" % (object.action_type, unicode(object.date))
 
     @staticmethod
-    def indicator_activity_summary_handler(object):
-        return object.description
-
-    @staticmethod
     def objects_summary_handler(object):
         return "%s - %s" % (object.name, object.value)
-
-    @staticmethod
-    def raw_data_highlights_summary_handler(object):
-        return "line %s: %s" % (object.line, unicode(object.line_data))
-
-    @staticmethod
-    def raw_data_inlines_summary_handler(object):
-        return "line %s: %s" % (object.line, object.comment)
 
     @staticmethod
     def relationships_summary_handler(object):
@@ -393,54 +381,6 @@ class ChangeParser():
         return ChangeParser.generic_list_change_handler(old_value, new_value, changed_field)
 
     @staticmethod
-    def campaign_change_handler(old_value, new_value, changed_field):
-        changed_data = ChangeParser.get_changed_object_list(old_value, new_value, 'name')
-        message = ChangeParser.parse_generic_change_object_list(
-                changed_data, changed_field, 'name',
-                ChangeParser.campaign_parse_handler)
-
-        return message
-
-    @staticmethod
-    def campaign_parse_handler(old_value, new_value, base_fqn):
-
-        fields = ['name', 'confidence', 'description']
-        message = ChangeParser.generic_child_fields_change_handler(old_value, new_value, fields, base_fqn)
-
-        return message
-
-    @staticmethod
-    def indicator_activity_change_handler(old_value, new_value, changed_field):
-        changed_data = ChangeParser.get_changed_object_list(old_value, new_value, 'date')
-        message = ChangeParser.parse_generic_change_object_list(changed_data, changed_field, 'instance',
-                ChangeParser.indicator_activity_parse_handler,
-                ChangeParser.indicator_activity_summary_handler)
-
-        return message
-
-    @staticmethod
-    def indicator_activity_parse_handler(old_value, new_value, base_fqn):
-
-        fields = ['description', 'end_date', 'start_date']
-        message = ChangeParser.generic_child_fields_change_handler(old_value, new_value, fields, base_fqn)
-
-        return message
-
-    @staticmethod
-    def indicator_confidence_change_handler(old_value, new_value, changed_field):
-        fields = ['rating']
-        message = ChangeParser.generic_child_fields_change_handler(old_value, new_value, fields, changed_field)
-
-        return message
-
-    @staticmethod
-    def indicator_impact_change_handler(old_value, new_value, changed_field):
-        fields = ['rating']
-        message = ChangeParser.generic_child_fields_change_handler(old_value, new_value, fields, changed_field)
-
-        return message
-
-    @staticmethod
     def objects_change_handler(old_value, new_value, changed_field):
         changed_objects = ChangeParser.get_changed_object_list(old_value, new_value, 'name')
         message = ChangeParser.parse_generic_change_object_list(changed_objects, 'Objects', 'item',
@@ -466,52 +406,11 @@ class ChangeParser():
         return message
 
     @staticmethod
-    def raw_data_highlights_change_handler(old_value, new_value, changed_field):
-        changed_data = ChangeParser.get_changed_object_list(old_value, new_value, 'date')
-        message = ChangeParser.parse_generic_change_object_list(changed_data, changed_field, 'instance',
-                ChangeParser.raw_data_highlights_parse_handler,
-                ChangeParser.raw_data_highlights_summary_handler)
-
-        return message
-
-    @staticmethod
-    def raw_data_highlights_parse_handler(old_value, new_value, base_fqn):
-
-        fields = ['line', 'line_data']
-        message = ChangeParser.generic_child_fields_change_handler(old_value, new_value, fields, base_fqn)
-
-        return message
-
-    @staticmethod
-    def raw_data_inlines_change_handler(old_value, new_value, changed_field):
-        changed_data = ChangeParser.get_changed_object_list(old_value, new_value, 'date')
-        message = ChangeParser.parse_generic_change_object_list(changed_data, changed_field, 'instance',
-                ChangeParser.raw_data_inlines_parse_handler,
-                ChangeParser.raw_data_inlines_summary_handler)
-
-        return message
-
-    @staticmethod
-    def raw_data_inlines_parse_handler(old_value, new_value, base_fqn):
-
-        fields = ['line', 'comment']
-        message = ChangeParser.generic_child_fields_change_handler(old_value, new_value, fields, base_fqn)
-
-        return message
-
-    @staticmethod
     def relationships_change_handler(old_value, new_value, changed_field):
         changed_data = ChangeParser.get_changed_object_list(old_value, new_value, 'date')
         message = ChangeParser.parse_generic_change_object_list(changed_data, changed_field, 'instance',
                 ChangeParser.relationships_parse_handler,
                 ChangeParser.relationships_summary_handler)
-
-        return message
-
-    @staticmethod
-    def screenshots_change_handler(old_value, new_value, changed_field):
-        changed_screenshots = ChangeParser.get_changed_primitive_list(old_value, new_value)
-        message = ChangeParser.parse_generic_change_object_list(changed_screenshots, changed_field, 'id')
 
         return message
 
@@ -583,64 +482,8 @@ class NotificationHeaderManager():
         return __notification_header_handler__.get(obj_type)
 
     @staticmethod
-    def generate_actor_header(obj):
-        return "Actor: %s" % (obj.name)
-
-    @staticmethod
-    def generate_backdoor_header(obj):
-        return "Backdoor: %s" % (obj.name)
-
-    @staticmethod
-    def generate_campaign_header(obj):
-        return "Campaign: %s" % (obj.name)
-
-    @staticmethod
-    def generate_certificate_header(obj):
-        return "Certificate: %s" % (obj.filename)
-
-    @staticmethod
-    def generate_domain_header(obj):
-        return "Domain: %s" % (obj.domain)
-
-    @staticmethod
-    def generate_email_header(obj):
-        return "Email: %s" % (obj.subject)
-
-    @staticmethod
     def generate_event_header(obj):
         return "Event: %s" % (obj.title)
-
-    @staticmethod
-    def generate_exploit_header(obj):
-        return "Exploit: %s" % (obj.name)
-
-    @staticmethod
-    def generate_indicator_header(obj):
-        return "Indicator: %s - %s" % (obj.ind_type, obj.value)
-
-    @staticmethod
-    def generate_ip_header(obj):
-        return "IP: %s" % (obj.ip)
-
-    @staticmethod
-    def generate_pcap_header(obj):
-        return "PCAP: %s" % (obj.filename)
-
-    @staticmethod
-    def generate_raw_data_header(obj):
-        return "RawData: %s (version %s)" % (obj.title, obj.version)
-
-    @staticmethod
-    def generate_sample_header(obj):
-        return "Sample: %s" % (obj.filename)
-
-    @staticmethod
-    def generate_screenshot_header(obj):
-        return "Screenshot: %s" % (obj.filename)
-
-    @staticmethod
-    def generate_target_header(obj):
-        return "Target: %s" % (obj.email_address)
 
 
 
@@ -652,10 +495,8 @@ __general_field_to_change_handler__ = {
     "actions": ChangeParser.actions_change_handler,
     "analysis": ChangeParser.skip_change_handler,
     "bucket_list": ChangeParser.bucket_list_change_handler,
-    "campaign": ChangeParser.campaign_change_handler,
     "obj": ChangeParser.objects_change_handler,
     "relationships": ChangeParser.relationships_change_handler,
-    "screenshots": ChangeParser.screenshots_change_handler,
     "source": ChangeParser.source_change_handler,
     "tickets": ChangeParser.tickets_change_handler,
 }
@@ -674,21 +515,7 @@ __specific_field_to_change_handler__ = {
 }
 
 __notification_header_handler__ = {
-    "Actor": NotificationHeaderManager.generate_actor_header,
-    "Backdoor": NotificationHeaderManager.generate_backdoor_header,
-    "Campaign": NotificationHeaderManager.generate_campaign_header,
-    "Certificate": NotificationHeaderManager.generate_certificate_header,
-    "Domain": NotificationHeaderManager.generate_domain_header,
-    "Email": NotificationHeaderManager.generate_email_header,
     "Event": NotificationHeaderManager.generate_event_header,
-    "Exploit": NotificationHeaderManager.generate_exploit_header,
-    "Indicator": NotificationHeaderManager.generate_indicator_header,
-    "IP": NotificationHeaderManager.generate_ip_header,
-    "PCAP": NotificationHeaderManager.generate_pcap_header,
-    "RawData": NotificationHeaderManager.generate_raw_data_header,
-    "Sample": NotificationHeaderManager.generate_sample_header,
-    "Screenshot": NotificationHeaderManager.generate_screenshot_header,
-    "Target": NotificationHeaderManager.generate_target_header,
 }
 
 __general_mongo_to_doc_field__ = {
@@ -700,7 +527,5 @@ __specific_mongo_to_doc_field__ = {
         "from": "from_address",
         "raw_headers": "raw_header",
     },
-    "Indicator": {
-        "type": "ind_type"
-    }
+
 }

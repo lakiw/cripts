@@ -1,7 +1,7 @@
 import unittest
 
-from crits.services.core import Service, ServiceConfigOption
-from crits.services.forms import (_get_config_fields, make_edit_config_form,
+from cripts.services.core import Service, ServiceConfigOption
+from cripts.services.forms import (_get_config_fields, make_edit_config_form,
         make_run_config_form)
 
 

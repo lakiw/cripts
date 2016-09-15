@@ -16,7 +16,7 @@ def migrate_2_to_3(self):
         migrate_1_to_2(self)
 
     if self.schema_version == 2:
-        from crits.core.core_migrate import migrate_analysis_results
+        from cripts.core.core_migrate import migrate_analysis_results
         migrate_analysis_results(self)
         self.schema_version = 3
         self.save()

@@ -6,8 +6,8 @@ from django.http import HttpResponse
 from django.shortcuts import render_to_response
 from django.template import RequestContext
 
-from crits.core.user_tools import user_can_view_data
-from crits.notifications.handlers import remove_user_from_notification_id, get_notification_details
+from cripts.core.user_tools import user_can_view_data
+from cripts.notifications.handlers import remove_user_from_notification_id, get_notification_details
 
 
 @user_passes_test(user_can_view_data)

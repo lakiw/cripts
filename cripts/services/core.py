@@ -15,8 +15,8 @@ import uuid
 
 from django.conf import settings
 
-from crits.services.analysis_result import EmbeddedAnalysisResultLog, AnalysisConfig
-from crits.services.service import CRITsService
+from cripts.services.analysis_result import EmbeddedAnalysisResultLog, AnalysisConfig
+from cripts.services.service import CRIPTsService
 
 logger = logging.getLogger(__name__)
 
@@ -123,10 +123,10 @@ class ServiceManager(object):
             else:
                 # Only register the service if it is valid.
                 logger.debug("Registering Service %s" % service_name)
-                svc_obj = CRITsService.objects(name=service_class.name).first()
+                svc_obj = CRIPTsService.objects(name=service_class.name).first()
                 service = service_class()
                 if not svc_obj:
-                    svc_obj = CRITsService()
+                    svc_obj = CRIPTsService()
                     svc_obj.name = service_name
                     try:
                         new_config = service.get_config({})
@@ -167,7 +167,7 @@ class ServiceManager(object):
                 self._services[service_class.name] = service_class
         # For anything in the database that did not import properly, mark the
         # status to unavailable.
-        svcs = CRITsService.objects()
+        svcs = CRIPTsService.objects()
         for svc in svcs:
             if svc.name not in self._services:
                 svc.status = 'unavailable'
@@ -278,7 +278,7 @@ class AnalysisTask(object):
             'config':               self.config,
             'log':                  self.log,
             'results':              self.results,
-            'object_type':          self.obj._meta['crits_type'],
+            'object_type':          self.obj._meta['cripts_type'],
             'object_id':            str(self.obj.id),
             'results':              self.results,
         }
@@ -396,7 +396,7 @@ class Service(object):
         pass
 
     @classmethod
-    def generate_runtime_form(self, analyst, config, crits_type, identifier):
+    def generate_runtime_form(self, analyst, config, cripts_type, identifier):
         """
         Generate a form as HTML for runtime.
 
@@ -458,14 +458,14 @@ class Service(object):
         finally:
             if self.complete:
                 self._info("Analysis complete")
-                from crits.services.handlers import update_analysis_results
+                from cripts.services.handlers import update_analysis_results
                 update_analysis_results(self.current_task)
                 # Check status, if it is ERROR, don't change it.
                 if self.current_task.status == self.current_task.STATUS_ERROR:
                     status = self.current_task.STATUS_ERROR
                 else:
                     status = self.current_task.STATUS_COMPLETED
-                self.complete(self.current_task.obj._meta['crits_type'],
+                self.complete(self.current_task.obj._meta['cripts_type'],
                               str(self.current_task.obj.id),
                               self.current_task.task_id,
                               status,
@@ -500,7 +500,7 @@ class Service(object):
         called for every object type. Otherwise, they may determine whether to
         run based on the members of the object.
 
-        Typically, services should just call methods of CRITsBaseDocument, but
+        Typically, services should just call methods of CRIPTsBaseDocument, but
         services may implement their own decision logic.
 
         Arguments:

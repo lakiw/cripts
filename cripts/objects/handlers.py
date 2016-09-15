@@ -10,19 +10,17 @@ try:
 except ImportError:
     from mongoengine.errors import ValidationError
 
-from crits.core import form_consts
-from crits.core.class_mapper import class_from_id, class_from_type
-from crits.core.data_tools import convert_string_to_bool, detect_pcap
-from crits.core.handsontable_tools import form_to_dict, get_field_from_label
-from crits.core.mongo_tools import put_file, mongo_connector
-from crits.core.user_tools import get_user_organization
-from crits.indicators.indicator import Indicator
-from crits.objects.forms import AddObjectForm
-from crits.pcaps.handlers import handle_pcap_file
-from crits.relationships.handlers import forge_relationship
+from cripts.core import form_consts
+from cripts.core.class_mapper import class_from_id, class_from_type
+from cripts.core.data_tools import convert_string_to_bool, detect_pcap
+from cripts.core.handsontable_tools import form_to_dict, get_field_from_label
+from cripts.core.mongo_tools import put_file, mongo_connector
+from cripts.core.user_tools import get_user_organization
+from cripts.objects.forms import AddObjectForm
+from cripts.relationships.handlers import forge_relationship
 
-from crits.vocabulary.relationships import RelationshipTypes
-from crits.vocabulary.indicators import (
+from cripts.vocabulary.relationships import RelationshipTypes
+from cripts.vocabulary.indicators import (
     IndicatorAttackTypes,
     IndicatorThreatTypes
 )
@@ -120,11 +118,11 @@ def add_new_handler_object(data, rowData, request, is_validate_only=False,
     :param cache: Cached data, typically for performance enhancements
                   during bulk operations.
     :type cache: dict
-    :param obj: The CRITs top-level object we are adding objects to.
+    :param obj: The CRIPTs top-level object we are adding objects to.
                 This is an optional parameter used mainly for performance
                 reasons (by not querying mongo if we already have the
                 top level-object).
-    :type obj: :class:`crits.core.crits_mongoengine.CritsBaseAttributes`
+    :type obj: :class:`cripts.core.cripts_mongoengine.CriptsBaseAttributes`
     :returns: tuple (<result>, <retVal>)
     """
 
@@ -221,11 +219,11 @@ def add_object(type_, id_, object_type, source, method, reference, user,
     :type add_indicator: bool
     :param get_objects: Return the formatted list of objects when completed.
     :type get_objects: bool
-    :param tlo: The CRITs top-level object we are adding objects to.
+    :param tlo: The CRIPTs top-level object we are adding objects to.
                 This is an optional parameter used mainly for performance
                 reasons (by not querying mongo if we already have the
                 top level-object).
-    :type tlo: :class:`crits.core.crits_mongoengine.CritsBaseAttributes`
+    :type tlo: :class:`cripts.core.cripts_mongoengine.CriptsBaseAttributes`
     :param is_sort_relationships: Return all relationships and meta, sorted
     :type is_sort_relationships: bool
     :param is_validate_only: Validate, but do not add to TLO.
@@ -241,13 +239,6 @@ def add_object(type_, id_, object_type, source, method, reference, user,
               "objects" (list),
               "relationships" (list)
     """
-
-    # if object_type is a validated indicator type, then validate value
-    if value:
-        from crits.indicators.handlers import validate_indicator_value
-        (value, error) = validate_indicator_value(value, object_type)
-        if error:
-            return {"success": False, "message": error}
 
     if is_validate_locally: # no TLO provided
         return {"success": True}
@@ -280,45 +271,16 @@ def add_object(type_, id_, object_type, source, method, reference, user,
             results['message'] = "Object added successfully"
 
         if file_:
-            # do we have a pcap?
-            if detect_pcap(data):
-                handle_pcap_file(filename,
-                                 data,
-                                 source,
-                                 user=user,
-                                 related_id=id_,
-                                 related_type=type_)
-            else:
-                #XXX: MongoEngine provides no direct GridFS access so we
-                #     need to use pymongo directly.
-                col = settings.COL_OBJECTS
-                grid = mongo_connector("%s.files" % col)
-                if grid.find({'md5': md5sum}).count() == 0:
-                    put_file(filename, data, collection=col)
+            
+            #XXX: MongoEngine provides no direct GridFS access so we
+            #     need to use pymongo directly.
+            col = settings.COL_OBJECTS
+            grid = mongo_connector("%s.files" % col)
+            if grid.find({'md5': md5sum}).count() == 0:
+                put_file(filename, data, collection=col)
 
         if add_indicator and not is_validate_only:
             campaign = tlo.campaign if hasattr(tlo, 'campaign') else None
-            from crits.indicators.handlers import handle_indicator_ind
-            ind_res = handle_indicator_ind(value,
-                                           source,
-                                           object_type,
-                                           IndicatorThreatTypes.UNKNOWN,
-                                           IndicatorAttackTypes.UNKNOWN,
-                                           user,
-                                           method,
-                                           reference,
-                                           add_domain=True,
-                                           campaign=campaign,
-                                           cache=cache)
-
-            if ind_res['success']:
-                forge_relationship(class_=tlo,
-                                   right_class=ind_res['object'],
-                                   rel_type=RelationshipTypes.RELATED_TO,
-                                   user=user)
-            else:
-                msg = "Object added, but failed to add Indicator.<br>Error: %s"
-                results['message'] = msg % ind_res.get('message')
 
         if is_sort_relationships == True:
             results['relationships'] = tlo.sort_relationships(user, meta=True)
@@ -345,20 +307,8 @@ def delete_object_file(value):
 
     #XXX: MongoEngine provides no direct GridFS access so we
     #     need to use pymongo directly.
-    obj_list = ('Actor',
-                'Backdoor',
-                'Campaign',
-                'Certificate',
-                'Domain',
-                'Email',
+    obj_list = (
                 'Event',
-                'Exploit',
-                'Indicator',
-                'IP',
-                'PCAP',
-                'RawData',
-                'Sample',
-                'Target',
                )
     # In order to make sure this object isn't tied to more than one top-level
     # object, we need to check the rest of the database. We will at least find
@@ -543,47 +493,10 @@ def create_indicator_from_object(rel_type, rel_id, ind_type, value,
         source_name = source_name.strip()
 
         create_indicator_result = {}
-        from crits.indicators.handlers import handle_indicator_ind
-
-        campaign = me.campaign if hasattr(me, 'campaign') else None
-        create_indicator_result = handle_indicator_ind(value,
-                                                       source_name,
-                                                       ind_type,
-                                                       IndicatorThreatTypes.UNKNOWN,
-                                                       IndicatorAttackTypes.UNKNOWN,
-                                                       analyst,
-                                                       method,
-                                                       reference,
-                                                       add_domain=True,
-                                                       campaign=campaign)
-
-        # Check if an error occurred, if it did then return the error result
-        if create_indicator_result.get('success', True) == False:
-            return create_indicator_result
-
-        indicator = Indicator.objects(ind_type=ind_type,
-                                      value=value).first()
-        if not indicator:
-            result = {'success': False,
-                      'message': "Could not create indicator"}
-        else:
-            results = me.add_relationship(indicator,
-                                          RelationshipTypes.RELATED_TO,
-                                          analyst=analyst,
-                                          get_rels=True)
-            if results['success']:
-                me.save(username=analyst)
-                relationship= {'type': rel_type, 'value': rel_id}
-                message = render_to_string('relationships_listing_widget.html',
-                                            {'relationship': relationship,
-                                             'nohide': True,
-                                             'relationships': results['message']},
-                                            RequestContext(request))
-                result = {'success': True, 'message': message}
-            else:
-                message = "Indicator created. Could not create relationship"
-                result = {'success': False,
-                          'message': message}
+        
+        result = {'success': False,
+                     'message': "Could not create indicator"}
+       
     return result
 
 def object_array_to_dict(array, otype, oid):
@@ -622,7 +535,7 @@ def parse_row_to_bound_object_form(request, rowData, cache):
     :param cache: Cached data, typically for performance enhancements
                   during bulk operations.
     :type cache: dict
-    :returns: :class:`crits.objects.forms.AddObjectForm`
+    :returns: :class:`cripts.objects.forms.AddObjectForm`
     """
 
     bound_form = None

@@ -9,16 +9,16 @@ from django.shortcuts import render_to_response
 from django.template import RequestContext
 from django.template.loader import render_to_string
 
-from crits.core.class_mapper import class_from_type
-from crits.core.user_tools import user_can_view_data, user_is_admin, user_sources
-from crits.services.analysis_result import AnalysisResult
-from crits.services.handlers import do_edit_config, generate_analysis_results_csv
-from crits.services.handlers import generate_analysis_results_jtable
-from crits.services.handlers import get_service_config, set_enabled, set_triage
-from crits.services.handlers import run_service, get_supported_services
-from crits.services.handlers import delete_analysis
-from crits.services.service import CRITsService
-import crits.services
+from cripts.core.class_mapper import class_from_type
+from cripts.core.user_tools import user_can_view_data, user_is_admin, user_sources
+from cripts.services.analysis_result import AnalysisResult
+from cripts.services.handlers import do_edit_config, generate_analysis_results_csv
+from cripts.services.handlers import generate_analysis_results_jtable
+from cripts.services.handlers import get_service_config, set_enabled, set_triage
+from cripts.services.handlers import run_service, get_supported_services
+from cripts.services.handlers import delete_analysis
+from cripts.services.service import CRIPTsService
+import cripts.services
 
 logger = logging.getLogger(__name__)
 
@@ -45,7 +45,7 @@ def list(request):
     List all services.
     """
 
-    all_services = CRITsService.objects()
+    all_services = CRIPTsService.objects()
 
     if all_services:
         all_services = sorted(all_services, key=lambda item: item.name.lower())
@@ -69,7 +69,7 @@ def analysis_result(request, analysis_id):
 
     ar = AnalysisResult.objects(id=analysis_id).first()
     if ar:
-        return HttpResponseRedirect(reverse('crits.core.views.details',
+        return HttpResponseRedirect(reverse('cripts.core.views.details',
                                             args=(ar.object_type,ar.object_id)))
     else:
         return render_to_response('error.html',
@@ -165,7 +165,7 @@ def edit_config(request, name):
 
 
 @user_passes_test(user_can_view_data)
-def get_form(request, name, crits_type, identifier):
+def get_form(request, name, cripts_type, identifier):
     """
     Get a configuration form for a service.
     """
@@ -174,23 +174,23 @@ def get_form(request, name, crits_type, identifier):
     response['name'] = name
     analyst = request.user.username
 
-    service = CRITsService.objects(name=name, status__ne="unavailable").first()
+    service = CRIPTsService.objects(name=name, status__ne="unavailable").first()
     if not service:
         msg = 'Service "%s" is unavailable. Please review error logs.' % name
         response['error'] = msg
         return HttpResponse(json.dumps(response), content_type="application/json")
 
     # Get the class that implements this service.
-    service_class = crits.services.manager.get_service_class(name)
+    service_class = cripts.services.manager.get_service_class(name)
 
     config = service.config.to_dict()
 
     form_html = service_class.generate_runtime_form(analyst,
                                                     config,
-                                                    crits_type,
+                                                    cripts_type,
                                                     identifier)
     if not form_html:
-        return service_run(request, name, crits_type, identifier)
+        return service_run(request, name, cripts_type, identifier)
     else:
         response['form'] = form_html
 
@@ -198,7 +198,7 @@ def get_form(request, name, crits_type, identifier):
 
 
 @user_passes_test(user_can_view_data)
-def refresh_services(request, crits_type, identifier):
+def refresh_services(request, cripts_type, identifier):
     """
     Refresh the Analysis tab with the latest information.
     """
@@ -207,7 +207,7 @@ def refresh_services(request, crits_type, identifier):
 
     # Verify user can see results.
     sources = user_sources(request.user.username)
-    klass = class_from_type(crits_type)
+    klass = class_from_type(cripts_type)
     if not klass:
         msg = 'Could not find object to refresh!'
         response['success'] = False
@@ -224,23 +224,23 @@ def refresh_services(request, crits_type, identifier):
         return HttpResponse(json.dumps(response), content_type="application/json")
 
     # Get analysis results.
-    results = AnalysisResult.objects(object_type=crits_type,
+    results = AnalysisResult.objects(object_type=cripts_type,
                                      object_id=identifier)
 
-    relationship = {'type': crits_type,
+    relationship = {'type': cripts_type,
                     'value': identifier}
 
-    subscription = {'type': crits_type,
+    subscription = {'type': cripts_type,
                     'id': identifier}
 
-    service_list = get_supported_services(crits_type)
+    service_list = get_supported_services(cripts_type)
 
     response['success'] = True
     response['html'] = render_to_string("services_analysis_listing.html",
                                         {'relationship': relationship,
                                          'subscription': subscription,
                                          'service_results': results,
-                                         'crits_type': crits_type,
+                                         'cripts_type': cripts_type,
                                          'identifier': identifier,
                                          'service_list': service_list},
                                         RequestContext(request))
@@ -249,7 +249,7 @@ def refresh_services(request, crits_type, identifier):
 
 
 @user_passes_test(user_can_view_data)
-def service_run(request, name, crits_type, identifier):
+def service_run(request, name, cripts_type, identifier):
     """
     Run a service.
     """
@@ -263,19 +263,19 @@ def service_run(request, name, crits_type, identifier):
         custom_config = {}
 
     result = run_service(name,
-                         crits_type,
+                         cripts_type,
                          identifier,
                          username,
                          execute=settings.SERVICE_MODEL,
                          custom_config=custom_config)
     if result['success'] == True:
-        return refresh_services(request, crits_type, identifier)
+        return refresh_services(request, cripts_type, identifier)
     else:
         return HttpResponse(json.dumps(result), content_type="application/json")
 
 
 @user_passes_test(user_is_admin)
-def delete_task(request, crits_type, identifier, task_id):
+def delete_task(request, cripts_type, identifier, task_id):
     """
     Delete a service task.
     """
@@ -284,4 +284,4 @@ def delete_task(request, crits_type, identifier, task_id):
 
     # Identifier is used since there's not currently an index on task_id
     delete_analysis(task_id, analyst)
-    return refresh_services(request, crits_type, identifier)
+    return refresh_services(request, cripts_type, identifier)

@@ -1,4 +1,4 @@
-from crits.vocabulary.vocab import vocab
+from cripts.vocabulary.vocab import vocab
 
 class ObjectTypes(vocab):
     """
@@ -49,7 +49,7 @@ class ObjectTypes(vocab):
     FILE_PATH = "File Path"
     FILE_READ = "File Read"
     FILE_WRITTEN = "File Written"
-    FILE_UPLOAD = "File Upload" # Used to upload a file to CRITs!
+    FILE_UPLOAD = "File Upload" # Used to upload a file to CRIPTs!
     GET_PARAM = "GET Parameter"
     HEX_STRING = "HEX String"
     HTML_ID = "HTML ID"

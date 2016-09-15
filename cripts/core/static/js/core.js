@@ -142,8 +142,8 @@ function setPagingSize(size) {
 }
 
 function get_stored_item_data(url) {
-    var rid = readCookie('crits_rel_id');
-    var rtype = readCookie('crits_rel_type');
+    var rid = readCookie('cripts_rel_id');
+    var rtype = readCookie('cripts_rel_type');
     var cbc = $('#clipboard_container');
     var cbi = $('#clipboard_icon');
     var cbq = $('#selected_item_topbar');
@@ -170,11 +170,11 @@ function get_stored_item_data(url) {
                 $('span#delete_stored_cookie').remove();
                 cbc.append('<span id="delete_stored_cookie" class="ui-icon ui-icon-close ui-icon-delete-stored-cookie" title="Clear your clipboard"></span>');
                 $('span#delete_stored_cookie').click(function() {
-                    $('button.id_copy#' + readCookie('crits_rel_id')).css('background-color', '');
-                    $('span#' + readCookie('crits_rel_id') + '.id_copy').css('background-color', '');
+                    $('button.id_copy#' + readCookie('cripts_rel_id')).css('background-color', '');
+                    $('span#' + readCookie('cripts_rel_id') + '.id_copy').css('background-color', '');
                     cbq.text("Your clipboard is empty.");
-                    eraseCookie('crits_rel_id');
-                    eraseCookie('crits_rel_type');
+                    eraseCookie('cripts_rel_id');
+                    eraseCookie('cripts_rel_type');
                     cbi.removeClass('clipboard_icon_full');
                     cbi.addClass('clipboard_icon_empty');
                     cbi.attr('title', 'Your clipboard is empty.');
@@ -534,7 +534,7 @@ function jtCSVDownload(jtid) {
  * an AJAX request to record that in the database and toggle the button
  * and top-menu star appropriately.
  */
-function toggle_favorite(crits_type) {
+function toggle_favorite(cripts_type) {
     if (is_favorite) {
         $('button.favorite').css('background-color', '#1AC932');
         $('span.favorites_icon').removeClass('favorites_icon_inactive');
@@ -545,7 +545,7 @@ function toggle_favorite(crits_type) {
         $.ajax({
             type: "POST",
             url: favorite_url,
-            data: {'type': crits_type, 'id': $(this).attr('id')},
+            data: {'type': cripts_type, 'id': $(this).attr('id')},
             datatype: 'json',
             success: function(data) {
                 if (data.success) {
@@ -570,15 +570,15 @@ function toggle_favorite(crits_type) {
     });
 }
 
-function details_copy_id (crits_type) {
+function details_copy_id (cripts_type) {
     // Highlight the icon if we have it selected
-    if (readCookie('crits_rel_id')) {
-        $('button#'+readCookie('crits_rel_id')).css('background-color', '#1AC932');
+    if (readCookie('cripts_rel_id')) {
+        $('button#'+readCookie('cripts_rel_id')).css('background-color', '#1AC932');
     }
     $('button.id_copy').click(function() {
-        createCookie('crits_rel_id',$(this).attr('id'),60);
-        createCookie('crits_rel_type',crits_type,60);
-        $('button#'+readCookie('crits_rel_id')).css('background-color', '#1AC932');
+        createCookie('cripts_rel_id',$(this).attr('id'),60);
+        createCookie('cripts_rel_type',crpits_type,60);
+        $('button#'+readCookie('cripts_rel_id')).css('background-color', '#1AC932');
         get_stored_item_data(get_item_data_url);
     });
 }
@@ -598,20 +598,20 @@ function jtRecordsLoaded(event,data, button) {
         $(jtable).find('.jtable-title-text').html(jtTitle + " - " + data.serverResponse.term);
     }
     // When the table loads, highlight the icon if it is already stored
-    $('span#'+readCookie('crits_rel_id') + '.id_copy').css('background-color', '#1AC932');
+    $('span#'+readCookie('cripts_rel_id') + '.id_copy').css('background-color', '#1AC932');
     // Set top bar information
     $(jtable).find('.id_copy').click(function() {
         // Uncolor the previous stored value's icon
-        $('span#' + readCookie('crits_rel_id') + '.id_copy').css('background-color', '#D5DFE6');
+        $('span#' + readCookie('cripts_rel_id') + '.id_copy').css('background-color', '#D5DFE6');
         // Save the new value
-        createCookie('crits_rel_id', $(this).attr('id'), 60);
-        createCookie('crits_rel_type', data.serverResponse.crits_type, 60);
+        createCookie('cripts_rel_id', $(this).attr('id'), 60);
+        createCookie('cripts_rel_type', data.serverResponse.cripts_type, 60);
         // Adjust background
-        $('span#' + readCookie('crits_rel_id') + '.id_copy').css('background-color', '#1AC932');
+        $('span#' + readCookie('cripts_rel_id') + '.id_copy').css('background-color', '#1AC932');
         get_stored_item_data(get_item_data_url);
     });
     // Light up the favorite icon for any that are favorites.
-    favorites_list = user_favorites[data.serverResponse.crits_type];
+    favorites_list = user_favorites[data.serverResponse.cripts_type];
     if (favorites_list) {
         for (var id = 0; id < favorites_list.length; id++) {
             $('span#' + favorites_list[id] + '.favorites_icon_jtable').css('background-color', '#1AC932').addClass('favorites_icon_active');
@@ -619,10 +619,10 @@ function jtRecordsLoaded(event,data, button) {
     }
 
     // Also add an attribute for the data type.
-    $(jtable).find('.favorites_icon_jtable').attr('data-type', data.serverResponse.crits_type);
+    $(jtable).find('.favorites_icon_jtable').attr('data-type', data.serverResponse.cripts_type);
 
     // Also add an attribute for the data type to the actions button
-    $(jtable).find('.preferred_actions_jtable').attr('data-type', data.serverResponse.crits_type);
+    $(jtable).find('.preferred_actions_jtable').attr('data-type', data.serverResponse.cripts_type);
 }
 
 function link_jtable_column (data, column, baseurl, campbase) {
@@ -905,7 +905,7 @@ $(document).ready(function() {
     });
     $(document).on('click', 'a.external', function(e) {
         e.preventDefault();
-        var answer = confirm("You are about to leave CRITs and view the content of another website.\n\n" + $(this).attr('href') + "\n\nCRITs cannot be held responsible for the content of external websites.");
+        var answer = confirm("You are about to leave CRIPTs and view the content of another website.\n\n" + $(this).attr('href') + "\n\nCRIPTs cannot be held responsible for the content of external websites.");
         if (answer){
             window.location = $(this).attr('href');
         }
@@ -1036,7 +1036,7 @@ $(document).ready(function() {
         header: {
             add: true,
             update: true,
-            title: "Welcome to CRITs",
+            title: "Welcome to CRIPTs",
 	    preventTabbing: false,
         },
     },

@@ -8,7 +8,7 @@
 <div id="tabnav" class="tabnav" style="font-size:90%;">
     <ul style="font-size: 125%;">
         {% comment %}
-            name - is the name/type/title of the search results (e.g. Certificate, Sample, Domain, etc)
+            name - is the name/type/title of the search results (e.g. Hash, Email, Username, etc)
             count - is the number of results for the type of search result
             url - is the django url for the search listings for the type of search
         {% endcomment %}
@@ -23,7 +23,7 @@
 </div>
 
 
-<form id='openSavedSearch' method='GET' action='{% url "crits.dashboards.views.new_save_search" %}'>
+<form id='openSavedSearch' method='GET' action='{% url "cripts.dashboards.views.new_save_search" %}'>
     <input type='hidden' value='{{term}}' name='q'/>
     <input type='hidden' value='global' name='search_type'/>
     <input type='submit' value='Configure for Dashboard'/>

@@ -4,18 +4,18 @@ from mongoengine import Document
 from mongoengine import ObjectIdField, StringField, ListField
 from django.conf import settings
 
-from crits.core.fields import CritsDateTimeField
-from crits.core.crits_mongoengine import CritsDocument, CritsSchemaDocument
+from cripts.core.fields import CriptsDateTimeField
+from cripts.core.cripts_mongoengine import CriptsDocument, CriptsSchemaDocument
 
 
-class Notification(CritsDocument, CritsSchemaDocument, Document):
+class Notification(CriptsDocument, CriptsSchemaDocument, Document):
     """
     Notification Class.
     """
 
     meta = {
         "collection": settings.COL_NOTIFICATIONS,
-        "crits_type": "Notification",
+        "cripts_type": "Notification",
         "latest_schema_version": 1,
         "schema_doc": {
             'notification': 'The notification body',
@@ -38,7 +38,7 @@ class Notification(CritsDocument, CritsSchemaDocument, Document):
     notification = StringField()
     notification_type = StringField()
     header = StringField()
-    created = CritsDateTimeField(default=date, db_field="date")
+    created = CriptsDateTimeField(default=date, db_field="date")
     obj_id = ObjectIdField()
     obj_type = StringField()
     status = StringField(default="new")

@@ -2,22 +2,22 @@ from tastypie import authorization, fields, http
 from tastypie.authentication import MultiAuthentication
 from tastypie.exceptions import ImmediateHttpResponse
 
-from crits.core.api import CRITsApiKeyAuthentication, CRITsSessionAuthentication
-from crits.core.api import CRITsAPIResource, MongoObject
-from crits.vocabulary.actors import ThreatTypes, Motivations
-from crits.vocabulary.actors import Sophistications, IntendedEffects
-from crits.vocabulary.confidence import Confidence
-from crits.vocabulary.events import EventTypes
-from crits.vocabulary.indicators import IndicatorTypes, IndicatorThreatTypes
-from crits.vocabulary.indicators import IndicatorAttackTypes, IndicatorCI
-from crits.vocabulary.ips import IPTypes
-from crits.vocabulary.kill_chain import KillChain
-from crits.vocabulary.objects import ObjectTypes
-from crits.vocabulary.relationships import RelationshipTypes
-from crits.vocabulary.sectors import Sectors
-from crits.vocabulary.status import Status
+from cripts.core.api import CRIPTsApiKeyAuthentication, CRIPTsSessionAuthentication
+from cripts.core.api import CRIPTsAPIResource, MongoObject
+from cripts.vocabulary.actors import ThreatTypes, Motivations
+from cripts.vocabulary.actors import Sophistications, IntendedEffects
+from cripts.vocabulary.confidence import Confidence
+from cripts.vocabulary.events import EventTypes
+from cripts.vocabulary.indicators import IndicatorTypes, IndicatorThreatTypes
+from cripts.vocabulary.indicators import IndicatorAttackTypes, IndicatorCI
+from cripts.vocabulary.ips import IPTypes
+from cripts.vocabulary.kill_chain import KillChain
+from cripts.vocabulary.objects import ObjectTypes
+from cripts.vocabulary.relationships import RelationshipTypes
+from cripts.vocabulary.sectors import Sectors
+from cripts.vocabulary.status import Status
 
-class VocabResource(CRITsAPIResource):
+class VocabResource(CRIPTsAPIResource):
     """
     Class to handle everything related to the Vocabulary API.
 
@@ -30,8 +30,8 @@ class VocabResource(CRITsAPIResource):
     class Meta:
         allowed_methods = ('get')
         resource_name = "vocab"
-        authentication = MultiAuthentication(CRITsApiKeyAuthentication(),
-                                             CRITsSessionAuthentication())
+        authentication = MultiAuthentication(CRIPTsApiKeyAuthentication(),
+                                             CRIPTsSessionAuthentication())
         authorization = authorization.Authorization()
 
     def obj_get_list(self, bundle=None, **kwargs):

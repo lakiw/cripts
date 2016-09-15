@@ -31,24 +31,8 @@
         var blankCol = { field: '', caption: '', size:"10%", sortable: true };
         //columns and data corresponding to each data type
         var objects = [
-			actorObject= {
-			        url:"{% url 'crits.dashboards.views.load_data' obj='Actor' %}",
-			        cols: [
-			               { field: 'details', caption: 'Details', size:"5%", sortable: false },
-			               { field: 'name', caption: 'Name', size:"10%", sortable: true },
-			               { field: 'description', caption: 'Description', size:"10%", sortable: true },
-			               { field: 'modified', caption: 'Modified', size:"10%", sortable: true },
-			               { field: 'source', caption: 'Source', size:"10%", sortable: true },
-			               { field: 'campaign', caption: 'Campaign', size:"10%", sortable: true },
-			               { field: 'status', caption: 'Status', size:"10%", sortable: true },
-			           ],
-			           sortBy: null,
-			           data: null,
-			           type: "Actor",
-			           totalRecords: null
-			},
 			analysisObject= {
-                    url:"{% url 'crits.dashboards.views.load_data' obj='AnalysisResult' %}",
+                    url:"{% url 'cripts.dashboards.views.load_data' obj='AnalysisResult' %}",
                     cols: [
                            { field: 'details', caption: 'Details', size:"5%", sortable: false },
                            { field: 'object_type', caption: 'Object Type', size:"5%", sortable: true },
@@ -63,47 +47,8 @@
                        type: "AnalysisResult",
                        totalRecords: null
             },
-            campaignsObject= {
-                    url:"{% url 'crits.dashboards.views.load_data' obj='Campaign' %}",
-                    cols: [
-                           { field: 'details', caption: 'Details', size:"5%", sortable: false },
-                           { field: 'name', caption: 'Name', size:"10%", sortable: true },
-                           { field: 'status', caption: 'Status', size:"10%", sortable: true },
-                           { field: 'aliases', caption: 'Aliases', size:"10%", sortable: true },
-                           { field: 'indicator_count', caption: 'Indicator Count', size:"10%", sortable: true },
-                           { field: 'email_count', caption: 'Email Count', size:"10%", sortable: true },
-                           { field: 'domain_count', caption: 'Domain Count', size:"10%", sortable: true },
-                           { field: 'sample_count', caption: 'Sample Count', size:"10%", sortable: true },
-                           { field: 'event_count', caption: 'Event Count', size:"10%", sortable: true },
-                           { field: 'ip_count', caption: 'IP Count', size:"10%", sortable: true },
-                           { field: 'pcap_count', caption: 'PCAP Count', size:"10%", sortable: true },
-                           { field: 'modified', caption: 'Modified', size:"10%", sortable: true },
-                       ],
-                       sortBy: null,
-                       data: null,
-                       type: "Campaign",
-                       totalRecords: null
-            },
-            certificatesObject= {
-                    url:"{% url 'crits.dashboards.views.load_data' obj='Certificate' %}",
-                    cols: [
-                           { field: 'details', caption: 'Details', size:"5%", sortable: false },
-                           { field: 'filename', caption: 'Filename', size:"10%", sortable: true },
-                           { field: 'description', caption: 'Description', size:"10%", sortable: true },
-                           { field: 'filetype', caption: 'Filetype', size:"10%", sortable: true },
-                           { field: 'size', caption: 'Size', size:"10%", sortable: true },
-                           { field: 'modified', caption: 'Modified', size:"10%", sortable: true },
-                           { field: 'source', caption: 'Source', size:"10%", sortable: true },
-                           { field: 'campaign', caption: 'Campaign', size:"10%", sortable: true },
-                           { field: 'status', caption: 'Status', size:"10%", sortable: true },
-                       ],
-                       sortBy: null,
-                       data: null,
-                       type: "Certificate",
-                       totalRecords: null
-            },
             commentsObject= {
-                    url:"{% url 'crits.dashboards.views.load_data' obj='Comment' %}",
+                    url:"{% url 'cripts.dashboards.views.load_data' obj='Comment' %}",
                     cols: [
                            { field: 'details', caption: 'Details', size:"5%", sortable: false },
                            { field: 'obj_type', caption: 'Object Type', size:"10%", sortable: true },
@@ -117,170 +62,19 @@
                        type: "Comment",
                        totalRecords: null
             },
-            domainsObject= {
-                    url:"{% url 'crits.dashboards.views.load_data' obj='Domain' %}",
-                    cols: [
-                           { field: 'details', caption: 'Details', size:"5%", sortable: false },
-                           { field: 'domain', caption: 'Domain', size:"10%", sortable: true },
-                           { field: 'modified', caption: 'Modified', size:"10%", sortable: true },
-                           { field: 'source', caption: 'Source', size:"10%", sortable: true },
-                           { field: 'campaign', caption: 'Campaign', size:"10%", sortable: true },
-                           { field: 'status', caption: 'Status', size:"10%", sortable: true },
-                       ],
-                       sortBy: null,
-                       data: null,
-                       type: "Domain",
-                       totalRecords: null
-            },
-            emailsObject= {
-                    url:"{% url 'crits.dashboards.views.load_data' obj='Email' %}",
-                    cols: [
-                           { field: 'details', caption: 'Details', size:"5%", sortable: false },
-                           { field: 'from', caption: 'From', size:"10%", sortable: true },
-                           { field: 'to', caption: 'Recipient', size:"5%", sortable: true },
-                           { field: 'subject', caption: 'Subject', size:"10%", sortable: true },
-                           { field: 'isodate', caption: 'Date', size:"10%", sortable: true },
-                           { field: 'source', caption: 'Source', size:"10%", sortable: true },
-                           { field: 'campaign', caption: 'Campaign', size:"10%", sortable: true },
-                           { field: 'status', caption: 'Status', size:"10%", sortable: true },
-                       ],
-                       sortBy: null,
-                       data: null,
-                       type: "Email",
-                       totalRecords: null
-            },
             eventsObject= {
-                    url:"{% url 'crits.dashboards.views.load_data' obj='Event' %}",
+                    url:"{% url 'cripts.dashboards.views.load_data' obj='Event' %}",
                     cols: [
                            { field: 'details', caption: 'Details', size:"5%", sortable: false },
                            { field: 'title', caption: 'Title', size:"10%", sortable: true },
                            { field: 'event_type', caption: 'Event Type', size:"10%", sortable: true },
                            { field: 'created', caption: 'Added', size:"10%", sortable: true },
                            { field: 'source', caption: 'Source', size:"10%", sortable: true },
-                           { field: 'campaign', caption: 'Campaign', size:"10%", sortable: true },
                            { field: 'status', caption: 'Status', size:"10%", sortable: true },
                        ],
                        sortBy: null,
                        data: null,
                        type: "Event",
-                       totalRecords: null
-            },
-            indicatorsObject= {
-                    url:"{% url 'crits.dashboards.views.load_data' obj='Indicator' %}",
-                    cols: [
-                           { field: 'details', caption: 'Details', size:"5%", sizeType:'%', sortable: false },
-                           { field: 'value', caption: 'Value', size:"10%", sizeType:'%',sortable: true },
-                           { field: 'type', caption: 'Type', size:"10%", sizeType:'%',sortable: true },
-                           { field: 'created', caption: 'Added', size:"10%", sizeType:'%',sortable: true },
-                           { field: 'modified', caption: 'Modified', size:"10%", sizeType:'%',sortable: true },
-                           { field: 'source', caption: 'Source', size:"10%", sizeType:'%',sortable: true },
-                           { field: 'campaign', caption: 'Campaign', size:"10%", sizeType:'%',sortable: true },
-                           { field: 'status', caption: 'Status', size:"10%", sizeType:'%',sortable: true },
-                       ],
-                       sortBy: null,
-                       data: null,
-                       type: "Indicator",
-                       totalRecords: null
-            },
-            IPsObject= {
-                    url:"{% url 'crits.dashboards.views.load_data' obj='IP' %}",
-                    cols: [
-                           { field: 'details', caption: 'Details', size:"5%", sortable: false },
-                           { field: 'ip', caption: 'IP', size:"10%", sortable: true },
-                           { field: 'type', caption: 'Type', size:"10%", sortable: true },
-                           { field: 'created', caption: 'Added', size:"10%", sortable: true },
-                           { field: 'modified', caption: 'Modified', size:"10%", sortable: true },
-                           { field: 'source', caption: 'Source', size:"10%", sortable: true },
-                           { field: 'campaign', caption: 'Campaign', size:"10%", sortable: true },
-                           { field: 'status', caption: 'Status', size:"10%", sortable: true },
-                       ],
-                       sortBy: null,
-                       data: null,
-                       type: "IP",
-                       totalRecords: null
-            },
-            PCAPsObject= {
-                    url:"{% url 'crits.dashboards.views.load_data' obj='PCAP' %}",
-                    cols: [
-                           { field: 'details', caption: 'Details', size:"5%", sortable: false },
-                           { field: 'filename', caption: 'Filename', size:"10%", sortable: true },
-                           { field: 'description', caption: 'Description', size:"10%", sortable: true },
-                           { field: 'length', caption: 'Length', size:"10%", sortable: true },
-                           { field: 'modified', caption: 'Modified', size:"10%", sortable: true },
-                           { field: 'source', caption: 'Source', size:"10%", sortable: true },
-                           { field: 'campaign', caption: 'Campaign', size:"10%", sortable: true },
-                           { field: 'status', caption: 'Status', size:"10%", sortable: true },
-                       ],
-                       sortBy: null,
-                       data: null,
-                       type: "PCAP",
-                       totalRecords: null
-            },
-            rawDatasObject= {
-                    url:"{% url 'crits.dashboards.views.load_data' obj='RawData' %}",
-                    cols: [
-                           { field: 'details', caption: 'Details', size:"5%", sortable: false },
-                           { field: 'title', caption: 'Title', size:"10%", sortable: true },
-                           { field: 'data_type', caption: 'Data Type', size:"10%", sortable: true },
-                           { field: 'version', caption: 'Version', size:"10%", sortable: true },
-                           { field: 'modified', caption: 'Modified', size:"10%", sortable: true },
-                           { field: 'source', caption: 'Source', size:"10%", sortable: true },
-                           { field: 'campaign', caption: 'Campaign', size:"10%", sortable: true },
-                           { field: 'status', caption: 'Status', size:"10%", sortable: true },
-                       ],
-                       sortBy: null,
-                       data: null,
-                       type: "RawData",
-                       totalRecords: null
-            },
-            samplesObject= {
-                    url:"{% url 'crits.dashboards.views.load_data' obj='Sample' %}",
-                    cols: [
-                           { field: 'details', caption: 'Details', size:"5%", sortable: false },
-                           { field: 'filename', caption: 'Filename', size:"10%", sortable: true },
-                           { field: 'size', caption: 'Size', size:"10%", sortable: true },
-                           { field: 'filetype', caption: 'Filetype', size:"10%", sortable: true },
-                           { field: 'created', caption: 'Added', size:"10%", sortable: true },
-                           { field: 'exploit', caption: 'Exploit', size:"10%", sortable: true },
-                           { field: 'campaign', caption: 'Campaign', size:"10%", sortable: true },
-                           { field: 'source', caption: 'Source', size:"10%", sortable: true },
-                           { field: 'status', caption: 'Status', size:"10%", sortable: true },
-                       ],
-                       sortBy: null,
-                       data: null,
-                       type: "Sample",
-                       totalRecords: null
-            },
-            screenShotsObject= {
-                    url:"{% url 'crits.dashboards.views.load_data' obj='Screenshot' %}",
-                    cols: [
-                           { field: 'details', caption: 'Details', size:"5%", sortable: false },
-                           { field: 'thumb', caption: 'Thumb', size:"10%", sortable: true },
-                           { field: 'description', caption: 'Description', size:"10%", sortable: true },
-                           { field: 'created', caption: 'Added', size:"10%", sortable: true },
-                           { field: 'source', caption: 'Source', size:"10%", sortable: true },
-                           { field: 'tags', caption: 'Tags', size:"10%", sortable: true },
-                       ],
-                       sortBy: null,
-                       data: null,
-                       type: "Screenshot",
-                       totalRecords: null
-            },
-            targetsObject= {
-                    url:"{% url 'crits.dashboards.views.load_data' obj='Target' %}",
-                    cols: [
-                           { field: 'details', caption: 'Details', size:"5%", sortable: false },
-                           { field: 'email_address', caption: 'Email Address', size:"10%", sortable: true },
-                           { field: 'firstname', caption: 'First Name', size:"10%", sortable: true },
-                           { field: 'lastname', caption: 'Last Name', size:"10%", sortable: true },
-                           { field: 'email_count', caption: 'Email Count', size:"10%", sortable: true },
-                           { field: 'department', caption: 'Department', size:"10%", sortable: true },
-                           { field: 'division', caption: 'Division', size:"10%", sortable: true },
-                           { field: 'status', caption: 'Status', size:"10%", sortable: true },
-                       ],
-                       sortBy: null,
-                       data: null,
-                       type: "Target",
                        totalRecords: null
             },
             countsObject= {
@@ -292,15 +86,6 @@
                        type: "Count",
                        totalRecords: null
             },
-            backdoorsObject= {
-                    cols: [
-                           { field: 'name', caption: 'Name', size:"10%", sortable: true },
-                           { field: 'sample_count', caption: 'Sample Count', size:"10%", sortable: true },
-                       ],
-                       sortBy: null,
-                       type: "Backdoor",
-                       totalRecords: null
-            }
         ]
         //default to the first object in the objects array
         var currentlyShownObject = objects[0];
@@ -318,16 +103,7 @@
         var gridWidth = $('#grid').width();
         var isGridsterInitalized = false;
         function create_pivot_links(data) {
-            var campBase = "/campaigns/details/__CAMPAIGN__/";
-            var items = data.split('|||');
             var links = [];
-            for (var i = 0; i < items.length; i++)
-                if (items[i]) {
-                	var campUrl = '<a href="'+campBase.replace("__CAMPAIGN__", items[i])+'">'+items[i]+'</a>';
-                    if (links.indexOf(campUrl) >= 0)
-                        continue;
-                    links.push(campUrl);
-                }
             return links;
         }
         //retrieve the data to show and pass it to the showData() method
@@ -373,8 +149,6 @@
                                             k == "size" || k == 'results' ||
                                             (k == "version" && object.type != "AnalysisResult")) 
                                         record[k] = parseInt(record[k]);
-                                    else if(k == 'campaign')
-                                    	record[k] = create_pivot_links(record[k]);
                             }
                         }
                         showData(records);
@@ -568,7 +342,7 @@
            //ajax call to save the table/search
             $.ajax({
                 type:"GET",
-                url: "{% url 'crits.dashboards.views.save_search'%}",
+                url: "{% url 'cripts.dashboards.views.save_search'%}",
                 data: data,
                 datatype: 'json',
                 success: function(data) {

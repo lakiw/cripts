@@ -3,11 +3,11 @@ import uuid
 from mongoengine import Document, StringField, UUIDField
 from django.conf import settings
 
-from crits.core.crits_mongoengine import CritsBaseAttributes, CritsSourceDocument
-from crits.core.crits_mongoengine import CritsActionsDocument
-from crits.events.migrate import migrate_event
+from cripts.core.cripts_mongoengine import CriptsBaseAttributes, CriptsSourceDocument
+from cripts.core.cripts_mongoengine import CriptsActionsDocument
+from cripts.events.migrate import migrate_event
 
-from crits.vocabulary.events import EventTypes
+from cripts.vocabulary.events import EventTypes
 
 class UnreleasableEventError(Exception):
     """
@@ -23,7 +23,7 @@ releasability list." % value
     def __str__(self):
         return repr(self.message)
 
-class Event(CritsBaseAttributes, CritsSourceDocument, CritsActionsDocument,
+class Event(CriptsBaseAttributes, CriptsSourceDocument, CriptsActionsDocument,
             Document):
     """
     Event class.
@@ -31,7 +31,7 @@ class Event(CritsBaseAttributes, CritsSourceDocument, CritsActionsDocument,
 
     meta = {
         "collection": settings.COL_EVENTS,
-        "crits_type": 'Event',
+        "cripts_type": 'Event',
         "latest_schema_version": 3,
         "schema_doc": {
             'title': 'Title of this event',
@@ -42,18 +42,17 @@ class Event(CritsBaseAttributes, CritsSourceDocument, CritsActionsDocument,
                 ' event')
         },
         "jtable_opts": {
-                         'details_url': 'crits.events.views.view_event',
+                         'details_url': 'cripts.events.views.view_event',
                          'details_url_key': 'id',
                          'default_sort': "created DESC",
-                         'searchurl': 'crits.events.views.events_listing',
+                         'searchurl': 'cripts.events.views.events_listing',
                          'fields': [ "title", "event_type", "created",
-                                     "source", "campaign", "status", "id"],
+                                     "source", "status", "id"],
                          'jtopts_fields': [ "details",
                                             "title",
                                             "event_type",
                                             "created",
                                             "source",
-                                            "campaign",
                                             "status",
                                             "favorite",
                                             "id"],
@@ -67,7 +66,7 @@ class Event(CritsBaseAttributes, CritsSourceDocument, CritsActionsDocument,
 
     title = StringField(required=True)
     event_type = StringField(required=True)
-    # description also exists in CritsBaseAttributes, but this one is required.
+    # description also exists in CriptsBaseAttributes, but this one is required.
     description = StringField(required=True)
     event_id = UUIDField(binary=True, required=True, default=uuid.uuid4)
 

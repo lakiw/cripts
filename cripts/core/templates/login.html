@@ -4,7 +4,7 @@
 {% csrf_token %}
 
 <script>
-    var reset_password = "{% url 'crits.core.views.reset_password' %}";
+    var reset_password = "{% url 'cripts.core.views.reset_password' %}";
 </script>
 
     {% if reset %}
@@ -92,7 +92,7 @@
                     </td>
                 </tr>
                 {% endif %}
-                {% if not crits_config.totp_web == "Disabled" %}
+                {% if not cripts_config.totp_web == "Disabled" %}
                 <tr id="login_tkn">
                     <td class="key">
                         Token
@@ -110,13 +110,13 @@
             </tbody>
         </table>
         <br />
-        <a href="{% url 'crits.core.views.reset_password' %}" style="float: left;">Forgot Password?</a>
+        <a href="{% url 'cripts.core.views.reset_password' %}" style="float: left;">Forgot Password?</a>
         <input class="login_submit_button" id="submit_login" type="submit" value="Login" />
         </form>
         <span id="ajax_response"></span>
     </div>
     {% endif %}
 
-    <img src="/new_images/crits_logo.png" class="login_logo"></img>
+    <img src="/new_images/cripts_logo.png" class="login_logo"></img>
 
 {% endblock %}

@@ -11,13 +11,13 @@ except ImportError:
 from mongoengine.base.datastructures import BaseList
 from mongoengine.queryset import Q
 
-from crits.core.class_mapper import class_from_id
-from crits.core.form_consts import NotificationType
-from crits.core.user import CRITsUser
-from crits.core.user_tools import user_sources, get_subscribed_users
-from crits.notifications.notification import Notification
-from crits.notifications.processor import ChangeParser, MappedMongoFields
-from crits.notifications.processor import NotificationHeaderManager
+from cripts.core.class_mapper import class_from_id
+from cripts.core.form_consts import NotificationType
+from cripts.core.user import CRIPTsUser
+from cripts.core.user_tools import user_sources, get_subscribed_users
+from cripts.notifications.notification import Notification
+from cripts.notifications.processor import ChangeParser, MappedMongoFields
+from cripts.notifications.processor import NotificationHeaderManager
 
 
 def create_notification(obj, username, message, source_filter=None,
@@ -27,7 +27,7 @@ def create_notification(obj, username, message, source_filter=None,
 
     :param obj: The object.
     :type obj: class which inherits from
-               :class:`crits.core.crits_mongoengine.CritsBaseAttributes`
+               :class:`cripts.core.cripts_mongoengine.CriptsBaseAttributes`
     :param username: The user creating the notification.
     :type username: str
     :param message: The notification message.
@@ -40,7 +40,7 @@ def create_notification(obj, username, message, source_filter=None,
 
     n = Notification()
     n.analyst = username
-    obj_type = obj._meta['crits_type']
+    obj_type = obj._meta['cripts_type']
     users = set()
 
     if notification_type not in NotificationType.ALL:
@@ -104,7 +104,7 @@ def create_general_notification(username, target_users, header, link_url, messag
 
     :param obj: The object.
     :type obj: class which inherits from
-               :class:`crits.core.crits_mongoengine.CritsBaseAttributes`
+               :class:`cripts.core.cripts_mongoengine.CriptsBaseAttributes`
     :param username: The user creating the notification.
     :type username: str
     :param target_users: The list of users who will get the notification.
@@ -131,7 +131,7 @@ def create_general_notification(username, target_users, header, link_url, messag
 
     for target_user in target_users:
         # Check to make sure the user actually exists
-        user = CRITsUser.objects(username=target_user).first()
+        user = CRIPTsUser.objects(username=target_user).first()
         if user is not None:
             n.users.append(target_user)
 
@@ -167,7 +167,7 @@ def generate_audit_notification(username, operation_type, obj, changed_fields,
     :type operation_type: str
     :param obj: The object.
     :type obj: class which inherits from
-               :class:`crits.core.crits_mongoengine.CritsBaseAttributes`
+               :class:`cripts.core.cripts_mongoengine.CriptsBaseAttributes`
     :param changed_fields: A list of field names that were changed.
     :type changed_fields: list of str
     :param message: A message summarizing what changed.
@@ -176,7 +176,7 @@ def generate_audit_notification(username, operation_type, obj, changed_fields,
     :type is_new_doc: bool
     """
 
-    obj_type = obj._meta['crits_type']
+    obj_type = obj._meta['cripts_type']
 
     supported_notification = __supported_notification_types__.get(obj_type)
 
@@ -259,11 +259,11 @@ def process_changed_fields(initial_message, changed_fields, obj):
     :type changed_fields: list of str
     :param obj: The object.
     :type obj: class which inherits from
-               :class:`crits.core.crits_mongoengine.CritsBaseAttributes`
+               :class:`cripts.core.cripts_mongoengine.CriptsBaseAttributes`
     :returns: str: Returns a message indicating what was changed.
     """
 
-    obj_type = obj._meta['crits_type']
+    obj_type = obj._meta['cripts_type']
     message = initial_message
 
     if message is None:
@@ -420,7 +420,7 @@ def get_notifications_for_id(username, obj_id, obj_type):
     :type obj_id: str
     :param obj_type: The top-level object type.
     :type obj_type: str
-    :returns: :class:`crits.core.crits_mongoengine.CritsQuerySet`
+    :returns: :class:`cripts.core.cripts_mongoengine.CriptsQuerySet`
     """
 
     return Notification.objects(users=username,
@@ -506,7 +506,7 @@ def get_user_notifications(username, count=False, newer_than=None):
     :type username: str
     :param count: Only return the count.
     :type count:bool
-    :returns: int, :class:`crits.core.crits_mongoengine.CritsQuerySet`
+    :returns: int, :class:`cripts.core.cripts_mongoengine.CriptsQuerySet`
     """
     n = None
 
@@ -521,19 +521,8 @@ def get_user_notifications(username, count=False, newer_than=None):
         return n
 
 __supported_notification_types__ = {
-    'Actor': 'name',
-    'Campaign': 'name',
-    'Certificate': 'md5',
     'Comment': 'object_id',
-    'Domain': 'domain',
-    'Email': 'id',
     'Event': 'id',
-    'Indicator': 'id',
-    'IP': 'ip',
-    'PCAP': 'md5',
-    'RawData': 'title',
-    'Sample': 'md5',
-    'Target': 'email_address',
 }
 
 class NotificationLockManager(object):
@@ -575,13 +564,13 @@ def generate_notification_header(obj):
 
     :param obj: The top-level object instantiated class.
     :type obj: class which inherits from
-               :class:`crits.core.crits_mongoengine.CritsBaseAttributes`.
+               :class:`cripts.core.cripts_mongoengine.CriptsBaseAttributes`.
     :returns: str with a human readable identification of the object
     """
 
-    generate_notification_header_handler = NotificationHeaderManager.get_header_handler(obj._meta['crits_type'])
+    generate_notification_header_handler = NotificationHeaderManager.get_header_handler(obj._meta['cripts_type'])
 
     if generate_notification_header_handler is not None:
         return generate_notification_header_handler(obj)
     else:
-        return "%s: %s" % (obj._meta['crits_type'], str(obj.id))
+        return "%s: %s" % (obj._meta['cripts_type'], str(obj.id))

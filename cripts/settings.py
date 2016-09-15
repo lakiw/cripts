@@ -92,9 +92,7 @@ GRIDFS = "GRIDFS"
 FILE_DB = GRIDFS
 
 # S3 buckets
-BUCKET_PCAPS = "pcaps"
 BUCKET_OBJECTS = "objects"
-BUCKET_SAMPLES = "samples"
 
 # Import custom Database config
 dbfile = os.path.join(SITE_ROOT, 'config/database.py')
@@ -309,7 +307,6 @@ _TEMPLATE_DIRS = [
 STATICFILES_DIRS = (
     os.path.join(SITE_ROOT, 'core/static'),
     os.path.join(SITE_ROOT, 'dashboards/static'),
-    os.path.join(SITE_ROOT, 'campaigns/static'),
     os.path.join(SITE_ROOT, 'comments/static'),
     os.path.join(SITE_ROOT, 'objects/static'),
     os.path.join(SITE_ROOT, 'relationships/static'),

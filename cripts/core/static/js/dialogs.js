@@ -696,9 +696,9 @@ function addEditSubmit(e) {
     log("Form (" + form.attr('id') + ") should have a defined item-type");
 
     var updateloc;
-    if ($(dialog).data("crits")) {
-    updateloc = $(dialog).data("crits").updateloc;
-        delete $(dialog).data("crits").updateloc;
+    if ($(dialog).data("cripts")) {
+    updateloc = $(dialog).data("cripts").updateloc;
+        delete $(dialog).data("cripts").updateloc;
     }
 
     var submit_url = form.attr('action');
@@ -852,7 +852,7 @@ function update_dialog(e) {
         }
         loc = parent.index();
 
-    dialog.data("crits", {updateloc: loc});
+    dialog.data("cripts", {updateloc: loc});
     }
 
     // Give the form a placeholder for extra data fields if not already there.

@@ -1,13 +1,13 @@
-from crits.core.crits_mongoengine import CritsDocument, CritsSchemaDocument
+from cripts.core.cripts_mongoengine import CriptsDocument, CriptsSchemaDocument
 from mongoengine import DynamicDocument, ListField, ObjectIdField, StringField, DictField, IntField, BooleanField
 
-class SavedSearch(CritsDocument, CritsSchemaDocument, DynamicDocument):
+class SavedSearch(CriptsDocument, CriptsSchemaDocument, DynamicDocument):
     """
     savedSearch class
     """
     meta = {
         "collection": "saved_search",
-        "crits_type": "saved_search",
+        "cripts_type": "saved_search",
         "latest_schema_version": 1,
         "schema_doc": {}
     }
@@ -38,13 +38,13 @@ class SavedSearch(CritsDocument, CritsSchemaDocument, DynamicDocument):
                     break;
         return textString
     
-class Dashboard(CritsDocument, CritsSchemaDocument, DynamicDocument):
+class Dashboard(CritpsDocument, CriptsSchemaDocument, DynamicDocument):
     """
     dashboard class
     """
     meta = {
         "collection": "dashboard",
-        "crits_type": "dashboard",
+        "cripts_type": "dashboard",
         "latest_schema_version": 1,
         "schema_doc": {}
     }

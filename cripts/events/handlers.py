@@ -12,25 +12,24 @@ try:
 except ImportError:
     from mongoengine.errors import ValidationError
 
-from crits.core import form_consts
-from crits.core.class_mapper import class_from_id
-from crits.campaigns.campaign import Campaign
-from crits.campaigns.forms import CampaignForm
-from crits.core.crits_mongoengine import create_embedded_source, json_handler
-from crits.core.crits_mongoengine import EmbeddedCampaign
-from crits.core.exceptions import ZipFileError
-from crits.core.forms import DownloadFileForm
-from crits.core.handlers import build_jtable, jtable_ajax_list
-from crits.core.handlers import jtable_ajax_delete
-from crits.core.handlers import csv_export
-from crits.core.user_tools import is_admin, user_sources, is_user_favorite
-from crits.core.user_tools import is_user_subscribed
-from crits.events.event import Event
-from crits.notifications.handlers import remove_user_from_notification
-from crits.samples.handlers import handle_uploaded_file, mail_sample
-from crits.services.handlers import run_triage, get_supported_services
+from cripts.core import form_consts
+from cripts.core.class_mapper import class_from_id
+from cripts.campaigns.campaign import Campaign
+from cripts.campaigns.forms import CampaignForm
+from cripts.core.cripts_mongoengine import create_embedded_source, json_handler
+from cripts.core.cripts_mongoengine import EmbeddedCampaign
+from cripts.core.exceptions import ZipFileError
+from cripts.core.forms import DownloadFileForm
+from cripts.core.handlers import build_jtable, jtable_ajax_list
+from cripts.core.handlers import jtable_ajax_delete
+from cripts.core.handlers import csv_export
+from cripts.core.user_tools import is_admin, user_sources, is_user_favorite
+from cripts.core.user_tools import is_user_subscribed
+from cripts.events.event import Event
+from cripts.notifications.handlers import remove_user_from_notification
+from cripts.services.handlers import run_triage, get_supported_services
 
-from crits.vocabulary.relationships import RelationshipTypes
+from cripts.vocabulary.relationships import RelationshipTypes
 
 
 
@@ -184,13 +183,13 @@ def generate_event_jtable(request, option):
     jtopts = {
         'title': "Events",
         'default_sort': mapper['default_sort'],
-        'listurl': reverse('crits.%ss.views.%ss_listing' % (type_,
+        'listurl': reverse('cripts.%ss.views.%ss_listing' % (type_,
                                                             type_),
                            args=('jtlist',)),
-        'deleteurl': reverse('crits.%ss.views.%ss_listing' % (type_,
+        'deleteurl': reverse('cripts.%ss.views.%ss_listing' % (type_,
                                                               type_),
                              args=('jtdelete',)),
-        'searchurl': reverse('crits.%ss.views.%ss_listing' % (type_,
+        'searchurl': reverse('cripts.%ss.views.%ss_listing' % (type_,
                                                               type_)),
         'fields': mapper['jtopts_fields'],
         'hidden_fields': mapper['hidden_fields'],
@@ -253,7 +252,7 @@ def generate_event_id(event):
     Generate an Event ID.
 
     :param event: The event.
-    :type event: :class:`crits.events.event.Event`
+    :type event: :class:`cripts.events.event.Event`
     :returns: `uuid.uuid4()`
     """
 
@@ -261,10 +260,10 @@ def generate_event_id(event):
 
 def add_new_event(title, description, event_type, source, method, reference,
                   date, analyst, bucket_list=None, ticket=None,
-                  campaign=None, campaign_confidence=None, related_id=None,
+                  related_id=None,
                   related_type=None, relationship_type=None):
     """
-    Add a new Event to CRITs.
+    Add a new Event to CRIPTs.
 
     :param title: Event title.
     :type title: str
@@ -366,7 +365,7 @@ def add_new_event(title, description, event_type, source, method, reference,
         run_triage(event, analyst)
 
         message = ('<div>Success! Click here to view the new event: <a href='
-                   '"%s">%s</a></div>' % (reverse('crits.events.views.view_event',
+                   '"%s">%s</a></div>' % (reverse('cripts.events.views.view_event',
                                                   args=[event.id]),
                                           title))
         result = {'success': True,
@@ -381,7 +380,7 @@ def add_new_event(title, description, event_type, source, method, reference,
 
 def event_remove(_id, username):
     """
-    Remove an event from CRITs.
+    Remove an event from CRIPTs.
 
     :param _id: The ObjectId of the Event to remove.
     :type _id: str
@@ -486,11 +485,6 @@ def add_sample_for_event(event_id, data, analyst, filedata=None, filename=None,
     if filename:
         filename = filename.strip()
 
-    # If selected, new sample inherits the campaigns of the related event.
-    if data['inherit_campaigns']:
-        if campaign:
-            event.campaign.append(EmbeddedCampaign(name=campaign, confidence=confidence, analyst=analyst))
-        campaign = event.campaign
 
     inherited_source = event.source if inherit_sources else None
 
@@ -503,8 +497,6 @@ def add_sample_for_event(event_id, data, analyst, filedata=None, filename=None,
                                           file_format,
                                           data['password'],
                                           analyst,
-                                          campaign,
-                                          confidence,
                                           related_id=event.id,
                                           related_type='Event',
                                           filename=filename,
@@ -512,8 +504,6 @@ def add_sample_for_event(event_id, data, analyst, filedata=None, filename=None,
                                           ticket=ticket,
                                           inherited_source=inherited_source)
         else:
-            if md5:
-                md5 = md5.strip().lower()
             result = handle_uploaded_file(None,
                                           source,
                                           method,
@@ -548,12 +538,5 @@ def add_sample_for_event(event_id, data, analyst, filedata=None, filename=None,
                 response = {'success': True, 'message': 'Files uploaded successfully. '}
         if not response['success']:
             return response
-        else:
-            if email_addr:
-                for s in result:
-                    email_errmsg = mail_sample(s, [email_addr])
-                    if email_errmsg is not None:
-                        response['success'] = False
-                        msg = "<br>Error emailing sample %s: %s\n" % (s, email_errmsg)
-                        response['message'] = response['message'] + msg
+
     return response

@@ -6,18 +6,18 @@ from django.shortcuts import render_to_response
 from django.template.loader import render_to_string
 from django.template import RequestContext
 
-from crits.core.form_consts import get_source_field_for_class
-from crits.core.class_mapper import class_from_id
-from crits.core.data_tools import json_handler
-from crits.objects.handlers import add_object, delete_object
-from crits.objects.handlers import update_object_value, update_object_source
-from crits.objects.handlers import create_indicator_from_object
-from crits.objects.handlers import parse_row_to_bound_object_form, add_new_handler_object_via_bulk
-from crits.objects.forms import AddObjectForm
-from crits.core.handsontable_tools import form_to_dict, parse_bulk_upload, get_field_from_label
-from crits.core.user_tools import user_can_view_data
+from cripts.core.form_consts import get_source_field_for_class
+from cripts.core.class_mapper import class_from_id
+from cripts.core.data_tools import json_handler
+from cripts.objects.handlers import add_object, delete_object
+from cripts.objects.handlers import update_object_value, update_object_source
+from cripts.objects.handlers import create_indicator_from_object
+from cripts.objects.handlers import parse_row_to_bound_object_form, add_new_handler_object_via_bulk
+from cripts.objects.forms import AddObjectForm
+from cripts.core.handsontable_tools import form_to_dict, parse_bulk_upload, get_field_from_label
+from cripts.core.user_tools import user_can_view_data
 
-from crits.vocabulary.objects import ObjectTypes
+from cripts.vocabulary.objects import ObjectTypes
 
 @user_passes_test(user_can_view_data)
 def add_new_object(request):

@@ -9,7 +9,7 @@
 <head>
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
     <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
-    <title>CRITs: {% block title %}Collaborative Research Into Threats{% endblock %}</title>
+    <title>CRIPTs: {% block title %}Collaborative Research Into Password Threats{% endblock %}</title>
 
     <link rel="stylesheet" href="/css/jquery-themes/{% if theme %}{{ theme }}{%else%}default{%endif%}/style.css" type="text/css" media="screen" />
     <link rel="stylesheet" href="/css/jquery-themes/{% if theme %}{{ theme }}{%else%}default{%endif%}/jquery-ui-1.10.3.custom.min.css" type="text/css" media="screen" />
@@ -56,10 +56,10 @@
         x.innerHTML = user_favorites;
         user_favorites = JSON.parse(x.innerHTML);
         var secure_cookie = "{{ secure_cookie }}";
-        var source_access = "{% url 'crits.core.views.source_access' %}";
+        var source_access = "{% url 'cripts.core.views.source_access' %}";
 
-        var obj_types_url = "{% url 'crits.objects.views.get_object_type_dropdown' %}";
-        var get_relationship_type_dropdown = "{% url 'crits.relationships.views.get_relationship_type_dropdown' %}";
+        var obj_types_url = "{% url 'cripts.objects.views.get_object_type_dropdown' %}";
+        var get_relationship_type_dropdown = "{% url 'cripts.relationships.views.get_relationship_type_dropdown' %}";
 
     {% if subscription.type %}
             var subscription_type = "{{ subscription.type }}";
@@ -67,9 +67,9 @@
             var subscription_type = false;
         {% endif %}
     {% endif %}
-    var login_user = "{% url 'crits.core.views.login' %}";
-    var get_item_data_url = "{% url 'crits.core.views.get_item_data' %}";
-    var get_dialog_url = "{% url 'crits.core.views.get_dialog' %}";
+    var login_user = "{% url 'cripts.core.views.login' %}";
+    var get_item_data_url = "{% url 'cripts.core.views.get_item_data' %}";
+    var get_dialog_url = "{% url 'cripts.core.views.get_dialog' %}";
     </script>
 </head>
 <body>

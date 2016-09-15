@@ -155,7 +155,7 @@ function completeUpload(table, tableName, progress, totalRows, isValidateOnly, l
         removeDuplicatesLink.css("color", 'red');
 
         removeDuplicatesLink.on('click', function() {
-            var isConfirm = window.confirm("Are you sure you want to remove ALL rows that are detected to already be in CRITs?");
+            var isConfirm = window.confirm("Are you sure you want to remove ALL rows that are detected to already be in CRIPTs?");
             if (isConfirm === true)
             {
                 duplicates.empty();

@@ -6,7 +6,7 @@ from mongoengine import StringField, IntField
 from django.conf import settings
 
 from cripts.core.migrate import migrate_bucket
-from cripts.core.crits_mongoengine import CriptsDocument, CriptsSchemaDocument
+from cripts.core.cripts_mongoengine import CriptsDocument, CriptsSchemaDocument
 
 logger = logging.getLogger(__name__)
 

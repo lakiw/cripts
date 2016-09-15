@@ -2,17 +2,17 @@ from mongoengine import Document, StringField, ListField
 from mongoengine import BooleanField, EmbeddedDocumentField
 from django.conf import settings
 
-from crits.core.crits_mongoengine import CritsDocument, CritsSchemaDocument
-from crits.services.analysis_result import AnalysisConfig
+from cripts.core.cripts_mongoengine import CriptsDocument, CriptsSchemaDocument
+from cripts.services.analysis_result import AnalysisConfig
 
 
-class CRITsService(CritsDocument, CritsSchemaDocument, Document):
+class CRIPTsService(CriptsDocument, CriptsSchemaDocument, Document):
     """
-    CRITs Service class.
+    CRIPTs Service class.
     """
 
     meta = {
-        "crits_type": "Service",
+        "cripts_type": "Service",
         "collection": settings.COL_SERVICES,
         "latest_schema_version": 1,
         "schema_doc": {
@@ -23,7 +23,7 @@ class CRITsService(CritsDocument, CritsSchemaDocument, Document):
             'enabled': 'If this service is enabled',
             'run_on_triage': 'If this service runs on upload',
             'status': 'The status of this service',
-            'supported_types': 'CRITs types this service supports',
+            'supported_types': 'CRIPTs types this service supports',
             'version': 'Version string of this service',
         }
     }

@@ -3,12 +3,12 @@ from mongoengine import Document, StringField, ListField, EmbeddedDocument
 from mongoengine import DynamicEmbeddedDocument, DynamicField, UUIDField
 from mongoengine import DictField, EmbeddedDocumentField, BooleanField
 
-from crits.core.crits_mongoengine import CritsDocument, CritsSchemaDocument
-from crits.core.crits_mongoengine import CritsDocumentFormatter
+from cripts.core.cripts_mongoengine import CriptsDocument, CriptsSchemaDocument
+from cripts.core.cripts_mongoengine import CriptsDocumentFormatter
 
 # Embedded Documents common to most classes
 
-class AnalysisConfig(DynamicEmbeddedDocument, CritsDocumentFormatter):
+class AnalysisConfig(DynamicEmbeddedDocument, CriptsDocumentFormatter):
     """
     Embedded Analysis Configuration dictionary.
     """
@@ -16,7 +16,7 @@ class AnalysisConfig(DynamicEmbeddedDocument, CritsDocumentFormatter):
     meta = {}
 
 
-class EmbeddedAnalysisResultLog(EmbeddedDocument, CritsDocumentFormatter):
+class EmbeddedAnalysisResultLog(EmbeddedDocument, CriptsDocumentFormatter):
     """
     Log entry for a service run.
     """
@@ -27,14 +27,14 @@ class EmbeddedAnalysisResultLog(EmbeddedDocument, CritsDocumentFormatter):
     level = StringField()
 
 
-class AnalysisResult(CritsDocument, CritsSchemaDocument, CritsDocumentFormatter,
+class AnalysisResult(CriptsDocument, CriptsSchemaDocument, CriptsDocumentFormatter,
                      Document):
     """
     Analysis Result from running an analytic service.
     """
 
     meta = {
-        "crits_type": "AnalysisResult",
+        "cripts_type": "AnalysisResult",
         "collection": settings.COL_ANALYSIS_RESULTS,
         "latest_schema_version": 1,
         "schema_doc": {
@@ -56,10 +56,10 @@ class AnalysisResult(CritsDocument, CritsSchemaDocument, CritsDocumentFormatter,
             'version': 'Version of the service used.',
         },
         "jtable_opts": {
-                         'details_url': 'crits.services.views.analysis_result',
+                         'details_url': 'cripts.services.views.analysis_result',
                          'details_url_key': 'id',
                          'default_sort': "start_date DESC",
-                         'searchurl': 'crits.services.views.analysis_results_listing',
+                         'searchurl': 'cripts.services.views.analysis_results_listing',
                          'fields': [ "object_type", "service_name", "version",
                                      "start_date", "finish_date", "results",
                                      "object_id", "id"],

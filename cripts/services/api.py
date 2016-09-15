@@ -4,13 +4,13 @@ from tastypie import authorization
 from tastypie.authentication import MultiAuthentication
 from tastypie.exceptions import BadRequest
 
-from crits.services.handlers import add_result, add_results, add_log, finish_task
-from crits.services.service import CRITsService
-from crits.core.api import CRITsApiKeyAuthentication, CRITsSessionAuthentication
-from crits.core.api import CRITsSerializer, CRITsAPIResource
+from cripts.services.handlers import add_result, add_results, add_log, finish_task
+from cripts.services.service import CRIPTsService
+from cripts.core.api import CRIPTsApiKeyAuthentication, CRIPTsSessionAuthentication
+from cripts.core.api import CRIPTsSerializer, CRIPTsAPIResource
 
 
-class ServiceResource(CRITsAPIResource):
+class ServiceResource(CRIPTsAPIResource):
     """
     Class to handle everything related to the Services API.
 
@@ -18,17 +18,17 @@ class ServiceResource(CRITsAPIResource):
     """
 
     class Meta:
-        object_class = CRITsService
+        object_class = CRIPTsService
         allowed_methods = ('post',)
         resource_name = "services"
-        authentication = MultiAuthentication(CRITsApiKeyAuthentication(),
-                                             CRITsSessionAuthentication())
+        authentication = MultiAuthentication(CRIPTsApiKeyAuthentication(),
+                                             CRIPTsSessionAuthentication())
         authorization = authorization.Authorization()
-        serializer = CRITsSerializer()
+        serializer = CRIPTsSerializer()
 
     def get_object_list(self, request):
         """
-        Use the CRITsAPIResource to get our objects but provide the class to get
+        Use the CRIPTsAPIResource to get our objects but provide the class to get
         the objects from.
 
         :param request: The incoming request.
@@ -37,7 +37,7 @@ class ServiceResource(CRITsAPIResource):
         """
 
         return super(ServiceResource, self).get_object_list(request,
-                                                            CRITsService,
+                                                            CRIPTsService,
                                                             False)
 
     def obj_create(self, bundle, **kwargs):
@@ -70,11 +70,11 @@ class ServiceResource(CRITsAPIResource):
 
         if not object_type or not object_id or not analysis_id:
             content['message'] = 'Need an object type, object id, and analysis id.'
-            self.crits_response(content)
+            self.cripts_response(content)
         if result:
             if not result_type or not result_subtype:
                 content['message'] = 'When adding a result, also need type and subtype'
-                self.crits_response(content)
+                self.cripts_response(content)
 
             if not result_is_batch:
                 result = add_result(object_type, object_id, analysis_id,
@@ -86,7 +86,7 @@ class ServiceResource(CRITsAPIResource):
 
                 if not (len(result_list) == len(result_type_list) == len(result_subtype_list)):
                     content['message'] = 'When adding results in batch result, result_type, and result_subtype must have the same length!'
-                    self.crits_response(content)
+                    self.cripts_response(content)
                 
                 result = add_results(object_type, object_id, analysis_id, result_list,
                                      result_type_list, result_subtype_list, analyst)
@@ -117,4 +117,4 @@ class ServiceResource(CRITsAPIResource):
         content['url'] = url
         if success:
             content['return_code'] = 0
-        self.crits_response(content)
+        self.cripts_response(content)

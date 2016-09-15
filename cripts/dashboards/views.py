@@ -6,10 +6,10 @@ from django.http import HttpResponse
 from django.shortcuts import render_to_response
 from django.template import RequestContext
 
-from crits.core.user_tools import user_can_view_data
-from crits.core.handlers import generate_global_search
-from crits.dashboards.dashboard import Dashboard
-from crits.dashboards.handlers import (
+from cripts.core.user_tools import user_can_view_data
+from cripts.core.handlers import generate_global_search
+from cripts.dashboards.dashboard import Dashboard
+from cripts.dashboards.handlers import (
     toggleTableVisibility,
     get_saved_searches_list,get_dashboard,
     clear_dashboard,
@@ -53,7 +53,7 @@ def dashboard(request, dashId=None):
 def new_save_search(request):
     """
     Renders the initial search results on save_search.html.
-    Called only from crits core
+    Called only from cripts core
     """
     args = generate_global_search(request)
     if 'Result' in args and args['Result'] == "ERROR":
@@ -157,7 +157,7 @@ def save_search(request):
         response["newDashId"] = str(newDash.id)
         response["newDashName"] = newDash.name
         response["isClone"] = clone
-        response["newDashUrl"] = reverse("crits.dashboards.views.dashboard",
+        response["newDashUrl"] = reverse("cripts.dashboards.views.dashboard",
                                           kwargs={"dashId":newDash.id})
     return httpResponse(response)
 

@@ -1,10 +1,10 @@
 from django import forms
 from django.forms.widgets import HiddenInput
-from crits.core import form_consts
-from crits.core.handlers import get_source_names
-from crits.core.user_tools import get_user_organization
+from cripts.core import form_consts
+from cripts.core.handlers import get_source_names
+from cripts.core.user_tools import get_user_organization
 
-from crits.vocabulary.objects import ObjectTypes
+from cripts.vocabulary.objects import ObjectTypes
 
 class AddObjectForm(forms.Form):
     """

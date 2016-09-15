@@ -1,25 +1,20 @@
 """
 This File will often refer to 'default dashboard tables.' They currently are:
-Counts, Top Campaigns, Recent Indicators, Recent Emails, and
-Recent Samples in that order. The user has the ability to change they're 
+Counts, <nothing els at this time> in that order. The user has the ability to change they're 
 positioning, size, columns, and sort order but they are always there and their 
 names cannot be changed.
 """
-from crits.dashboards.dashboard import SavedSearch, Dashboard
-from crits.core.crits_mongoengine import json_handler
+from cripts.dashboards.dashboard import SavedSearch, Dashboard
+from cripts.core.cripts_mongoengine import json_handler
 from mongoengine import Q
 from django.core.urlresolvers import reverse
-from crits.campaigns.campaign import Campaign
-from crits.indicators.indicator import Indicator
-from crits.emails.email import Email
-from crits.samples.sample import Sample
 from django.http import HttpResponse
 import json
 from django.utils.html import escape as html_escape
 import cgi
 import datetime
 from django.http import HttpRequest
-from crits.dashboards.utilities import getHREFLink, get_obj_name_from_title, get_obj_type_from_string
+from cripts.dashboards.utilities import getHREFLink, get_obj_name_from_title, get_obj_type_from_string
 import HTMLParser
 
 def get_dashboard(user,dashId=None):
@@ -106,21 +101,9 @@ def getRecordsForDefaultDashboardTable(username, tableName):
     get_dashboard_table_data in Views.py. This is to get the records when 
     editing the default tables.
     """
-    from crits.core.handlers import data_query, generate_counts_jtable
+    from cripts.core.handlers import data_query, generate_counts_jtable
     
-    if tableName == "Recent_Samples" or tableName == "Recent Samples":
-        obj_type = "Sample"
-        response = data_query(Sample, username, query={}, sort=["-created"], limit=5)
-    elif tableName == "Recent_Emails" or tableName == "Recent Emails":
-        obj_type = "Email"
-        response = data_query(Email, username, query={}, sort=["-isodate"], limit=5)
-    elif tableName == "Recent_Indicators" or tableName == "Recent Indicators":
-        obj_type = "Indicator"
-        response = data_query(Indicator, username, query={}, sort=["-created"], limit=5)
-    elif tableName == "Top_Campaigns" or tableName == "Top Campaigns":
-        obj_type = "Campaign"
-        response = data_query(Campaign, username, query={}, limit=5)
-    elif tableName == "Counts":
+    if tableName == "Counts":
         response = generate_counts_jtable(None, "jtlist")
         records = json.loads(response.content)["Records"]
         for record in records:
@@ -176,7 +159,7 @@ def constructTable(table, records, columns, colNames):
     }
     if table.objType:
         tableObject["objType"] = table.objType
-        tableObject["url"] = reverse("crits.dashboards.views.load_data",
+        tableObject["url"] = reverse("cripts.dashboards.views.load_data",
                                           kwargs={"obj":table.objType})
     return tableObject
     
@@ -243,9 +226,6 @@ def parseDocObjectsToStrings(records, obj_type):
                 doc[key] = value.keys()[0]
             elif key == "to":
                 doc[key] = len(value)
-            elif key == "thumb":
-                doc['url'] = reverse("crits.screenshots.views.render_screenshot",
-                                      args=(unicode(doc["_id"]),))
             elif key=="results" and obj_type == "AnalysisResult":
                 doc[key] = len(value)
             elif isinstance(value, list):
@@ -348,30 +328,6 @@ def clear_dashboard(dashId):
                             "row": 1,
                             "col": 1
                         },
-                        "Top Campaigns": {
-                            "sizex": 25,
-                            "sizey": 8,
-                            "row": 1,
-                            "col": 20
-                        },
-                        "Recent Indicators": {
-                            "sizex": 50,
-                            "sizey": 8,
-                            "row": 15,
-                            "col": 1
-                        },
-                        "Recent Emails": {
-                            "sizex": 50,
-                            "sizey": 8,
-                            "row": 23,
-                            "col": 1
-                        },
-                        "Recent Samples": {
-                            "sizex": 50,
-                            "sizey": 8,
-                            "row": 31,
-                            "col": 1
-                        },
                       }
     try:
         for search in SavedSearch.objects(dashboard=dashId):
@@ -428,7 +384,7 @@ def get_table_data(request=None,obj=None,user=None,searchTerm="",
     gets the records needed for the table, can be called via ajax on the 
     saved_search.html or the above ConstructTable function
     """
-    from crits.core.handlers import get_query, data_query
+    from cripts.core.handlers import get_query, data_query
     response = {"Result": "ERROR"}
     obj_type = get_obj_type_from_string(obj)
     # Build the query
@@ -461,7 +417,7 @@ def get_table_data(request=None,obj=None,user=None,searchTerm="",
                           projection=includes, limit=maxRows, sort=sortBy,skip=skip)
     if response['result'] == "ERROR":
         return {'Result': "ERROR", 'Message': response['msg']}
-    response['crits_type'] = obj_type
+    response['cripts_type'] = obj_type
     # Escape term for rendering in the UI.
     response['term'] = cgi.escape(term)
     response['data'] = response['data'].to_dict(excludes, includes)
@@ -477,9 +433,9 @@ def get_table_data(request=None,obj=None,user=None,searchTerm="",
 def get_query_without_request(obj_type, username, searchTerm, search_type="global"):
     """
     Builds the query without the request, very similar to the 
-    get_query method in the core of crits
+    get_query method in the core of cripts
     """
-    from crits.core.handlers import gen_global_query
+    from cripts.core.handlers import gen_global_query
     
     query = {}
     response = {}
@@ -503,7 +459,7 @@ def generate_search_for_saved_table(user, id=None,request=None):
     Called by edit_save_search in views.py. This is for editing a previously
     saved table or one of the default dashboard tables
     """
-    from crits.core.handlers import data_query
+    from cripts.core.handlers import data_query
     response = {}
     savedSearch = None
     try:
@@ -536,7 +492,7 @@ def generate_search_for_saved_table(user, id=None,request=None):
                    "count":str(len(records)),
                    "type":get_obj_name_from_title(savedSearch.name)}
         #special url to get the records of a default dashboard since their queries are different 
-        url = reverse("crits.dashboards.views.get_dashboard_table_data", 
+        url = reverse("cripts.dashboards.views.get_dashboard_table_data", 
                       kwargs={"tableName":str(savedSearch.name.replace(" ", "_"))})
     args = {'term': term,
             'results': results,

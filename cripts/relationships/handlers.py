@@ -2,14 +2,14 @@ import datetime
 
 from dateutil.parser import parse
 
-from crits.core.class_mapper import class_from_id
+from cripts.core.class_mapper import class_from_id
 
 def get_relationships(obj=None, type_=None, id_=None, analyst=None):
     """
     Get relationships for a top-level object.
 
     :param obj: The top-level object to get relationships for.
-    :type obj: :class:`crits.core.crits_mongoengine.CritsBaseAttributes`
+    :type obj: :class:`cripts.core.cripts_mongoengine.CriptsBaseAttributes`
     :param type_: The top-level object type to get relationships for.
     :type type_: str
     :param id_: The ObjectId of the top-level object.
@@ -43,13 +43,13 @@ def forge_relationship(type_=None, id_=None,
     :param id_: The ObjectId of the first top-level object.
     :type id_: str
     :param class_: The first top-level object to relate to.
-    :type class_: :class:`crits.core.crits_mongoengine.CritsBaseAttributes`
+    :type class_: :class:`cripts.core.cripts_mongoengine.CriptsBaseAttributes`
     :param right_type: The type of second top-level object to relate to.
     :type right_type: str
     :param right_id: The ObjectId of the second top-level object.
     :type right_id: str
     :param right_class: The second top-level object to relate to.
-    :type right_class: :class:`crits.core.crits_mongoengine.CritsBaseAttributes`
+    :type right_class: :class:`cripts.core.cripts_mongoengine.CriptsBaseAttributes`
     :param rel_type: The type of relationship.
     :type rel_type: str
     :param rel_date: The date this relationship applies.
@@ -106,7 +106,7 @@ def delete_all_relationships(left_class=None, left_type=None,
     Delete all relationships for this top-level object.
 
     :param left_class: The top-level object to delete relationships for.
-    :type left_class: :class:`crits.core.crits_mongoengine.CritsBaseAttributes`
+    :type left_class: :class:`cripts.core.cripts_mongoengine.CriptsBaseAttributes`
     :param left_type: The type of the top-level object.
     :type left_type: str
     :param left_id: The ObjectId of the top-level object.
@@ -137,9 +137,9 @@ def delete_relationship(left_class=None, right_class=None,
     Delete a relationship between two top-level objects.
 
     :param left_class: The first top-level object.
-    :type left_class: :class:`crits.core.crits_mongoengine.CritsBaseAttributes`
+    :type left_class: :class:`cripts.core.cripts_mongoengine.CriptsBaseAttributes`
     :param right_class: The second top-level object.
-    :type right_class: :class:`crits.core.crits_mongoengine.CritsBaseAttributes`
+    :type right_class: :class:`cripts.core.cripts_mongoengine.CriptsBaseAttributes`
     :param left_type: The type of first top-level object.
     :type left_type: str
     :param left_id: The ObjectId of the first top-level object.
@@ -209,9 +209,9 @@ def update_relationship_types(left_class=None, right_class=None,
     Update the relationship type between two top-level objects.
 
     :param left_class: The first top-level object.
-    :type left_class: :class:`crits.core.crits_mongoengine.CritsBaseAttributes`
+    :type left_class: :class:`cripts.core.cripts_mongoengine.CriptsBaseAttributes`
     :param right_class: The second top-level object.
-    :type right_class: :class:`crits.core.crits_mongoengine.CritsBaseAttributes`
+    :type right_class: :class:`cripts.core.cripts_mongoengine.CriptsBaseAttributes`
     :param left_type: The type of first top-level object.
     :type left_type: str
     :param left_id: The ObjectId of the first top-level object.
@@ -283,9 +283,9 @@ def update_relationship_confidences(left_class=None, right_class=None,
     Update the relationship type between two top-level objects.
 
     :param left_class: The first top-level object.
-    :type left_class: :class:`crits.core.crits_mongoengine.CritsBaseAttributes`
+    :type left_class: :class:`cripts.core.cripts_mongoengine.CriptsBaseAttributes`
     :param right_class: The second top-level object.
-    :type right_class: :class:`crits.core.crits_mongoengine.CritsBaseAttributes`
+    :type right_class: :class:`cripts.core.cripts_mongoengine.CriptsBaseAttributes`
     :param left_type: The type of first top-level object.
     :type left_type: str
     :param left_id: The ObjectId of the first top-level object.
@@ -351,9 +351,9 @@ def update_relationship_reasons(left_class=None, right_class=None,
     Update the relationship type between two top-level objects.
 
     :param left_class: The first top-level object.
-    :type left_class: :class:`crits.core.crits_mongoengine.CritsBaseAttributes`
+    :type left_class: :class:`cripts.core.cripts_mongoengine.CriptsBaseAttributes`
     :param right_class: The second top-level object.
-    :type right_class: :class:`crits.core.crits_mongoengine.CritsBaseAttributes`
+    :type right_class: :class:`cripts.core.cripts_mongoengine.CriptsBaseAttributes`
     :param left_type: The type of first top-level object.
     :type left_type: str
     :param left_id: The ObjectId of the first top-level object.
@@ -417,9 +417,9 @@ def update_relationship_dates(left_class=None, right_class=None,
     Update the relationship date between two top-level objects.
 
     :param left_class: The first top-level object.
-    :type left_class: :class:`crits.core.crits_mongoengine.CritsBaseAttributes`
+    :type left_class: :class:`cripts.core.cripts_mongoengine.CriptsBaseAttributes`
     :param right_class: The second top-level object.
-    :type right_class: :class:`crits.core.crits_mongoengine.CritsBaseAttributes`
+    :type right_class: :class:`cripts.core.cripts_mongoengine.CriptsBaseAttributes`
     :param left_type: The type of first top-level object.
     :type left_type: str
     :param left_id: The ObjectId of the first top-level object.

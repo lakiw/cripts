@@ -1,6 +1,6 @@
 class vocab(object):
     """
-    Base CRITs vocabulary object. Does nothing right now.
+    Base CRIPTs vocabulary object. Does nothing right now.
     """
 
     @classmethod
