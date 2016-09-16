@@ -1,7 +1,7 @@
 from django.conf import settings
 from django import forms
 from django.forms.widgets import HiddenInput
-from crits.core.widgets import CalWidget
+from cripts.core.widgets import CalWidget
 
 class AddCommentForm(forms.Form):
     """

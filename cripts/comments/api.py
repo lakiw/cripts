@@ -1,13 +1,13 @@
 from tastypie import authorization
 from tastypie.authentication import MultiAuthentication
 
-from crits.comments.comment import Comment
-from crits.comments.handlers import comment_add
-from crits.core.api import CRITsApiKeyAuthentication, CRITsSessionAuthentication
-from crits.core.api import CRITsSerializer, CRITsAPIResource
+from cripts.comments.comment import Comment
+from cripts.comments.handlers import comment_add
+from cripts.core.api import CRIPTsApiKeyAuthentication, CRIPTsSessionAuthentication
+from cripts.core.api import CRIPTsSerializer, CRIPTsAPIResource
 
 
-class CommentResource(CRITsAPIResource):
+class CommentResource(CRIPTsAPIResource):
     """
     Comment API Resource Class.
     """
@@ -16,14 +16,14 @@ class CommentResource(CRITsAPIResource):
         object_class = Comment
         allowed_methods = ('post')
         resource_name = "comments"
-        authentication = MultiAuthentication(CRITsApiKeyAuthentication(),
-                                             CRITsSessionAuthentication())
+        authentication = MultiAuthentication(CRIPTsApiKeyAuthentication(),
+                                             CRIPTsSessionAuthentication())
         authorization = authorization.Authorization()
-        serializer = CRITsSerializer()
+        serializer = CRIPTsSerializer()
 
     def get_object_list(self, request):
         """
-        Use the CRITsAPIResource to get our objects but provide the class to get
+        Use the CRIPTsAPIResource to get our objects but provide the class to get
         the objects from.
 
         :param request: The incoming request.
@@ -52,13 +52,13 @@ class CommentResource(CRITsAPIResource):
 
         if not obj_type:
             content['message'] = 'Must provide an object type.'
-            self.crits_response(content)
+            self.cripts_response(content)
         if not obj_id:
             content['message'] = 'Must provide an object id.'
-            self.crits_response(content)
+            self.cripts_response(content)
         if not comment:
             content['message'] = 'Must provide a comment.'
-            self.crits_response(content)
+            self.cripts_response(content)
 
         data = {'comment': comment,
                 'object_type': obj_type,
@@ -72,4 +72,4 @@ class CommentResource(CRITsAPIResource):
             content['return_code'] = 0
             content['message'] = 'Comment added successfully!'
 
-        self.crits_response(content)
+        self.cripts_response(content)

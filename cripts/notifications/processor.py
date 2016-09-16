@@ -502,16 +502,7 @@ __general_field_to_change_handler__ = {
 }
 
 __specific_field_to_change_handler__ = {
-    "Indicator": {
-        "activity": ChangeParser.indicator_activity_change_handler,
-        "confidence": ChangeParser.indicator_confidence_change_handler,
-        "impact": ChangeParser.indicator_impact_change_handler,
-    },
-    "RawData": {
-        "tool": ChangeParser.generic_single_field_json_change_handler,
-        "highlights": ChangeParser.raw_data_highlights_change_handler,
-        "inlines": ChangeParser.raw_data_inlines_change_handler,
-    }
+    
 }
 
 __notification_header_handler__ = {

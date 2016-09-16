@@ -75,7 +75,7 @@ def gridfs_connector(collection, preference=settings.MONGO_READ_PREFERENCE):
     except:
         raise
 
-def get_file(sample_md5, collection=settings.COL_SAMPLES):
+def get_file(sample_md5, collection):
     """
     Get a file from GridFS (or S3 if that's what you've configured).
 
@@ -95,7 +95,7 @@ def get_file(sample_md5, collection=settings.COL_SAMPLES):
         oid = obj['filedata']
         return get_file_s3(oid,collection)
 
-def put_file(m, data, collection=settings.COL_SAMPLES):
+def put_file(m, data, collection):
     """
     Add a file to storage.
 
@@ -110,7 +110,7 @@ def put_file(m, data, collection=settings.COL_SAMPLES):
 
     return put_file_gridfs(m, data, collection)
 
-def get_file_gridfs(sample_md5, collection=settings.COL_SAMPLES):
+def get_file_gridfs(sample_md5, collection):
     """
     Get a file from GridFS.
 
@@ -131,7 +131,7 @@ def get_file_gridfs(sample_md5, collection=settings.COL_SAMPLES):
         return None
     return data
 
-def put_file_gridfs(m, data, collection=settings.COL_SAMPLES):
+def put_file_gridfs(m, data, collection):
     """
     Add a file to storage.
 
@@ -152,7 +152,7 @@ def put_file_gridfs(m, data, collection=settings.COL_SAMPLES):
         return None
     return m
 
-def delete_file(sample_md5, collection=settings.COL_SAMPLES):
+def delete_file(sample_md5, collection):
     """
     delete_file allows you to delete a file from a gridfs collection specified
     in the collection parameter.

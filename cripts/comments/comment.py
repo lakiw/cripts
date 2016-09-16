@@ -7,29 +7,29 @@ from mongoengine import ObjectIdField, StringField, ListField, EmbeddedDocumentF
 from django.conf import settings
 from django.core.urlresolvers import reverse
 
-from crits.core.user import CRITsUser
-from crits.core.fields import CritsDateTimeField
-from crits.core.crits_mongoengine import CritsDocument, CritsSchemaDocument
-from crits.core.crits_mongoengine import CritsDocumentFormatter, CritsSourceDocument
-from crits.core.class_mapper import class_from_type
+from cripts.core.user import CRIPTsUser
+from cripts.core.fields import CriptsDateTimeField
+from cripts.core.cripts_mongoengine import CriptsDocument, CriptsSchemaDocument
+from cripts.core.cripts_mongoengine import CriptsDocumentFormatter, CriptsSourceDocument
+from cripts.core.class_mapper import class_from_type
 
 
-class EmbeddedParentField(EmbeddedDocument, CritsDocumentFormatter):
+class EmbeddedParentField(EmbeddedDocument, CriptsDocumentFormatter):
     """
     Embedded Parent Field
     """
 
-    date = CritsDateTimeField()
+    date = CriptsDateTimeField()
     analyst = StringField()
 
-class Comment(CritsDocument, CritsSchemaDocument, CritsSourceDocument, Document):
+class Comment(CriptsDocument, CriptsSchemaDocument, CriptsSourceDocument, Document):
     """
     Comment Class.
     """
 
     meta = {
         "collection": settings.COL_COMMENTS,
-        "crits_type": "Comment",
+        "cripts_type": "Comment",
         "latest_schema_version": 1,
         "schema_doc": {
             'comment': 'The comment body',
@@ -69,8 +69,8 @@ class Comment(CritsDocument, CritsSchemaDocument, CritsSourceDocument, Document)
 
     analyst = StringField()
     comment = StringField()
-    created = CritsDateTimeField(default=date, db_field="date")
-    edit_date = CritsDateTimeField(default=date)
+    created = CriptsDateTimeField(default=date, db_field="date")
+    edit_date = CriptsDateTimeField(default=date)
     obj_id = ObjectIdField()
     obj_type = StringField()
     #TODO: seems like this might be a good candidate for
@@ -82,10 +82,10 @@ class Comment(CritsDocument, CritsSchemaDocument, CritsSourceDocument, Document)
 
     def get_parent(self):
         """
-        Get the parent CRITs object.
+        Get the parent CRIPTs object.
 
         :returns: class which inherits from
-                  :class:`crits.core.crits_mongoengine.CritsBaseAttributes`.
+                  :class:`cripts.core.cripts_mongoengine.CriptsBaseAttributes`.
         """
 
         col_obj = class_from_type(self.obj_type)
@@ -142,7 +142,7 @@ class Comment(CritsDocument, CritsSchemaDocument, CritsSourceDocument, Document)
         """
         Set the top-level object this comment is for.
 
-        :param type_: The CRITs type of the object this comment is for.
+        :param type_: The CRIPTs type of the object this comment is for.
         :type type_: str
         :param id_: The ObjectId of the object this comment is for.
         :type id_: str
@@ -196,7 +196,7 @@ def parse_comment(comment):
     # get users
     for i in re_user.finditer(comment):
         user = i.group(0).replace('@','').strip()
-        if len(user) and CRITsUser.objects(username=user).count() == 1:
+        if len(user) and CRIPTsUser.objects(username=user).count() == 1:
             users.append(user)
     # dedupe
     users = list(set(users))
@@ -214,13 +214,13 @@ def parse_comment(comment):
     # generate html
     for user in users:
         link = '<a href="%s" class="comment_link">@%s</a>'\
-               % (reverse('crits.comments.views.activity', args=['byuser',
+               % (reverse('cripts.comments.views.activity', args=['byuser',
                                                                  user]),
                   user)
         comment = comment.replace('@%s' % user, link)
     for tag in tags:
         link = '<a href="%s" class="comment_link">#%s</a>'\
-               % (reverse('crits.comments.views.activity', args=['bytag',
+               % (reverse('cripts.comments.views.activity', args=['bytag',
                                                                  tag]),
                   tag)
         comment = comment.replace('#%s' % tag, link)

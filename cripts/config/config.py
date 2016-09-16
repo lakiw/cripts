@@ -9,7 +9,7 @@ class CRIPTsConfig(CriptsDocument, Document):
     """
     CRIPTs Configuration Class.
     """
-
+    
     from django.conf import settings
 
     meta = {
@@ -19,7 +19,8 @@ class CRIPTsConfig(CriptsDocument, Document):
         "schema_doc": {
         },
     }
-
+    print "START"
+    print settings.COL_CONFIG
     allowed_hosts = ListField(StringField(), default=['*'])
     classification = StringField(default='unclassified')
     company_name = StringField(default='My Company')
@@ -73,6 +74,8 @@ class CRIPTsConfig(CriptsDocument, Document):
     totp_cli = StringField(default='Disabled')
     zip7_path = StringField(default='/usr/bin/7z')
     zip7_password = StringField(default='hashes')
+    
+    print "END"
 
     def migrate(self):
         """

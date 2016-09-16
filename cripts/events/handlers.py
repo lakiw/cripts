@@ -14,8 +14,6 @@ except ImportError:
 
 from cripts.core import form_consts
 from cripts.core.class_mapper import class_from_id
-from cripts.campaigns.campaign import Campaign
-from cripts.campaigns.forms import CampaignForm
 from cripts.core.cripts_mongoengine import create_embedded_source, json_handler
 from cripts.core.cripts_mongoengine import EmbeddedCampaign
 from cripts.core.exceptions import ZipFileError

@@ -40,10 +40,7 @@ class AddObjectForm(forms.Form):
         required=False,
         widget=HiddenInput(attrs={'class':'bulkskip'}),
         label=form_consts.Object.PARENT_OBJECT_ID)
-    add_indicator = forms.BooleanField(
-        required=False,
-        widget=forms.CheckboxInput,
-        label=form_consts.Object.ADD_INDICATOR)
+
 
     def __init__(self, username, *args, **kwargs):
         super(AddObjectForm, self).__init__(*args, **kwargs)

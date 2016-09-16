@@ -88,7 +88,7 @@ class Object():
     REFERENCE = "Reference"
     PARENT_OBJECT_TYPE = "Otype"
     PARENT_OBJECT_ID = "Oid"
-    ADD_INDICATOR = Common.ADD_INDICATOR
+
 
 
 def get_source_field_for_class(otype):

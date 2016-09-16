@@ -5,8 +5,8 @@ from django.core.management.base import BaseCommand, CommandError
 from optparse import make_option
 from random import choice
 
-from crits.core.user import CRITsUser
-from crits.config.config import CRITsConfig
+from cripts.core.user import CRIPTsUser
+from cripts.config.config import CRIPTsConfig
 import settings
 
 class Command(BaseCommand):
@@ -20,7 +20,7 @@ class Command(BaseCommand):
                     dest='adduser',
                     action='store_true',
                     default=False,
-                    help='Add a new user to CRITs.'),
+                    help='Add a new user to CRIPTs.'),
         make_option('--administrator',
                     '-A',
                     dest='admin',
@@ -101,7 +101,7 @@ class Command(BaseCommand):
                     default=None,
                     help='Username for new user.'),
     )
-    help = 'Add and edit a CRITs user. If "-a" is not used, we will try to edit.'
+    help = 'Add and edit a CRIPTs user. If "-a" is not used, we will try to edit.'
 
     def handle(self, *args, **options):
         """
@@ -128,7 +128,7 @@ class Command(BaseCommand):
         # We always need a username
         if not username:
             raise CommandError("Must provide a username.")
-        user = CRITsUser.objects(username=username).first()
+        user = CRIPTsUser.objects(username=username).first()
 
         # If we've found a user with that username and we aren't trying to add a
         # new user...
@@ -166,11 +166,11 @@ class Command(BaseCommand):
             except Exception, e:
                 raise CommandError("Error saving changes: %s" % str(e))
             if adduser:
-                raise CommandError("User '%s' exists in CRITs!" % username)
+                raise CommandError("User '%s' exists in CRIPTs!" % username)
         elif adduser:
             if not email:
                 raise CommandError("Must provide an email address!")
-            user = CRITsUser.create_user(username, password, email)
+            user = CRIPTsUser.create_user(username, password, email)
             user.first_name = firstname
             user.last_name = lastname
             user.is_staff = True
@@ -181,13 +181,13 @@ class Command(BaseCommand):
             user.save()
 
             if sendemail:
-                crits_config = CRITsConfig.objects().first()
-                if crits_config.crits_email_end_tag:
-                    subject = "New CRITs User Account" + crits_config.crits_email_subject_tag
+                cripts_config = CRIPTsConfig.objects().first()
+                if cripts_config.cripts_email_end_tag:
+                    subject = "New CRIPTs User Account" + cripts_config.cripts_email_subject_tag
                 else:
-                    subject = crits_config.crits_email_subject_tag + "New CRITs User Account"
+                    subject = cripts_config.cripts_email_subject_tag + "New CRIPTs User Account"
                 body = """You are receiving this email because someone has created a
-CRITs account for you. If you feel like you have received this in
+CRIPTs account for you. If you feel like you have received this in
 error, please ignore this email. Your account information is below:\n\n
 """
                 body += "Username:\t%s\n" % username
@@ -209,9 +209,9 @@ Thank you!
         If we don't have one in the DB use the one out of settings.
         """
 
-        crits_config = CRITsConfig.objects().first()
-        if crits_config:
-            pw_regex = crits_config.password_complexity_regex
+        cripts_config = CRIPTsConfig.objects().first()
+        if cripts_config:
+            pw_regex = cripts_config.password_complexity_regex
         else:
             pw_regex = settings.PASSWORD_COMPLEXITY_REGEX
         rex = re.compile(pw_regex)

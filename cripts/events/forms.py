@@ -1,7 +1,6 @@
 from django.conf import settings
 from django import forms
 
-from cripts.campaigns.campaign import Campaign
 from cripts.core import form_consts
 from cripts.core.forms import add_bucketlist_to_form, add_ticket_to_form
 from cripts.core.widgets import CalWidget

@@ -10,13 +10,13 @@ from django.shortcuts import render_to_response
 from django.template import RequestContext
 from django.template.loader import render_to_string
 
-from crits.comments.forms import AddCommentForm
-from crits.comments.handlers import comment_add, comment_update, comment_remove
-from crits.comments.handlers import get_aggregate_comments, get_activity
-from crits.comments.handlers import generate_comment_jtable, generate_comment_csv
-from crits.core.user_tools import user_can_view_data
-from crits.core.data_tools import json_handler
-from crits.core.views import global_search_listing
+from cripts.comments.forms import AddCommentForm
+from cripts.comments.handlers import comment_add, comment_update, comment_remove
+from cripts.comments.handlers import get_aggregate_comments, get_activity
+from cripts.comments.handlers import generate_comment_jtable, generate_comment_csv
+from cripts.core.user_tools import user_can_view_data
+from cripts.core.data_tools import json_handler
+from cripts.core.views import global_search_listing
 
 @user_passes_test(user_can_view_data)
 def comment_search(request):
@@ -31,7 +31,7 @@ def comment_search(request):
     query = {}
     query[request.GET.get('search_type', '')]=request.GET.get('q', '').strip()
     #return render_to_response('error.html', {'error': query})
-    return HttpResponseRedirect(reverse('crits.comments.views.comments_listing')+
+    return HttpResponseRedirect(reverse('cripts.comments.views.comments_listing')+
                                 "?%s" % urllib.urlencode(query))
 
 

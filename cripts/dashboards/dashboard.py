@@ -38,7 +38,7 @@ class SavedSearch(CriptsDocument, CriptsSchemaDocument, DynamicDocument):
                     break;
         return textString
     
-class Dashboard(CritpsDocument, CriptsSchemaDocument, DynamicDocument):
+class Dashboard(CriptsDocument, CriptsSchemaDocument, DynamicDocument):
     """
     dashboard class
     """

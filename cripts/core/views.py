@@ -36,7 +36,6 @@ from cripts.core.handlers import generate_dashboard, generate_global_search
 from cripts.core.handlers import login_user, reset_user_password
 from cripts.core.handlers import generate_user_profile, generate_user_preference
 from cripts.core.handlers import modify_source_access, get_bucket_autocomplete
-from cripts.core.handlers import dns_timeline, email_timeline, indicator_timeline
 from cripts.core.handlers import generate_users_jtable, generate_items_jtable
 from cripts.core.handlers import toggle_item_state, download_grid_file
 from cripts.core.handlers import get_data_for_item, generate_audit_jtable
@@ -949,12 +948,6 @@ def timeline(request, data_type="dns"):
     sources = user_sources(analyst)
     query = {}
     params = {}
-    if request.GET.get("campaign"):
-        query["campaign.name"] = request.GET.get("campaign")
-        params["campaign"] = query["campaign.name"]
-    if request.GET.get("backdoor"):
-        query["backdoor.name"] = request.GET.get("backdoor")
-        params["backdoor"] = query["backdoor.name"]
     query["source.name"] = {"$in": sources}
     page_title = data_type
     if format == "json":
@@ -965,23 +958,6 @@ def timeline(request, data_type="dns"):
         tline['initial_zoom'] = "20"
         tline['timezone'] = strftime("%z", gmtime())
         events = []
-
-        # DNS data
-
-        if data_type == "dns":
-            tline['title'] = "DNS"
-            events = dns_timeline(query, analyst, sources)
-        # Email data
-
-        elif data_type == "email":
-            tline['title'] = "Emails"
-            events = email_timeline(query, analyst, sources)
-        # Indicator data
-
-        elif data_type == "indicator":
-            tline['title'] = "Indicators"
-            tline['initial_zoom'] = "14"
-            events = indicator_timeline(query, analyst, sources)
 
         tline['events'] = events
         timeglider.append(tline)

@@ -16,7 +16,6 @@ from cripts.events.handlers import update_event_title, update_event_type
 from cripts.events.handlers import get_event_details
 from cripts.events.handlers import generate_event_jtable, add_sample_for_event
 from cripts.events.handlers import generate_event_csv, add_new_event
-from cripts.samples.forms import UploadFileForm
 
 from cripts.vocabulary.events import EventTypes
 

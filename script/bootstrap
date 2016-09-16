@@ -383,7 +383,7 @@ do
             then
                 printf "${PASS}ubuntu is Supported!${END}\n"
                 ubuntu_install || exit_restart $STEP
-                depend_critps ||exit_restart $STEP
+                depend_cripts ||exit_restart $STEP
             elif [ "$OS" = 'debian' ]
             then
                 printf "${PASS}Debian is Supported!${END}\n"

@@ -12,13 +12,13 @@ try:
 except ImportError:
     from mongoengine.errors import ValidationError
 
-from crits.comments.comment import Comment
-from crits.comments.forms import JumpToDateForm
-from crits.core.class_mapper import class_from_type
-from crits.core.crits_mongoengine import create_embedded_source, json_handler
-from crits.core.handlers import jtable_ajax_list,build_jtable, jtable_ajax_delete
-from crits.core.handlers import csv_export
-from crits.core.user_tools import get_user_organization, user_sources
+from cripts.comments.comment import Comment
+from cripts.comments.forms import JumpToDateForm
+from cripts.core.class_mapper import class_from_type
+from cripts.core.cripts_mongoengine import create_embedded_source, json_handler
+from cripts.core.handlers import jtable_ajax_list,build_jtable, jtable_ajax_delete
+from cripts.core.handlers import csv_export
+from cripts.core.user_tools import get_user_organization, user_sources
 
 def generate_comment_csv(request):
     """
@@ -40,7 +40,7 @@ def get_comments(obj_id, obj_type):
     :type obj_id: str
     :param obj_type: The top-level object type.
     :type obj_type: str
-    :returns: list of :class:`crits.comments.comment.Comment`
+    :returns: list of :class:`cripts.comments.comment.Comment`
     """
 
     #TODO: add source filtering for non-UI based applications
@@ -64,7 +64,7 @@ def get_aggregate_comments(atype, value, username, date=None):
     :type username: str
     :param date: The specific date to get comments for.
     :type date: datetime.datetime
-    :returns: list of :class:`crits.comments.comment.Comment`
+    :returns: list of :class:`cripts.comments.comment.Comment`
     """
 
     results = None
@@ -92,7 +92,7 @@ def get_user_allowed_comments(comments, sources):
     :type comments: list
     :param sources: The sources the user has access to.
     :type sources: list
-    :returns: list of :class:`crits.comments.comment.Comment`
+    :returns: list of :class:`cripts.comments.comment.Comment`
     """
 
     docs = {'Actor': {},
@@ -166,13 +166,13 @@ def generate_comment_jtable(request, option):
     jtopts = {
         'title': "Comments",
         'default_sort': "date DESC",
-        'listurl': reverse('crits.%ss.views.%ss_listing' % (type_,
+        'listurl': reverse('cripts.%ss.views.%ss_listing' % (type_,
                                                             type_),
                            args=('jtlist',)),
-        'deleteurl': reverse('crits.%ss.views.%ss_listing' % (type_,
+        'deleteurl': reverse('cripts.%ss.views.%ss_listing' % (type_,
                                                               type_),
                              args=('jtdelete',)),
-        'searchurl': reverse('crits.%ss.views.%ss_listing' % (type_,type_)),
+        'searchurl': reverse('cripts.%ss.views.%ss_listing' % (type_,type_)),
         'fields': ["details",
                    "obj_type",
                    "comment",
