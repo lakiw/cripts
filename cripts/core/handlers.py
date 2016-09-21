@@ -2587,42 +2587,6 @@ def generate_user_profile(username, request):
     if not user_info:
         return {"status": "ERROR", "message": "User not found"}
 
-    # recent indicators worked on
-    query = {'$or': [{'actions.analyst': "%s" % username},
-                     {'activity.analyst': "%s" % username},
-                     {'objects.analyst': "%s" % username}]}
-    indicator_list = (Indicator.objects(__raw__=query)
-                      .only('value',
-                            'ind_type',
-                            'created',
-                            'campaign',
-                            'source',
-                            'status')
-                      .order_by('-created')
-                      .limit(limit)
-                      .sanitize_sources(username))
-
-    # recent emails worked on
-    query = {'campaign.analyst': "%s" % username}
-    email_list = (Email.objects(__raw__=query)
-                  .order_by('-date')
-                  .limit(limit)
-                  .sanitize_sources(username))
-
-    # samples
-    sample_md5s = (AuditLog.objects(user=username,
-                                    target_type="Sample")
-                   .order_by('-date')
-                   .limit(limit))
-    md5s = []
-    for sample in sample_md5s:
-        md5s.append(sample.value.split(" ")[0])
-    filter_data = ('md5', 'source', 'filename', 'mimetype',
-                   'size', 'campaign')
-    sample_list = (Sample.objects(md5__in=md5s)
-                   .only(*filter_data)
-                   .sanitize_sources(username))
-
     subscriptions = user_info.subscriptions
     subscription_count = 0
 
@@ -2664,12 +2628,9 @@ def generate_user_profile(username, request):
     result = {'username': username,
               'user_info': user_info,
               'user_sources': user_source_access,
-              'indicators': indicator_list,
-              'emails': email_list,
               'favorites': collected_favorites,
               'total_favorites': total_favorites,
-              'notifications': notifications,
-              'samples': sample_list,
+              'notifications': notifications,     
               'subscriptions': subscriptions,
               'subscription_count': subscription_count,
               'ui_themes': ui_themes(),
