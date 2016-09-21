@@ -272,23 +272,8 @@ def get_favorites(analyst):
         return {'success': True, 'message': '<div id="favorites_results">You have no favorites.</div>'}
 
     field_dict = {
-        'Actor': 'name',
-        'Backdoor': 'name',
-        'Campaign': 'name',
-        'Certificate': 'filename',
         'Comment': 'object_id',
-        'Domain': 'domain',
-        'Email': 'id',
-        'Event': 'title',
-        'Exploit': 'name',
-        'Indicator': 'id',
-        'IP': 'ip',
-        'PCAP': 'filename',
-        'RawData': 'title',
-        'Sample': 'filename',
-        'Screenshot': 'id',
-        'Signature': 'title',
-        'Target': 'email_address'
+        'Event': 'title',     
     }
 
     results = '''
@@ -386,21 +371,7 @@ def get_data_for_item(item_type, item_id):
     """
 
     type_to_fields = {
-        'Actor': ['name', ],
-        'Backdoor': ['name', ],
-        'Campaign': ['name', ],
-        'Certificate': ['filename', ],
-        'Domain': ['domain', ],
-        'Email': ['from_address', 'date', ],
-        'Event': ['title', 'event_type', ],
-        'Exploit': ['name', 'cve', ],
-        'Indicator': ['value', 'ind_type', ],
-        'IP': ['ip', 'type', ],
-        'PCAP': ['filename', ],
-        'RawData': ['title', ],
-        'Sample': ['filename', ],
-        'Signature': ['title', ],
-        'Target': ['email_address', ],
+        'Event': ['title', 'event_type', ], 
     }
     response = {'OK': 0, 'Msg': ''}
     if not item_id or not item_type:
@@ -922,22 +893,9 @@ def alter_bucket_list(obj, buckets, val):
 
         # Find and remove this bucket if, and only if, all counts are zero.
         if val == -1:
-            Bucket.objects(name=name,
-                           Actor=0,
-                           Backdoor=0,
-                           Campaign=0,
-                           Certificate=0,
-                           Domain=0,
-                           Email=0,
+            Bucket.objects(name=name, 
                            Event=0,
-                           Exploit=0,
-                           Indicator=0,
-                           IP=0,
-                           PCAP=0,
-                           RawData=0,
-                           Sample=0,
-                           Signature=0,
-                           Target=0).delete()
+                           ).delete()
 
 def generate_bucket_csv(request):
     """
@@ -1668,85 +1626,17 @@ def gen_global_query(obj,user,term,search_type="global",force_full=False):
         elif type_ == "AnalysisResult":
             search_list = [
                     {'results.result': search_query},
-            ]
-        elif type_ == "Actor":
-            search_list = [
-                    {'name': search_query},
-                    {'objects.value': search_query},
-            ]
-        elif type_ == "Certificate":
-            search_list = [
-                    {'md5': search_query},
-                    {'objects.value': search_query},
-                ]
-        elif type_ == "PCAP":
-            search_list = [
-                    {'md5': search_query},
-                    {'objects.value': search_query},
-                ]
-        elif type_ == "RawData":
-            search_list = [
-                    {'md5': search_query},
-                    {'data': search_query},
-                    {'objects.value': search_query},
-                ]
-        elif type_ == "Signature":
-            search_list = [
-                    {'md5': search_query},
-                    {'data': search_query},
-                    {'objects.value': search_query},
-                ]
-        elif type_ == "Indicator":
-            search_list = [
-                    {'value': search_query},
-                    {'objects.value': search_query}
-                ]
-        elif type_ == "Domain":
-            search_list = [
-                    {'domain': search_query},
-                    {'objects.value': search_query}
-                ]
-        elif type_ == "Email":
-            search_list = [
-                    {'from': search_query},
-                    {'subject': search_query},
-                    {'raw_body': search_query},
-                    {'raw_headers': search_query},
-                    {'objects.value': search_query},
-                    {'x_originating_ip': search_query},
-                    {'originating_ip': search_query}
-                ]
+            ] 
         elif type_ == "Event":
             search_list = [
                     {'description': search_query},
                     {'title': search_query},
                     {'objects.value': search_query}
                 ]
-        elif type_ == "IP":
-            search_list = [
-                    {'ip': search_query},
-                    {'objects.value': search_query}
-                ]
         elif type_ == "Comment":
             search_list = [
                     {'comment': search_query},
-                ]
-        elif type_ == "Campaign":
-            search_list = [
-                    {'name': search_query},
-                    {'aliases': search_query},
-                ]
-        elif type_ == "Screenshot":
-            search_list = [
-                    {'description': search_query},
-                    {'tags': search_query},
-                ]
-        elif type_ == "Target":
-            search_list = [
-                    {'email_address': search_query},
-                    {'firstname': search_query},
-                    {'lastname': search_query},
-                ]
+                ] 
         else:
             search_list = [{'name': search_query}]
         search_list.append({'source.instances.reference':search_query})
@@ -1754,73 +1644,13 @@ def gen_global_query(obj,user,term,search_type="global",force_full=False):
         search_list.append({'sectors': search_query})
         query = {'$or': search_list}
     else:
-        if type_ == "Domain":
-            query = {'domain': search_query}
-        elif type_ == "Email":
-            if search_type == "ip":
-                query = {'$or': [{'originating_ip': search_query},
-                                 {'x_originating_ip': search_query}]}
-            elif search_type == "reference":
-                query = {'source.instances.reference': search_query}
-            else:
-                query = defaultquery
-        elif type_ == "RawData":
-            if search_type == "data":
-                query = {'data': search_query}
-            elif search_type == "data_type":
-                query = {'data_type': search_query}
-            elif search_type == "title":
-                query = {'title': search_query}
-            elif search_type == "tool":
-                query = {'tool.name': search_query}
-            else:
-                query = defaultquery
-        elif type_ == "Signature":
-            if search_type == "data":
-                query = {'data': search_query}
-            elif search_type == "data_type":
-                query = {'data_type': search_query}
-            elif search_type == "title":
-                query = {'title': search_query}
-            elif search_type == "tool":
-                query = {'tool.name': search_query}
-            else:
-                query = defaultquery
-        elif type_ == "Event":
+        if type_ == "Event":
             if search_type == "campaign":
                 query = {'campaign.name': search_query}
             elif search_type == "source":
                 query = {'source.name': search_query}
             else:
-                query = defaultquery
-        elif type_ == "Indicator":
-            if search_type == "campaign":
-                query = {'campaign.name': search_query}
-            elif search_type == "ticket_number":
-                query = {'tickets.ticket_number': search_query}
-            elif search_type == "source":
-                query = {'source.name': search_query}
-            elif search_type == "confidence":
-                query = {'confidence.rating': search_query}
-            elif search_type == "impact":
-                query = {'impact.rating': search_query}
-            else:
-                query = defaultquery
-        elif type_ == "IP":
-            query = {'ip': search_query}
-        elif type_ == "Sample":
-            if search_type not in sample_queries:
-                return {'success': None,
-                        'ignore': False,
-                        'error': 'Search type not in sample queries.'}
-            query = sample_queries[search_type]
-            if 'size' in query:
-                try:
-                    query = {'size': int(query['size'])}
-                except ValueError:
-                    return {'success': None,
-                            'ignore': False,
-                            'error': 'Size must be an integer.'}
+                query = defaultquery      
         else:
             query = defaultquery
 
@@ -2797,60 +2627,6 @@ def generate_user_profile(username, request):
     subscription_count = 0
 
     # collect subscription information
-    if 'Sample' in subscriptions:
-        subscription_count += len(subscriptions['Sample'])
-        final_samples = []
-        ids = [ObjectId(s['_id']) for s in subscriptions['Sample']]
-        samples = Sample.objects(id__in=ids).only('md5', 'filename')
-        m = map(itemgetter('_id'), subscriptions['Sample'])
-        for sample in samples:
-            s = sample.to_dict()
-            s['md5'] = sample['md5']
-            s['id'] = sample.id
-            s['date'] = subscriptions['Sample'][m.index(sample.id)]['date']
-            final_samples.append(s)
-        subscriptions['Sample'] = final_samples
-
-    if 'PCAP' in subscriptions:
-        subscription_count += len(subscriptions['PCAP'])
-        final_pcaps = []
-        ids = [ObjectId(p['_id']) for p in subscriptions['PCAP']]
-        pcaps = PCAP.objects(id__in=ids).only('md5', 'filename')
-        m = map(itemgetter('_id'), subscriptions['PCAP'])
-        for pcap in pcaps:
-            p = pcap.to_dict()
-            p['id'] = pcap.id
-            p['date'] = subscriptions['PCAP'][m.index(pcap.id)]['date']
-            final_pcaps.append(p)
-        subscriptions['PCAP'] = final_pcaps
-
-    if 'Email' in subscriptions:
-        subscription_count += len(subscriptions['Email'])
-        final_emails = []
-        ids = [ObjectId(e['_id']) for e in subscriptions['Email']]
-        emails = Email.objects(id__in=ids).only('from_address',
-                                                'sender',
-                                                'subject')
-        m = map(itemgetter('_id'), subscriptions['Email'])
-        for email in emails:
-            e = email.to_dict()
-            e['id'] = email.id
-            e['date'] = subscriptions['Email'][m.index(email.id)]['date']
-            final_emails.append(e)
-        subscriptions['Email'] = final_emails
-
-    if 'Indicator' in subscriptions:
-        subscription_count += len(subscriptions['Indicator'])
-        final_indicators = []
-        ids = [ObjectId(i['_id']) for i in subscriptions['Indicator']]
-        indicators = Indicator.objects(id__in=ids).only('value', 'ind_type')
-        m = map(itemgetter('_id'), subscriptions['Indicator'])
-        for indicator in indicators:
-            i = indicator.to_dict()
-            i['id'] = indicator.id
-            i['date'] = subscriptions['Indicator'][m.index(indicator.id)]['date']
-            final_indicators.append(i)
-        subscriptions['Indicator'] = final_indicators
 
     if 'Event' in subscriptions:
         subscription_count += len(subscriptions['Event'])
@@ -2864,45 +2640,6 @@ def generate_user_profile(username, request):
             e['date'] = subscriptions['Event'][m.index(event.id)]['date']
             final_events.append(e)
         subscriptions['Event'] = final_events
-
-    if 'Domain' in subscriptions:
-        subscription_count += len(subscriptions['Domain'])
-        final_domains = []
-        ids = [ObjectId(d['_id']) for d in subscriptions['Domain']]
-        domains = Domain.objects(id__in=ids).only('domain')
-        m = map(itemgetter('_id'), subscriptions['Domain'])
-        for domain in domains:
-            d = domain.to_dict()
-            d['id'] = domain.id
-            d['date'] = subscriptions['Domain'][m.index(domain.id)]['date']
-            final_domains.append(d)
-        subscriptions['Domain'] = final_domains
-
-    if 'IP' in subscriptions:
-        subscription_count += len(subscriptions['IP'])
-        final_ips = []
-        ids = [ObjectId(a['_id']) for a in subscriptions['IP']]
-        ips = IP.objects(id__in=ids).only('ip')
-        m = map(itemgetter('_id'), subscriptions['IP'])
-        for ip in ips:
-            i = ip.to_dict()
-            i['id'] = ip.id
-            i['date'] = subscriptions['IP'][m.index(ip.id)]['date']
-            final_ips.append(i)
-        subscriptions['IP'] = final_ips
-
-    if 'Campaign' in subscriptions:
-        subscription_count += len(subscriptions['Campaign'])
-        final_campaigns = []
-        ids = [ObjectId(c['_id']) for c in subscriptions['Campaign']]
-        campaigns = Campaign.objects(id__in=ids).only('name')
-        m = map(itemgetter('_id'), subscriptions['Campaign'])
-        for campaign in campaigns:
-            c = campaign.to_dict()
-            c['id'] = campaign.id
-            c['date'] = subscriptions['Campaign'][m.index(campaign.id)]['date']
-            final_campaigns.append(c)
-        subscriptions['Campaign'] = final_campaigns
 
     # Collect favorite information
     favorites = user_info.favorites.to_dict()
@@ -3221,12 +2958,10 @@ def login_user(username, password, next_url=None, user_agent=None,
         response['type'] = "login_failed"
         response['message'] = error
         return response
-
     if request:
         totp = cripts_config.totp_web
     else:
         totp = cripts_config.totp_cli
-
     # Do the username and password authentication
     # TOTP is passed here so that authenticate() can check if
     # the threshold has been exceeded.
@@ -3236,7 +2971,6 @@ def login_user(username, password, next_url=None, user_agent=None,
                         remote_addr=remote_addr,
                         accept_language=accept_language,
                         totp_enabled=totp)
-
     if user:
         if totp == 'Required' or (totp == 'Optional' and user.totp):
             # Remote user auth'd but has not seen TOTP screen yet
@@ -3793,20 +3527,9 @@ def alter_sector_list(obj, sectors, val):
 
         # Find and remove this sector if, and only if, all counts are zero.
         if val == -1:
-            Sector.objects(name=name,
-                           Actor=0,
-                           Campaign=0,
-                           Certificate=0,
-                           Domain=0,
-                           Email=0,
+            Sector.objects(name=name,  
                            Event=0,
-                           Indicator=0,
-                           IP=0,
-                           PCAP=0,
-                           RawData=0,
-                           Sample=0,
-                           Signature=0,
-                           Target=0).delete()
+                           ).delete()
 
 def generate_sector_csv(request):
     """

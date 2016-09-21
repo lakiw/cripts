@@ -27,7 +27,7 @@ class Command(BaseCommand):
         create_dashboard(drop)
 
 def create_dashboard(drop=False):
-    from crits.dashboards.dashboard import SavedSearch, Dashboard
+    from cripts.dashboards.dashboard import SavedSearch, Dashboard
     if drop:
         Dashboard.drop_collection()
         SavedSearch.drop_collection()
@@ -66,22 +66,6 @@ def getColumnsForTable(title):
         if title == "Counts":
             colFields = ["type", "count"]
             colNames = ["Type", "Count"]
-        elif  title == "Top Campaigns":
-            colFields = ["name", "email_count", "indicator_count", "sample_count", 
-                         "domain_count", "ip_count", "event_count", "pcap_count"]
-            colNames = ["Name", "Email Count", "Indicator Count", "Sample Count", 
-                         "Domain Count", "IP Count", "Event Count", "PCAP Count"]
-        elif  title == "Recent Indicators":
-            colFields = ["details","value", "type", "modified", "status", "source", "campaign"]
-            colNames = ["Details","Value", "Type", "Added", "Status", "Source", "Campaign"]
-        elif  title == "Recent Emails":
-            colFields = ["details","from", "to", "subject", "isodate", "source", "campaign"]
-            colNames = ["Details","From", "Recip", "Subject", "Date", "Source", "Campaign"]
-        elif  title == "Recent Samples":
-            colFields = ["details","filename", "size", "filetype", "created",
-                          "modified", "source", "campaign"]
-            colNames = ["Details","Filename", "Size", "Filetype", "Added",
-                        "Modified", "Source", "Campaign"]
         columns = []
         for field, name in zip(colFields, colNames):
             if field == "details":

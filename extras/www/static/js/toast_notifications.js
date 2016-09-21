@@ -1,5 +1,5 @@
-$.noty.themes.crits = {
-    name    : 'crits',
+$.noty.themes.cripts = {
+    name    : 'cripts',
     helpers : {},
     modal   : {
         css: {
@@ -238,7 +238,7 @@ $(document).ready(function() {
             dismissQueue: true,
             layout      : 'topCenter',
             timeout     : timeout,
-            theme       : 'crits',
+            theme       : 'cripts',
             maxVisible  : max_visible_notifications,
             closeWith   : ['button'],
             callback: {

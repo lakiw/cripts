@@ -4,8 +4,8 @@
 *.swo
 
 # Ignore custom config files and logs
-crits/config/database.py
-crits/config/overrides.py
+cripts/config/database.py
+cripts/config/overrides.py
 logs/*.log*
 
 # Ignore build files

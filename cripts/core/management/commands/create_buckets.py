@@ -1,6 +1,6 @@
 from django.core.management.base import BaseCommand
 
-from crits.core.s3_tools import s3_create_bucket
+from cripts.core.s3_tools import s3_create_bucket
 import settings
 
 class Command(BaseCommand):

@@ -104,8 +104,8 @@ def prep_indexes():
 
 def update_database_version():
 
-    c = CRIPsConfig.objects().first()
-    c.crips_version = "0.1.0"
+    c = CRIPTsConfig.objects().first()
+    c.cripts_version = "0.1.0"
     c.save()
 
 def prep_database():

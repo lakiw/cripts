@@ -40,9 +40,9 @@ def dev_setup():
         # These let you set the password to a simpler string
         run("python manage.py setconfig password_complexity_regex '.*'")
         run("python manage.py setconfig password_complexity_desc 'Anything'")
-        # These aren't strictly required, but CRITs will complain if you try to
+        # These aren't strictly required, but CRIPTs will complain if you try to
         # change any other settings, if these aren't defined.
-        run("python manage.py setconfig crits_email 'crits@localhost'")
+        run("python manage.py setconfig cripts_email 'cripts@localhost'")
         run("python manage.py setconfig instance_url 'http://localhost:8080/'")
 
 

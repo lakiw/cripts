@@ -406,7 +406,6 @@ If you are already setup with TOTP, please enter your PIN + Key above."""
                           remote_addr, accept_language, request,
                           totp_pass=totp_pass)
         return HttpResponse(json.dumps(resp), content_type="application/json")
-
     # Display template for authentication
     return render_to_response('login.html',
                               {'next': url,
@@ -1043,10 +1042,8 @@ def base_context(request):
         base_context['add_new_action'] = NewActionForm()
         base_context['comment_add'] = AddCommentForm()
         base_context['inline_comment_add'] = InlineCommentForm()
-        base_context['location_add'] = AddLocationForm()
         base_context['relationship_form'] = ForgeRelationshipForm()
         base_context['source_access'] = SourceAccessForm()
-        base_context['upload_tlds'] = TLDUpdateForm()
         base_context['user_role_add'] = AddUserRoleForm()
         base_context['new_ticket'] = TicketForm(initial={'date': datetime.datetime.now()})
 
@@ -1064,10 +1061,6 @@ def base_context(request):
         except Exception, e:
             logger.warning("Base Context SourceForm Error: %s" % e)
         try:
-            base_context['upload_csv'] = UploadIndicatorCSVForm(user)
-        except Exception, e:
-            logger.warning("Base Context UploadIndicatorCSVForm Error: %s" % e)
-        try:
             base_context['upload_event'] = EventForm(user)
         except Exception, e:
             logger.warning("Base Context EventForm Error: %s" % e)
@@ -1079,10 +1072,7 @@ def base_context(request):
             base_context['releasability_form'] = AddReleasabilityForm(user)
         except Exception, e:
             logger.warning("Base Context AddReleasabilityForm Error: %s" % e)
-        try:
-            base_context['upload_signature'] = UploadSignatureForm(user)
-        except Exception, e:
-            logger.warning("Base Context UploadSignatureForm Error: %s" % e)
+
 
         # Other info acquired from functions
         try:
@@ -1131,29 +1121,17 @@ def base_context(request):
         except Exception, e:
             logger.warning("Base Context AddSourceForm Error: %s" % e)
         base_context['category_list'] = [
-                                        {'collection': '', 'name': ''},
-                                        {'collection': settings.COL_BACKDOORS,
-                                            'name': 'Backdoors'},
-                                        {'collection': settings.COL_CAMPAIGNS,
-                                            'name': 'Campaigns'},
+                                        {'collection': '', 'name': ''},    
                                         {'collection': settings.COL_EVENT_TYPES,
                                             'name': 'Event Types'},
                                         {'collection': settings.COL_IDB_ACTIONS,
                                             'name': 'Actions'},
-                                        {'collection': settings.COL_INTERNAL_LOCATIONS,
-                                            'name': 'Internal Locations'},
                                         {'collection': settings.COL_OBJECT_TYPES,
                                             'name': 'Object Types'},
-                                        {'collection': settings.COL_RAW_DATA_TYPES,
-                                            'name': 'Raw Data Types'},
                                         {'collection': settings.COL_RELATIONSHIP_TYPES,
                                             'name': 'Relationship Types'},
                                         {'collection': settings.COL_SOURCE_ACCESS,
                                             'name': 'Sources'},
-                                        {'collection': settings.COL_SIGNATURE_TYPES,
-                                            'name': 'Signature Types'},
-                                        {'collection': settings.COL_SIGNATURE_DEPENDENCY,
-                                            'name': 'Signature Dependency'},
                                         {'collection': settings.COL_USER_ROLES,
                                             'name': 'User Roles'}
                                         ]
@@ -1468,17 +1446,7 @@ def collections(request):
     """
 
     colls = {}
-    colls['COL_CERTIFICATES'] = settings.COL_CERTIFICATES
-    colls['COL_EMAIL'] = settings.COL_EMAIL
     colls['COL_EVENTS'] = settings.COL_EVENTS
-    colls['COL_DOMAINS'] = settings.COL_DOMAINS
-    colls['COL_INDICATORS'] = settings.COL_INDICATORS
-    colls['COL_IPS'] = settings.COL_IPS
-    colls['COL_PCAPS'] = settings.COL_PCAPS
-    colls['COL_RAW_DATA'] = settings.COL_RAW_DATA
-    colls['COL_SAMPLES'] = settings.COL_SAMPLES
-    colls['COL_SIGNATURES'] = settings.COL_SIGNATURES
-    colls['COL_TARGETS'] = settings.COL_TARGETS
     return colls
 
 @user_passes_test(user_can_view_data)

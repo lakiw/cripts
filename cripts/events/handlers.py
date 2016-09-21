@@ -295,7 +295,6 @@ def add_new_event(title, description, event_type, source, method, reference,
     :param campaign_confidence: Confidence to associate with the Campaign
     :type campaign_confidence: str
     """
-
     result = dict()
     if not source:
         return {'success': False, 'message': "Missing source information."}

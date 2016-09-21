@@ -1,7 +1,7 @@
 from django.core.management.base import BaseCommand
 
-from crits.core.bucket import Bucket
-from crits.core.class_mapper import class_from_type
+from cripts.core.bucket import Bucket
+from cripts.core.class_mapper import class_from_type
 
 class Command(BaseCommand):
     """

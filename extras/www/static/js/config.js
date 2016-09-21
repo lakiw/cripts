@@ -9,9 +9,9 @@ var generalObject = {
 		nodeId:"#node_generalTab",
 		contentId:"#generalTab"
 };
-var CRITsObject = {
-             		nodeId:"#node_CRITsTab",
-             		contentId:"#CRITsTab",
+var CRIPTsObject = {
+             		nodeId:"#node_CRIPTsTab",
+             		contentId:"#CRIPTsTab",
                		isChanged:false
              };
 var LDAPObject = {
@@ -41,7 +41,7 @@ var loggingObject = {
                };
 //array of objects referring to the inner System nodes
 var objectArray = [generalObject,
-                   CRITsObject,
+                   CRIPTsObject,
                    LDAPObject,
                    securityObject,
                    servicesTabObject,

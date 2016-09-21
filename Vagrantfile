@@ -6,7 +6,7 @@ Vagrant.configure(2) do |config|
 
   config.vm.network "forwarded_port", guest: 8080, host: 8080
 
-  # Assumes that, if present, the "crits_services" repository is checked out
+  # Assumes that, if present, the "cripts_services" repository is checked out
   # beside the "crits" repository.
   if File.exists?("../cripts_services")
     # We use this destination because it's what the other CRIPTs documentation

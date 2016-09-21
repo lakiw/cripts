@@ -17,63 +17,11 @@
             <thead>
                 <tr style="border-top: 0px;">
                     <th width="20px"><span class="ui-icon ui-icon-document" title="Details"></span></th>
-                    <th width="120px">Relationship</th>
-                    {% if rel_type == 'Target' %}
-                        <th>First Name</th>
-                        <th>Last Name</th>
-                        <th>Email Address</th>
-                        <th>Email Count</th>
-                    {% elif rel_type == 'Actor' %}
-                        <th>Name</th>
-                        <th>Campaign</th>
-                    {% elif rel_type == 'Backdoor' %}
-                        <th>Name</th>
-                        <th>Version</th>
-                        <th>Campaign</th>
-                    {% elif rel_type == 'Event' %}
+                    <th width="120px">Relationship</th>      
+                    {% if rel_type == 'Event' %}
                         <th>Title</th>
                         <th>Type</th>
-                        <th>Description</th>
-                    {% elif rel_type == 'Exploit' %}
-                        <th>Name</th>
-                        <th>CVE</th>
-                        <th>Campaign</th>
-                    {% elif rel_type == 'Indicator' %}
-                        <th>Value</th>
-                        <th>Type</th>
-                        <th>Actions</th>
-                        {% if relationship.type in 'EventEmail' %}
-                            <th>Event Count</th>
-                        {% endif %}
-                    {% elif rel_type == 'Certificate' %}
-                        <th>Filename</th>
-                        <th>Filetype</th>
-                        <th>Description</th>
-                    {% elif rel_type == 'PCAP' %}
-                        <th>Filename</th>
-                        <th>Description</th>
-                    {% elif rel_type == 'RawData' %}
-                        <th>Title</th>
-                        <th>Data Type</th>
-                        <th>Tool</th>
-                        <th>Description</th>
-                        <th>Version</th>
-                    {% elif rel_type == 'Signature' %}
-                        <th>Title</th>
-                        <th>Data Type</th>
-                        <th>Description</th>
-                        <th>Version</th>
-                    {% elif rel_type == 'IP' %}
-                        <th>IP Address</th>
-                    {% elif rel_type == 'Domain' %}
-                        <th>Domain Name</th>
-                    {% elif rel_type == 'Campaign' %}
-                        <th>Name</th>
-                    {% else %}
-                        <th>Details</th>
-                    {% endif %}
-                    {% if rel_type in "RawDataSignaturePCAPCertificateIndicatorEvent" %}
-                      <th>Campaign</th>
+                        <th>Description</th>          
                     {% endif %}
                     <th>Analyst</th>
                     <th>Date</th>

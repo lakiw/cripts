@@ -19,8 +19,6 @@ class CRIPTsConfig(CriptsDocument, Document):
         "schema_doc": {
         },
     }
-    print "START"
-    print settings.COL_CONFIG
     allowed_hosts = ListField(StringField(), default=['*'])
     classification = StringField(default='unclassified')
     company_name = StringField(default='My Company')

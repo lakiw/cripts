@@ -121,6 +121,7 @@ COL_COMMENTS = "comments"                                 # comments collection
 COL_CONFIG = "config"                                     # config collection
 COL_COUNTS = "counts"                                     # general counts for dashboard
 COL_EVENTS = "events"                                     # main events collection
+COL_EVENT_TYPES = "event_types"                           # event types for events
 COL_IDB_ACTIONS = "idb_actions"                           # list of available actions to be taken with indicators
 COL_LOCATIONS = "locations"                               # Locations collection
 COL_NOTIFICATIONS = "notifications"                       # notifications collection
@@ -348,7 +349,7 @@ SESSION_ENGINE = 'mongoengine.django.sessions'
 SESSION_SERIALIZER = 'mongoengine.django.sessions.BSONSerializer'
 
 AUTHENTICATION_BACKENDS = (
-    'crips.core.user.CRIPTsAuthBackend',
+    'cripts.core.user.CRIPTsAuthBackend',
 )
 if REMOTE_USER:
     MIDDLEWARE_CLASSES = (
