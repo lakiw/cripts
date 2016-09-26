@@ -1,6 +1,6 @@
 # Welcome to CRIPTs
 
-## Important! I just forked the code and updated the README. No actual work has been done on this project so far. In fact, I probably won't get around to this for a while. The reason I forked it was simply to kick myself in the butt to get around to developing this since dealing with multiple large password datasets is a pain
+## Important! I am currently in the process of adding basic functionality. This project currently doesn't work and I am making no effort to ensure backwards compatability once I do get it working"
 
 ## What Is CRIPTs?
 
