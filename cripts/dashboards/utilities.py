@@ -1,6 +1,11 @@
 from cripts.services.analysis_result import AnalysisResult
 from cripts.comments.comment import Comment
 from cripts.events.event import Event
+from cripts.email_addresses.email_addresses import EmailAddress
+from cripts.hashes.hashes import Hash
+from cripts.usernames.usernames import Username
+from cripts.datasets.datasets import Dataset
+
 
 
 def getHREFLink(object, object_type):

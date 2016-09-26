@@ -57,7 +57,7 @@ class Event(CriptsBaseAttributes, CriptsSourceDocument, CriptsActionsDocument,
                                             "favorite",
                                             "id"],
                          'hidden_fields': [],
-                         'linked_fields': ["source", "campaign", "event_type"],
+                         'linked_fields': ["source", "event_type"],
                          'details_link': 'details',
                          'no_sort': ['details']
                        }
