@@ -118,8 +118,8 @@ class ConfigSecurityForm(forms.Form):
     password_complexity_regex = forms.CharField(
         widget=forms.TextInput,
         help_text='*Complexity regex for new passwords',
-        initial='(?=^.{8,}$)((?=.*\\d)|(?=.*\\W+))(?![.\n])(?=.*[A-Z])(?=.*[a-z]).*$',
-        required=True)
+        initial='',
+        required=False)
     password_complexity_desc = forms.CharField(
         widget=forms.TextInput,
         help_text='*Description of complexity regex',

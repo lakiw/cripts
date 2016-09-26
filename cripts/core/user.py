@@ -181,56 +181,8 @@ class CRIPTsUser(CriptsDocument, CriptsSchemaDocument, Document):
             'role': 'The role this user has been granted from a CRIPTs Admin',
             'sources': ('List [] of source names this user has been granted'
                         ' access to view data from'),
-            'subscriptions': {
-                'Campaign': [
-                    {
-                        'date': 'ISODate subscribed',
-                        'id': 'ObjectId of the object subscribed to'
-                    }
-                ],
-                'Domain': [
-                    {
-                        'date': 'ISODate subscribed',
-                        'id': 'ObjectId of the object subscribed to'
-                    }
-                ],
-                'Email': [
-                    {
-                        'date': 'ISODate subscribed',
-                        'id': 'ObjectId of the object subscribed to'
-                    }
-                ],
-                'Target': [
-                    {
-                        'date': 'ISODate subscribed',
-                        'id': 'ObjectId of the object subscribed to'
-                    }
-                ],
+            'subscriptions': {   
                 'Event': [
-                    {
-                        'date': 'ISODate subscribed',
-                        'id': 'ObjectId of the object subscribed to'
-                    }
-                ],
-                'IP': [
-                    {
-                        'date': 'ISODate subscribed',
-                        'id': 'ObjectId of the object subscribed to'
-                    }
-                ],
-                'Indicator': [
-                    {
-                        'date': 'ISODate subscribed',
-                        'id': 'ObjectId of the object subscribed to'
-                    }
-                ],
-                'PCAP': [
-                    {
-                        'date': 'ISODate subscribed',
-                        'id': 'ObjectId of the object subscribed to'
-                    }
-                ],
-                'Sample': [
                     {
                         'date': 'ISODate subscribed',
                         'id': 'ObjectId of the object subscribed to'
@@ -244,18 +196,7 @@ class CRIPTsUser(CriptsDocument, CriptsSchemaDocument, Document):
                 ],
             },
             'favorites': {
-                'Actor': [],
-                'Backdoor': [],
-                'Campaign': [],
-                'Domain': [],
-                'Email': [],
-                'Target': [],
                 'Event': [],
-                'Exploit': [],
-                'IP': [],
-                'Indicator': [],
-                'PCAP': [],
-                'Sample': [],
             }
         },
     }
@@ -630,7 +571,7 @@ class CRIPTsUser(CriptsDocument, CriptsSchemaDocument, Document):
         return False
 
     @classmethod
-    def create_user(cls, username, password, email=None, analyst=None):
+    def create_user(cls, username, password=None, email=None, analyst=None):
         """
         Create (and save) a new user with the given username, password and
         email address.
@@ -644,13 +585,12 @@ class CRIPTsUser(CriptsDocument, CriptsSchemaDocument, Document):
             try:
                 email_name, domain_part = email.strip().split('@', 1)
             except ValueError:
-                pass
+                return None
             else:
                 email = '@'.join([email_name, domain_part.lower()])
 
         user = cls(username=username, email=email, date_joined=now)
-        user.create_api_key("default", analyst, default=True)
-        if password and user.set_password(password):
+        if password is not None and user.set_password(password):
             user.save(username=analyst)
             return user
         elif CRIPTsConfig.remote_user:

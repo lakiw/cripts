@@ -10,3 +10,11 @@ class ZipFileError(Exception):
         self.value = value
     def __str__(self):
         return repr(self.value)
+    
+    
+class ErrorMiddleware(object):
+    def process_exception(self, request, exception):
+        import sys, traceback
+        print("Exception : " + str(exception))
+        traceback.print_exc(file=sys.stdout)
+        return none

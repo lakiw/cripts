@@ -71,18 +71,21 @@ def class_from_value(type_, value):
 
     # doing this to avoid circular imports
     from cripts.comments.comment import Comment
+    from cripts.events.event import Event
 
     # Make sure value is a string...
     value = str(value)
 
     # Use bson.ObjectId to make sure this is a valid ObjectId, otherwise
     # the queries below will raise a ValidationError exception.
-    if (type_ in ['Comment',] and
+    if (type_ in ['Comment','Event'] and
        not ObjectId.is_valid(value.decode('utf8'))):
         return None
-
+    
     if type_ == 'Comment':
         return Comment.objects(id=value).first()
+    elif type_ == 'Event':
+        return Event.objects(id=value).first()
     else:
         return None
 
@@ -102,12 +105,19 @@ def class_from_type(type_):
 
     # doing this to avoid circular imports
     from cripts.comments.comment import Comment
+    from cripts.events.event import Event
     from cripts.core.cripts_mongoengine import Action
     from cripts.core.source_access import SourceAccess
     from cripts.core.user_role import UserRole
 
     if type_ == 'Comment':
         return Comment
+    elif type_ == 'Action':
+        return Action
+    elif type_ == 'Event':
+        return Event
+    elif type_ == 'SourceAccess':
+        return SourceAccess
     elif type_ == 'UserRole':
         return UserRole
     else:

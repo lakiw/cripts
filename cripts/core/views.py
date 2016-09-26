@@ -176,7 +176,6 @@ def favorites_list(request, ctype=None, option=None):
     :type request: :class:`django.http.HttpRequest`
     :returns: :class:`django.http.HttpResponse`
     """
-
     return generate_favorites_jtable(request, ctype, option)
 
 
@@ -1574,12 +1573,8 @@ def item_editor(request):
     """
 
     counts = {}
-    obj_list = [ActorThreatIdentifier,
-                Campaign,
-                Action,
-                RawDataType,
-                SignatureType,
-                SignatureDependency,
+    obj_list = [
+                Action, 
                 SourceAccess,
                 UserRole]
     for col_obj in obj_list:

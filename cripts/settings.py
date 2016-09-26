@@ -202,8 +202,8 @@ TIME_ZONE =                 cripts_config.get('timezone', 'America/New_York')
 ZIP7_PATH =                 cripts_config.get('zip7_path', '/usr/bin/7z')
 ZIP7_PASSWORD =             cripts_config.get('zip7_password', 'hashed')
 REMOTE_USER =               cripts_config.get('remote_user', False)
-PASSWORD_COMPLEXITY_REGEX = cripts_config.get('password_complexity_regex', '(?=^.{1,}$)')
-PASSWORD_COMPLEXITY_DESC =  cripts_config.get('password_complexity_desc', '1 character required, this is a password hash research platform. I trust you to do what you need to.')
+PASSWORD_COMPLEXITY_REGEX = cripts_config.get('password_complexity_regex', '')
+PASSWORD_COMPLEXITY_DESC =  cripts_config.get('password_complexity_desc', 'No complexity requirement. This is a password hash research platform. I trust you to do what you need to.')
 DEPTH_MAX =                 cripts_config.get('depth_max', '10')
 TOTAL_MAX =                 cripts_config.get('total_max', '250')
 REL_MAX =                   cripts_config.get('rel_max', '50')
@@ -276,6 +276,7 @@ MIDDLEWARE_CLASSES = (
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'cripts.core.user.AuthenticationMiddleware',
+    'cripts.core.exceptions.ErrorMiddleware',
 )
 
 STATICFILES_FINDERS = (

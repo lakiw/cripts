@@ -1258,7 +1258,7 @@ def modify_source_access(analyst, data):
             data.get('email') )
         if not user:
             return {'success': False,
-                    'message': 'Missing user information username/password/email'}
+                    'message': 'Missing user information username/password/email or invalid e-mail'}
     user.first_name = data['first_name']
     user.last_name = data['last_name']
     user.email = data['email']
@@ -2000,7 +2000,7 @@ def jtable_ajax_list(col_obj,url,urlfieldparam,request,excludes=[],includes=[],q
     :param query: MongoDB query
     :type query: dict
     """
-
+    
     response = {"Result": "ERROR"}
     users_sources = user_sources(request.user.username)
     if request.is_ajax():
@@ -2017,17 +2017,14 @@ def jtable_ajax_list(col_obj,url,urlfieldparam,request,excludes=[],includes=[],q
         sort = request.GET.get("jtSorting", urlfieldparam+" ASC")
         keys = sort.split(',')
         multisort = []
-
+        
         keymaps = {
-            "actor_identifier": "identifiers.identifier_id",
-            "campaign": "campaign.name",
             "source": "source.name",
             "confidence": "confidence.rating",
             "impact": "impact.rating",
             "object_value": "objects.value",
             "analysis_result": "results.result",
         }
-
         for key in keys:
             (keyname, keyorder) = key.split()
             if keyname in keymaps:
@@ -2035,96 +2032,94 @@ def jtable_ajax_list(col_obj,url,urlfieldparam,request,excludes=[],includes=[],q
             if keyorder == "DESC":
                 keyname = "-%s" % keyname
             multisort.append(keyname)
-
-        # Build the query
-        term = ""
-        if not query:
-            resp = get_query(col_obj, request)
-            if resp['Result'] in ["ERROR", "IGNORE"]:
-                return resp
-            query = resp['query']
-            term = resp['term']
-
-        response = data_query(col_obj, user=request.user.username, limit=pageSize,
-                              skip=skip, sort=multisort, query=query,
-                              projection=includes)
-        if response['result'] == "ERROR":
-            return {'Result': "ERROR", 'Message': response['msg']}
-        response['cripts_type'] = col_obj._meta['cripts_type']
-        # Escape term for rendering in the UI.
-        response['term'] = cgi.escape(term)
-        response['data'] = response['data'].to_dict(excludes, includes)
-        # Convert data_query to jtable stuff
-        response['Records'] = response.pop('data')
-        response['TotalRecordCount'] = response.pop('count')
-        response['Result'] = response.pop('result')
-        for doc in response['Records']:
-            for key, value in doc.items():
-                # all dates should look the same
-                if isinstance(value, datetime.datetime):
-                    doc[key] = datetime.datetime.strftime(value,
-                                                          "%Y-%m-%d %H:%M:%S")
-                if key == "password_reset":
-                    doc['password_reset'] = None
-                if key == "campaign":
-                    camps = []
-                    for campdict in value:
-                        camps.append(campdict['name'])
-                    doc[key] = "|||".join(camps)
-                elif key == "source":
-                    srcs = []
-                    for srcdict in doc[key]:
-                        if srcdict['name'] in users_sources:
-                            srcs.append(srcdict['name'])
-                    doc[key] = "|||".join(srcs)
-                elif key == "tags":
-                    tags = []
-                    for tag in doc[key]:
-                        tags.append(tag)
-                    doc[key] = "|||".join(tags)
-                elif key == "is_active":
-                    if value:
-                        doc[key] = "True"
-                    else:
-                        doc[key] = "False"
-                elif key == "datatype":
-                    doc[key] = value.keys()[0]
-                elif key == "results":
-                    doc[key] = len(doc[key])
-                elif key == "preferred":
-                    final = ""
-                    for p in doc[key]:
-                        final += p['object_type']
-                        final += "|"
-                        final += p['object_field']
-                        final += "|"
-                        final += p['object_value']
-                        final += "||"
-                    doc[key] = final
-                elif isinstance(value, list):
-                    if value:
-                        for item in value:
-                            if not isinstance(item, basestring):
-                                break
+            
+            # Build the query
+            term = ""
+            if not query:            
+                resp = get_query(col_obj, request)
+                if resp['Result'] in ["ERROR", "IGNORE"]:
+                    return resp
+                query = resp['query']
+                term = resp['term']
+                
+            response = data_query(col_obj, user=request.user.username, limit=pageSize,
+                                  skip=skip, sort=multisort, query=query,
+                                  projection=includes)
+            
+            if response['result'] == "ERROR":
+                return {'Result': "ERROR", 'Message': response['msg']}
+            response['cripts_type'] = col_obj._meta['cripts_type']
+            # Escape term for rendering in the UI.
+            response['term'] = cgi.escape(term)
+            response['data'] = response['data'].to_dict(excludes, includes)
+            # Convert data_query to jtable stuff
+            response['Records'] = response.pop('data')
+            response['TotalRecordCount'] = response.pop('count')
+            response['Result'] = response.pop('result')
+            
+            for doc in response['Records']:
+                for key, value in doc.items():
+                    # all dates should look the same
+                    if isinstance(value, datetime.datetime):
+                        doc[key] = datetime.datetime.strftime(value,
+                                                              "%Y-%m-%d %H:%M:%S")
+                    if key == "password_reset":
+                        doc['password_reset'] = None
+                    elif key == "source":
+                        srcs = []
+                        for srcdict in doc[key]:
+                            if srcdict['name'] in users_sources:
+                                srcs.append(srcdict['name'])
+                        doc[key] = "|||".join(srcs)
+                    elif key == "tags":
+                        tags = []
+                        for tag in doc[key]:
+                            tags.append(tag)
+                        doc[key] = "|||".join(tags)
+                    elif key == "is_active":
+                        if value:
+                            doc[key] = "True"
                         else:
-                            doc[key] = ",".join(value)
-                    else:
-                        doc[key] = ""
-                doc[key] = html_escape(doc[key])
-            if col_obj._meta['cripts_type'] == "Comment":
-                mapper = {
-                    "Event": 'cripts.events.views.view_event',
-                }
-                doc['url'] = reverse(mapper[doc['obj_type']],
-                                    args=(doc['url_key'],))
-            elif col_obj._meta['cripts_type'] == "AuditLog":
-                if doc.get('method', 'delete()') != 'delete()':
-                    doc['url'] = details_from_id(doc['type'],
-                                                 doc.get('target_id', None))
-            elif not url:
-                doc['url'] = None
-            else:
-                doc['url'] = reverse(url, args=(unicode(doc[urlfieldparam]),))
+                            doc[key] = "False"
+                    elif key == "datatype":
+                        doc[key] = value.keys()[0]
+                    elif key == "results":
+                        doc[key] = len(doc[key])
+                    elif key == "preferred":
+                        final = ""
+                        for p in doc[key]:
+                            final += p['object_type']
+                            final += "|"
+                            final += p['object_field']
+                            final += "|"
+                            final += p['object_value']
+                            final += "||"
+                        doc[key] = final
+                    elif isinstance(value, list):
+                        if value:
+                            for item in value:
+                                if not isinstance(item, basestring):
+                                    break
+                            else:
+                                doc[key] = ",".join(value)
+                        else:
+                            doc[key] = ""
+                    doc[key] = html_escape(doc[key])
+                if col_obj._meta['cripts_type'] == "Comment":
+                    mapper = {
+                        "Event": 'cripts.events.views.view_event',
+                    }
+                    doc['url'] = reverse(mapper[doc['obj_type']],
+                                        args=(doc['url_key'],))
+                elif col_obj._meta['cripts_type'] == "AuditLog":
+                    if doc.get('method', 'delete()') != 'delete()':
+                        doc['url'] = details_from_id(doc['type'],
+                                                     doc.get('target_id', None))
+                elif not url:
+                    doc['url'] = None
+                else:
+                    doc['url'] = reverse(url, args=(unicode(doc[urlfieldparam]),))
+
     return response
 
 def jtable_ajax_delete(obj,request):
@@ -2392,48 +2387,23 @@ def generate_items_jtable(request, itype, option):
     :type option: str of either 'jtlist', 'jtdelete', or 'inline'.
     :returns: :class:`django.http.HttpResponse`
     """
-
     obj_type = class_from_type(itype)
-
-    if itype == 'ActorThreatIdentifier':
-        fields = ['name', 'active', 'id']
-        click = "function () {window.parent.$('#actor_identifier_type_add').click();}"
-    elif itype == 'Campaign':
-        fields = ['name', 'description', 'active', 'id']
-        click = "function () {window.parent.$('#new-campaign').click();}"
-    elif itype == 'Action':
+    if itype == 'Action':
         fields = ['name', 'active', 'object_types', 'preferred', 'id']
         click = "function () {window.parent.$('#action_add').click();}"
-    elif itype == 'RawDataType':
-        fields = ['name', 'active', 'id']
-        click = "function () {window.parent.$('#raw_data_type_add').click();}"
-    elif itype == 'SignatureType':
-        fields = ['name', 'active', 'id']
-        click = "function () {window.parent.$('#signature_type_add').click();}"
-    elif itype == 'SignatureDependency':
-        fields = ['name', 'id']
-        click = "function () {window.parent.$('#signature_dependency_add').click();}"
     elif itype == 'SourceAccess':
         fields = ['name', 'active', 'id']
         click = "function () {window.parent.$('#source_create').click();}"
     elif itype == 'UserRole':
         fields = ['name', 'active', 'id']
         click = "function () {window.parent.$('#user_role').click();}"
-
     if option == 'jtlist':
         details_url = None
         details_url_key = 'name'
         response = jtable_ajax_list(obj_type, details_url, details_url_key,
-                                    request, includes=fields)
+                            request, includes=fields)
         return HttpResponse(json.dumps(response, default=json_handler),
                             content_type="application/json")
-
-
-    '''Special case for dependency, to allow for deletions, no more toggle on dependencies '''
-    ''' This is modified here to fit with rest of code, there is no delete field in mongo, but the user can delete '''
-
-    if itype == 'SignatureDependency':
-        fields = ['name', 'delete', 'id']
 
     jtopts = {
         'title': "%ss" % itype,
@@ -2467,15 +2437,6 @@ def generate_items_jtable(request, itype, option):
             }
             """
 
-    '''special case for signature dependency, add a delete button to allow for removal'''
-    if itype == 'SignatureDependency':
-        for field in jtable['fields']:
-            if field['fieldname'].startswith("'delete"):
-                field['display'] = """ function (data) {
-                return '<button title="Delete" class="jtable-command-button jtable-delete-command-button" id="to_delete_' + data.record.id + '" href="#" onclick=\\'javascript:deleteSignatureDependency("%s","'+data.record.id+'");\\'><span>Delete</span></button>';
-                }
-                """ % itype
-
     if option == "inline":
         return render_to_response("jtable.html",
                                   {'jtable': jtable,
@@ -2487,6 +2448,7 @@ def generate_items_jtable(request, itype, option):
                                   {'jtable': jtable,
                                    'jtid': 'items_listing'},
                                   RequestContext(request))
+   
 
 def generate_users_jtable(request, option):
     """
@@ -2932,6 +2894,7 @@ def login_user(username, password, next_url=None, user_agent=None,
                         remote_addr=remote_addr,
                         accept_language=accept_language,
                         totp_enabled=totp)
+    
     if user:
         if totp == 'Required' or (totp == 'Optional' and user.totp):
             # Remote user auth'd but has not seen TOTP screen yet
@@ -2982,6 +2945,7 @@ def login_user(username, password, next_url=None, user_agent=None,
             user.login_attempts.append(e)
             user.save()
         if user.is_active:
+            print("here")
             user.invalid_login_attempts = 0
             user.password_reset.reset_code = ""
             user.save()
