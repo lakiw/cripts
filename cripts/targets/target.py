@@ -7,33 +7,29 @@ from cripts.core.cripts_mongoengine import CriptsBaseAttributes, CriptsSourceDoc
 from cripts.core.cripts_mongoengine import CriptsActionsDocument
 
 
-class EmailAddresss(CriptsBaseAttributes, CriptsSourceDocument, CriptsActionsDocument,
+class Target(CriptsBaseAttributes, CriptsSourceDocument, CriptsActionsDocument,
             Document):
     """
-    EmailAddress class.
+    Target class.
     """
 
     meta = {
-        "collection": settings.COL_EMAIL_ADDRESSES,
-        "cripts_type": 'EmailAddress',
+        "collection": settings.COL_HASHES,
+        "cripts_type": 'Target',
         "latest_schema_version": 1,
         "schema_doc": {
-            'address': 'Email address, eg: test@test.com',
-            'email_address_id': 'Unique email_address ID',
-            'datasets': ('List [] of datasets this email_address'
-                ' appeared in'),
-            'domain': 'Domain of the e-mail address, eg test.com',
+            'type': 'If the target is a person, service, or server',
             'source': ('List [] of sources who provided information about this'
-                ' email address')
+                ' target')
         },
         "jtable_opts": {
-                         'details_url': 'cripts.email_addresses.views.view_email_address',
+                         'details_url': 'cripts.targets.views.view_target',
                          'details_url_key': 'id',
                          'default_sort': "created DESC",
-                         'searchurl': 'cripts.email_addresses.views.email_addresses_listing',
-                         'fields': [ "addresss", "created",
+                         'searchurl': 'cripts.targets.views.targets_listing',
+                         'fields': [ "created",
                                      "source", "id"],
-                         'jtopts_fields': [ "address",
+                         'jtopts_fields': [
                                             "created",
                                             "source",
                                             "favorite",

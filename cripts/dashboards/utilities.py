@@ -1,10 +1,11 @@
 from cripts.services.analysis_result import AnalysisResult
 from cripts.comments.comment import Comment
 from cripts.events.event import Event
-from cripts.email_addresses.email_addresses import EmailAddress
-from cripts.hashes.hashes import Hash
-from cripts.usernames.usernames import Username
-from cripts.datasets.datasets import Dataset
+from cripts.usernames.username import UserName
+from cripts.targets.target import Target
+from cripts.hashes.hash import Hash
+from cripts.datasets.dataset import Dataset
+from cripts.email_addresses.email_address import EmailAddress
 
 
 
@@ -21,6 +22,8 @@ def getHREFLink(object, object_type):
     
     if object_type == "AnalysisResult":
         href += "services/analysis_results/"
+	elif object_type == "EmailAddress":
+		href += "email_address/"
     else:
         href += object_type.lower()+"s/"
         
@@ -45,6 +48,8 @@ def get_obj_name_from_title(tableTitle):
     when editing a default dashboard table since they do not have types saved,
     it gets it from the hard-coded title.
     """
+	if tableTitle == "Counts":
+		return "Count"
     return "None"
     
 def get_obj_type_from_string(objType):
@@ -53,9 +58,27 @@ def get_obj_type_from_string(objType):
     is used in order to build the query to be run.
     Called by generate_search_for_saved_table and get_table_data
     """
+	from cripts.usernames.username import UserName
+from cripts.targets.target import Target
+from cripts.hashes.hash import Hash
+from cripts.datasets.dataset import Dataset
+from cripts.email_addresses.email_address import EmailAddress
+
     if objType == "Comment":
         return Comment
     elif objType == "Event":
         return Event
+	elif objType == "AnalysisResult":
+		return AnalysisResult
+	elif objType == "UserName":
+		return UserName
+	elif objType == "Target":
+		return Target
+	elif objType == "Hash":
+		return Hash
+	elif objType == "Dataset":
+		return Dataset
+	elif objType == "EmailAddress":
+		return EmailAddress
         
     return None

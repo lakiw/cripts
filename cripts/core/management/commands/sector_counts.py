@@ -15,8 +15,8 @@ class Command(BaseCommand):
 
         sectors = {}
 
-        types = ['Event',
-                 ]
+        types = ['Dataset', 'EmailAddress', 'Event','Hash',
+                 'Target', 'Username']
 
         for otype in types:
             klass = class_from_type(otype)

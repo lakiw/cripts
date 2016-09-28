@@ -7,7 +7,12 @@
         <form id="add_related_form" method="post"> {% csrf_token %}
             <select id="add_related_options" onchange="populateList()">
                 <option>Choose TLO</option>
+				<option value='new-dataset'>Dataset</option>
+				<option value='new-email_address'>Email Address</option>
                 <option value='new-event'>Event</option>
+				<option value='new-hash'>Hash</option>
+				<option value='new-target'>Target</option>
+				<option value='new-username'>UserName</option>
             </select>
         </form>
     </div>
