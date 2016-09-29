@@ -2945,7 +2945,6 @@ def login_user(username, password, next_url=None, user_agent=None,
             user.login_attempts.append(e)
             user.save()
         if user.is_active:
-            print("here")
             user.invalid_login_attempts = 0
             user.password_reset.reset_code = ""
             user.save()

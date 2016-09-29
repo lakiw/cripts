@@ -1407,7 +1407,6 @@ def source_subscription(request):
     :type request: :class:`django.http.HttpRequest`
     :returns: :class:`django.http.HttpResponse`
     """
-
     if request.method == 'POST' and request.is_ajax():
         username = "%s" % request.user.username
         user_source_access = user_sources(username)

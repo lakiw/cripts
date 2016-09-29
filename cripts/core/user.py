@@ -97,6 +97,7 @@ class EmbeddedSubscriptions(EmbeddedDocument, CriptsDocumentFormatter):
     """
 
     Event = ListField(EmbeddedDocumentField(EmbeddedSubscription))
+    Source = ListField(EmbeddedDocumentField(EmbeddedSourceSubscription))
 
 
 class PreferencesField(DynamicEmbeddedDocument):
