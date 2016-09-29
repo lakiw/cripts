@@ -21,11 +21,21 @@ class Sector(CriptsDocument, CriptsSchemaDocument, Document):
         "schema_doc": {
             'name': 'Sectorlist name',
             'Event': 'Integer',
+			'UserName': 'Integer',
+			'Target': 'Integer',
+			'Hash': 'Integer',
+			'Dataset': 'Integer',
+			'EmailAddress': 'Integer',
         },
     }
 
     name = StringField(required=True)
     Event = IntField(default=0)
+	UserName = IntField(default=0)
+	Target = IntField(default=0)
+	Hash = IntField(default=0)
+	Dataset = IntField(default=0)
+	EmailAddress = IntField(default=0)
 
     def migrate(self):
         """

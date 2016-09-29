@@ -13,9 +13,20 @@
             <!-- link to the object page -->
             <span class="comment_button">
                 {% with obj_type=comment.obj_type %}
-                    {% if obj_type == 'Event' %}
+					{% if obj_type == 'Dataset' %}
+					<a href="{% url 'cripts.datasets.views.dataset_detail' comment.url_key %}" class="ui-icon ui-icon-arrowthick-1-e" title="View Dataset"></a>
+					{% elif obj_type == 'EmailAddress' %}
+					<a href="{% url 'cripts.email_addresses.views.email_address_detail' comment.url_key %}" class="ui-icon ui-icon-arrowthick-1-e" title="View Email Address"></a>
+                    {% elif obj_type == 'Event' %}
                     <a href="{% url 'cripts.events.views.view_event' comment.url_key %}" class="ui-icon ui-icon-arrowthick-1-e" title="View Event"></a>
-                    {% endif %}
+					{% elif obj_type == 'Hash' %}
+					<a href="{% url 'cripts.hashes.views.hash_detail' comment.url_key %}" class="ui-icon ui-icon-arrowthick-1-e" title="View Hash"></a>
+					{% elif obj_type == 'Target' %}
+					<a href="{% url 'cripts.targets.views.target_detail' comment.url_key %}" class="ui-icon ui-icon-arrowthick-1-e" title="View Target"></a>
+                    {% elif obj_type == 'UserName' %}
+					<a href="{% url 'cripts.usernames.views.username_detail' comment.url_key %}" class="ui-icon ui-icon-arrowthick-1-e" title="View UserName"></a>
+					{% endif %}
+					
                 {% endwith %}
             </span>
             {% endif %}

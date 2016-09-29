@@ -223,63 +223,62 @@
 </div>
 <div id="recent_activity_section">
 <table width="100%">
-    <tr>
-    <td colspan="3">
-        {% if indicators %}
-        <div class='content_box' style='width: 100%;'>
-            <h3 class='titleheader'>
-            <span>Recent Indicators</span>
-            </h3>
-            <div class='content_body'>
-                {% with indicator_list=indicators %}
-                    {% include 'indicators_listing_widget.html' %}
-                {% endwith %}
-            </div>
-        </div>
-        {% endif %}
-    </td>
-    </tr>
-    <tr>
-    <td colspan="3">
-        {% if emails %}
-        <div class='content_box' style='width: 100%;'>
-            <h3 class='titleheader'>
-            <span>Recent Emails</span>
-            </h3>
-            <div class='content_body'>
-            {% with email_list=emails %}
-                {% include 'email_listing_widget.html' %}
-            {% endwith %}
-            </div>
-        </div>
-        {% endif %}
-    </td>
-    </tr>
-       <tr>
-    <td colspan="3">
-        {% if samples %}
-        <div class='content_box' style='width: 100%;'>
-            <h3 class='titleheader'>
-            <span>Recent Samples</span>
-            </h3>
-            <div class='content_body'>
-            {% with sample_list=samples %}
-                {% include 'samples_listing_widget.html' %}
-            {% endwith %}
-            </div>
-        </div>
-        {% endif %}
-    </td>
-    </tr>
+    
 </table>
 </div>
 <div id="subscriptions_section">
     <div class="tabnav" style="font-size: 90%;">
     <ul style="font-size: 125%;">
+		{% if subscriptions.Dataset %}
+        <li><a href="#dataset_subscriptions" id="datasets_button"><span>Datasets ({{ subscriptions.Dataset|length }})</span></a></li>
+        {% endif %}
         {% if subscriptions.Event %}
         <li><a href="#event_subscriptions" id="events_button"><span>Events ({{ subscriptions.Event|length }})</span></a></li>
         {% endif %}
+		{% if subscriptions.Target %}
+        <li><a href="#target_subscriptions" id="targets_button"><span>Targets ({{ subscriptions.Target|length }})</span></a></li>
+        {% endif %}
     </ul>
+
+	{% if subscriptions.Dataset %}
+    <div id="dataset_subscriptions">
+        <div class='content_box' style='width: 100%;'>
+        <h3 class='titleheader'>
+            <span>Datasets Subscriptions</span>
+        </h3>
+        <div class='content_body'>
+            <table class='chart tablesorter'>
+            <thead>
+                <tr>
+                    <th>Dataset</th>
+                    <th>Date Subscribed</th>
+                    <th>
+                        <span class="ui-icon ui-icon-signal-diag subscription_link_enable" title="Subscribe" style="display: inline-block;"></span>
+                        <span class="ui-icon ui-icon-close subscription_link_disable" title="Unsubscribe" style="display: inline-block;"></span>
+                    </th>
+                </tr>
+            </thead>
+            <tbody>
+            {% for dataset in subscriptions.Dataset %}
+                <tr>
+                    <td><a href="{% url 'crits.datasets.views.dataset_detail' dataset.id %}">{{ dataset.id }}</a></td>
+                    <td>{{ target.date }}</td>
+                    <td>
+                        <span class="ui-state-default ui-corner-all" style="border: 0px;">
+                        <a href="#" class="subscription_button" action="{% url 'crits.core.views.change_subscription' 'Dataset' dataset.id %}">
+                        <span class="ui-icon ui-icon-close subscription_link_enable" title="Unsubscribe"></span>
+                        </a>
+                        </span>
+                    </td>
+                </tr>
+            {% endfor %}
+            </tbody>
+            </table>
+        </div>
+        </div>
+    </div>
+    {% endif %}
+	
     {% if subscriptions.Event %}
     <div id="event_subscriptions">
         <div class='content_box' style='width: 100%;'>
@@ -308,6 +307,44 @@
                     <td>
                         <span class="ui-state-default ui-corner-all" style="border: 0px;">
                         <a href="#" class="subscription_button" action="{% url 'cripts.core.views.change_subscription' 'Event' event.id %}">
+                        <span class="ui-icon ui-icon-close subscription_link_enable" title="Unsubscribe"></span>
+                        </a>
+                        </span>
+                    </td>
+                </tr>
+            {% endfor %}
+            </tbody>
+            </table>
+        </div>
+        </div>
+    </div>
+    {% endif %}
+	{% if subscriptions.Target %}
+    <div id="target_subscriptions">
+        <div class='content_box' style='width: 100%;'>
+        <h3 class='titleheader'>
+            <span>Targets Subscriptions</span>
+        </h3>
+        <div class='content_body'>
+            <table class='chart tablesorter'>
+            <thead>
+                <tr>
+                    <th>Target</th>
+                    <th>Date Subscribed</th>
+                    <th>
+                        <span class="ui-icon ui-icon-signal-diag subscription_link_enable" title="Subscribe" style="display: inline-block;"></span>
+                        <span class="ui-icon ui-icon-close subscription_link_disable" title="Unsubscribe" style="display: inline-block;"></span>
+                    </th>
+                </tr>
+            </thead>
+            <tbody>
+            {% for target in subscriptions.Target %}
+                <tr>
+                    <td><a href="{% url 'crits.targets.views.target_detail' target.id %}">{{ target.id }}</a></td>
+                    <td>{{ target.date }}</td>
+                    <td>
+                        <span class="ui-state-default ui-corner-all" style="border: 0px;">
+                        <a href="#" class="subscription_button" action="{% url 'crits.core.views.change_subscription' 'Target' target.id %}">
                         <span class="ui-icon ui-icon-close subscription_link_enable" title="Unsubscribe"></span>
                         </a>
                         </span>

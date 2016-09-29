@@ -50,6 +50,11 @@ from cripts.core.user_tools import get_user_email_notification
 from cripts.comments.comment import Comment
 from cripts.events.event import Event
 from cripts.notifications.handlers import get_user_notifications, generate_audit_notification
+from cripts.usernames.username import UserName
+from cripts.targets.target import Target
+from cripts.hashes.hash import Hash
+from cripts.datasets.dataset import Dataset
+from cripts.email_addresses.email_address import EmailAddress
 
 from cripts.core.totp import valid_totp
 
@@ -273,7 +278,12 @@ def get_favorites(analyst):
 
     field_dict = {
         'Comment': 'object_id',
-        'Event': 'title',     
+		'Dataset': 'id',
+		'EmailAddress': 'id',
+        'Event': 'title',
+		'Hash': 'id',
+		'Target': 'id',
+		'UserName': 'id',
     }
 
     results = '''
@@ -371,7 +381,12 @@ def get_data_for_item(item_type, item_id):
     """
 
     type_to_fields = {
-        'Event': ['title', 'event_type', ], 
+		'Dataset': ['name', ],
+		'EmailAddress': ['name', ],
+        'Event': ['title', 'event_type', ],
+		'Hash': ['name', ],
+		'Target': ['name', ],
+		'UserName': ['name', ],
     }
     response = {'OK': 0, 'Msg': ''}
     if not item_id or not item_type:
@@ -893,8 +908,13 @@ def alter_bucket_list(obj, buckets, val):
 
         # Find and remove this bucket if, and only if, all counts are zero.
         if val == -1:
-            Bucket.objects(name=name, 
+            Bucket.objects(name=name,
+						   Dataset=0,
+						   EmailAddress=0,
                            Event=0,
+						   Hash=0,
+						   Target=0,
+						   UserName=0,
                            ).delete()
 
 def generate_bucket_csv(request):
@@ -927,12 +947,17 @@ def generate_bucket_jtable(request, option):
                                     details_key,
                                     request,
                                     includes=['name',
+											  'Dataset',
+											  'EmailAddress',
                                               'Event',
+											  'Hash',
+											  'Target',
+											  'UserName',
                                               ])
         return HttpResponse(json.dumps(response, default=json_handler),
                             content_type='application/json')
 
-    fields = ['name', 'Event', 'Promote']
+    fields = ['name', 'Dataset', 'EmailAddress', 'Event', 'Hash', 'Target', 'Username', 'Promote']
     jtopts = {'title': 'Buckets',
               'fields': fields,
               'listurl': 'jtlist',
@@ -1626,7 +1651,17 @@ def gen_global_query(obj,user,term,search_type="global",force_full=False):
         elif type_ == "AnalysisResult":
             search_list = [
                     {'results.result': search_query},
-            ] 
+            ]
+		elif type_ == "EmailAddress":
+			search_list = [
+					{'name': search_query},
+					{'objects.value': search_query},
+			    ]
+		elif type_ == "Dataset":
+			search_list = [
+					{'name': search_query},
+					{'objects.value': search_query},
+			    ]
         elif type_ == "Event":
             search_list = [
                     {'description': search_query},
@@ -1636,7 +1671,22 @@ def gen_global_query(obj,user,term,search_type="global",force_full=False):
         elif type_ == "Comment":
             search_list = [
                     {'comment': search_query},
-                ] 
+                ]
+		elif type_ == "Hash":
+			search_list = [
+					{'name': search_query},
+					{'objects.value': search_query},
+			    ]
+		elif type_ == "Target":
+			search_list = [
+					{'name': search_query},
+					{'objects.value': search_query},
+			    ]
+		elif type_ == "UserName":
+			search_list = [
+					{'name': search_query},
+					{'objects.value': search_query},
+			    ]	
         else:
             search_list = [{'name': search_query}]
         search_list.append({'source.instances.reference':search_query})
@@ -2107,7 +2157,12 @@ def jtable_ajax_list(col_obj,url,urlfieldparam,request,excludes=[],includes=[],q
                     doc[key] = html_escape(doc[key])
                 if col_obj._meta['cripts_type'] == "Comment":
                     mapper = {
+						"Dataset": 'cripts.datasets.views.dataset_detail',
+						"EmailAddress": 'cripts.email_addresses.views.email_address_detail',
                         "Event": 'cripts.events.views.view_event',
+						"Hash": 'cripts.hashes.views.hash_detail',
+						"Target": 'cripts.targets.views.target_detail',
+						"UserName": 'cripts.usernames.views.username_detail',
                     }
                     doc['url'] = reverse(mapper[doc['obj_type']],
                                         args=(doc['url_key'],))
@@ -3023,8 +3078,12 @@ def generate_global_search(request):
     searchtext = request.GET['q']
     if ObjectId.is_valid(searchtext):
         for obj_type, url, key in [
+				['Dataset', 'cripts.datasets.views.dataset_details', 'id'],
+				['EmailAddress', 'cripts.email_addresses.views.email_address_details', 'id'],
                 ['Event', 'cripts.events.views.view_event', 'id'],
-                ]:
+				['Hash', 'cripts.hashes.views.hash_details', 'id'],
+				['Target', 'cripts.targets.views.target_details', 'id'],
+				['UserName', 'cripts.usernames.views.username_details', 'id']]:
             obj = class_from_id(obj_type, searchtext)
             if obj:
                 return {'url': url, 'key': obj[key]}
@@ -3035,8 +3094,13 @@ def generate_global_search(request):
     results = []
     for col_obj,url in [
                     [AnalysisResult, "cripts.services.views.analysis_results_listing"],
-                    [Comment, "cripts.comments.views.comments_listing"],
-                    ]:
+					[Comment, "cripts.comments.views.comments_listing"],
+					[Dataset, "cripts.datasets.views.datasets_listing"],
+					[EmailAddress, "cripts.email_addresses.views.email_addresses_listing"],
+					[Event, "cripts.events.views.events_listing"],
+					[Hash, "cripts.hashes.views.hashes_listing"],
+					[Target, "cripts.targets.views.targets_listing"],
+					[UserName, "cripts.usernames.views.usernames_listing"]]:
         ctype = col_obj._meta['cripts_type']
         resp = get_query(col_obj, request)
         if resp['Result'] == "ERROR":
@@ -3218,10 +3282,31 @@ def details_from_id(type_, id_):
     """
 
     type_map = {
+				'Dataset': 'cripts.datasets.views.dataset_detail',
+				'EmailAddress': 'cripts.email_addresses.views.email_address_detail',
                 'Event': 'cripts.events.views.view_event',
+				'Hash': 'cripts.hashes.views.hash_detail',
+				'Target': 'cripts.targets.views.target_detail',
+				'UserName': 'cripts.usernames.views.username_detail',
                 }
     if type_ in type_map and id_:
-        if type_ == 'Campaign':
+        if type_ == 'Dataset':
+            arg = class_from_id(type_, id_)
+            if arg:
+                arg = arg.name
+		if type_ == 'EmailAddress':
+            arg = class_from_id(type_, id_)
+            if arg:
+                arg = arg.name
+		if type_ == 'Hash':
+            arg = class_from_id(type_, id_)
+            if arg:
+                arg = arg.name
+		if type_ == 'Target':
+            arg = class_from_id(type_, id_)
+            if arg:
+                arg = arg.name
+		if type_ == 'UserName':
             arg = class_from_id(type_, id_)
             if arg:
                 arg = arg.name
@@ -3451,8 +3536,13 @@ def alter_sector_list(obj, sectors, val):
 
         # Find and remove this sector if, and only if, all counts are zero.
         if val == -1:
-            Sector.objects(name=name,  
+            Sector.objects(name=name,
+						   Dataset=0,
+						   EmailAddress=0,
                            Event=0,
+						   Hash=0,
+						   Target=0,
+						   UserName=0,
                            ).delete()
 
 def generate_sector_csv(request):
@@ -3485,14 +3575,18 @@ def generate_sector_jtable(request, option):
                                     details_key,
                                     request,
                                     includes=['name',
+											  'Dataset',
+											  'EmailAddress',
                                               'Event',
+											  'Hash',
+											  'Target',
+											  'UserName'
                                               ])
         return HttpResponse(json.dumps(response, default=json_handler),
                             content_type='application/json')
 
-    fields = ['name', 'Actor', 'Backdoor', 'Campaign', 'Certificate', 'Domain',
-              'Email', 'Event', 'Exploit', 'Indicator', 'IP', 'PCAP', 'RawData',
-              'Sample', 'Signature', 'Target']
+    fields = ['name', 'Dataset', 'EmailAddress',
+              'Event', 'Hash', 'Target', 'UserName']
     jtopts = {'title': 'Sectors',
               'fields': fields,
               'listurl': 'jtlist',
