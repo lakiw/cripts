@@ -20,10 +20,7 @@ from cripts.objects.forms import AddObjectForm
 from cripts.relationships.handlers import forge_relationship
 
 from cripts.vocabulary.relationships import RelationshipTypes
-from cripts.vocabulary.indicators import (
-    IndicatorAttackTypes,
-    IndicatorThreatTypes
-)
+
 
 
 def validate_and_add_new_handler_object(data, rowData, request, errors,
@@ -307,8 +304,12 @@ def delete_object_file(value):
 
     #XXX: MongoEngine provides no direct GridFS access so we
     #     need to use pymongo directly.
-    obj_list = (
+    obj_list = ('Dataset',
+                'EmailAddress',
                 'Event',
+                'Hash',
+                'Target',
+                'UserName'
                )
     # In order to make sure this object isn't tied to more than one top-level
     # object, we need to check the rest of the database. We will at least find

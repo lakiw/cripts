@@ -87,16 +87,24 @@ class EmbeddedFavorites(EmbeddedDocument, CriptsDocumentFormatter):
     """
     Embedded Favorites
     """
-    
+    Dataset = ListField(StringField())
+    EmailAddress = ListField(StringField())
     Event = ListField(StringField())
+    Hash = ListField(StringField())
+    Target = ListField(StringField())
+    UserName = ListField(StringField())
     
 
 class EmbeddedSubscriptions(EmbeddedDocument, CriptsDocumentFormatter):
     """
     Embedded Subscriptions
     """
-
+    Dataset = ListField(EmbeddedDocumentField(EmbeddedSubscription))
+    EmailAddress = ListField(EmbeddedDocumentField(EmbeddedSubscription))
     Event = ListField(EmbeddedDocumentField(EmbeddedSubscription))
+    Hash = ListField(EmbeddedDocumentField(EmbeddedSubscription))
+    Target = ListField(EmbeddedDocumentField(EmbeddedSubscription))
+    UserName = ListField(EmbeddedDocumentField(EmbeddedSubscription))
 
 
 class PreferencesField(DynamicEmbeddedDocument):
@@ -181,8 +189,38 @@ class CRIPTsUser(CriptsDocument, CriptsSchemaDocument, Document):
             'role': 'The role this user has been granted from a CRIPTs Admin',
             'sources': ('List [] of source names this user has been granted'
                         ' access to view data from'),
-            'subscriptions': {   
+            'subscriptions': { 
+                'Dataset': [
+                    {
+                        'date': 'ISODate subscribed',
+                        'id': 'ObjectId of the object subscribed to'
+                    }
+                ],
+                'EmailAddress': [
+                    {
+                        'date': 'ISODate subscribed',
+                        'id': 'ObjectId of the object subscribed to'
+                    }
+                ],
                 'Event': [
+                    {
+                        'date': 'ISODate subscribed',
+                        'id': 'ObjectId of the object subscribed to'
+                    }
+                ],
+                'Hash': [
+                    {
+                        'date': 'ISODate subscribed',
+                        'id': 'ObjectId of the object subscribed to'
+                    }
+                ],
+                'Target': [
+                    {
+                        'date': 'ISODate subscribed',
+                        'id': 'ObjectId of the object subscribed to'
+                    }
+                ],
+                'UserName': [
                     {
                         'date': 'ISODate subscribed',
                         'id': 'ObjectId of the object subscribed to'
@@ -196,7 +234,12 @@ class CRIPTsUser(CriptsDocument, CriptsSchemaDocument, Document):
                 ],
             },
             'favorites': {
+                'Dataset': [],
+                'EmailAddress': [],
                 'Event': [],
+                'Hash': [],
+                'Target': [],
+                'UserName': []
             }
         },
     }
