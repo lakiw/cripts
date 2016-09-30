@@ -102,13 +102,10 @@ class EmbeddedSubscriptions(EmbeddedDocument, CriptsDocumentFormatter):
     Dataset = ListField(EmbeddedDocumentField(EmbeddedSubscription))
     EmailAddress = ListField(EmbeddedDocumentField(EmbeddedSubscription))
     Event = ListField(EmbeddedDocumentField(EmbeddedSubscription))
-<<<<<<< HEAD
     Hash = ListField(EmbeddedDocumentField(EmbeddedSubscription))
     Target = ListField(EmbeddedDocumentField(EmbeddedSubscription))
     UserName = ListField(EmbeddedDocumentField(EmbeddedSubscription))
-=======
     Source = ListField(EmbeddedDocumentField(EmbeddedSourceSubscription))
->>>>>>> 9d4b7baa1d7be65ade60fb4427b10f20172608cd
 
 
 class PreferencesField(DynamicEmbeddedDocument):
