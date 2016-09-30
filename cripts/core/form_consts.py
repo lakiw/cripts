@@ -26,11 +26,11 @@ class Common():
     # class names
     Event = "Event"
     Object = "Object"
-	UserName = "UserName"
-	Target = "Target"
-	Hash = "Hash"
-	Dataset = "Dataset"
-	EmailAddress = "EmailAddress"
+    UserName = "UserName"
+    Target = "Target"
+    Hash = "Hash"
+    Dataset = "Dataset"
+    EmailAddress = "EmailAddress"
 
     RELATED_ID = "Related ID"
     RELATED_TYPE = "Related Type"
@@ -48,22 +48,22 @@ class Status():
     FAILURE = 0;
     SUCCESS = 1;
     DUPLICATE = 2;
-	
-class Dataset
-	"""
-	Constants for Datasets
-	"""
-	NAME = "Name"
-	SOURCE = Common.SOURCE
+    
+class Dataset():
+    """
+    Constants for Datasets
+    """
+    NAME = "Name"
+    SOURCE = Common.SOURCE
     SOURCE_METHOD = "Source Method"
-    SOURCE_REFERENCE = Common.SOURCE_REFERENCE	
+    SOURCE_REFERENCE = Common.SOURCE_REFERENCE    
 
-class EmailAddress
-	"""
-	Constants for EmailAddresses
-	"""
-	NAME = "Name"
-	SOURCE = Common.SOURCE
+class EmailAddress():
+    """
+    Constants for EmailAddresses
+    """
+    NAME = "Name"
+    SOURCE = Common.SOURCE
     SOURCE_METHOD = "Source Method"
     SOURCE_REFERENCE = Common.SOURCE_REFERENCE
 
@@ -77,33 +77,33 @@ class Event():
     SOURCE_METHOD = Common.SOURCE_METHOD
     SOURCE_REFERENCE = Common.SOURCE_REFERENCE
 
-class Hash
-	"""
-	Constants for Hashes
-	"""
-	NAME = "Name"
-	SOURCE = Common.SOURCE
+class Hash():
+    """
+    Constants for Hashes
+    """
+    NAME = "Name"
+    SOURCE = Common.SOURCE
     SOURCE_METHOD = "Source Method"
     SOURCE_REFERENCE = Common.SOURCE_REFERENCE
 
-class Target
-	"""
-	Constants for Targets
-	"""
-	NAME = "Name"
-	SOURCE = Common.SOURCE
+class Target():
+    """
+    Constants for Targets
+    """
+    NAME = "Name"
+    SOURCE = Common.SOURCE
     SOURCE_METHOD = "Source Method"
-    SOURCE_REFERENCE = Common.SOURCE_REFERENCE	
-	
-class UserName
-	"""
-	Constants for Usernames
-	"""
-	NAME = "Name"
-	SOURCE = Common.SOURCE
+    SOURCE_REFERENCE = Common.SOURCE_REFERENCE    
+    
+class UserName():
+    """
+    Constants for Usernames
+    """
+    NAME = "Name"
+    SOURCE = Common.SOURCE
     SOURCE_METHOD = "Source Method"
     SOURCE_REFERENCE = Common.SOURCE_REFERENCE
-	
+    
 class NotificationType():
     ALERT = 'alert'
     ERROR = 'error'
@@ -147,12 +147,12 @@ def get_source_field_for_class(otype):
     """
 
     class_to_source_field_map = {
-		Common.Dataset: Dataset.SOURCE,
-		Common.EmailAddress: EmailAddress.SOURCE,
+        Common.Dataset: Dataset.SOURCE,
+        Common.EmailAddress: EmailAddress.SOURCE,
         Common.Event: Event.SOURCE,
-		Common.Hash: Hash.SOURCE,
+        Common.Hash: Hash.SOURCE,
         Common.Object: Object.SOURCE,
-		Common.Target: Target.SOURCE,
-		Common.UserName: Username.SOURCE
+        Common.Target: Target.SOURCE,
+        Common.UserName: Username.SOURCE
     }
     return class_to_source_field_map.get(otype)
