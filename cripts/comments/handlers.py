@@ -95,18 +95,14 @@ def get_user_allowed_comments(comments, sources):
     :returns: list of :class:`cripts.comments.comment.Comment`
     """
 
-    docs = {'Actor': {},
-            'Campaign':{},
-            'Certificate':{},
-            'Domain':{},
-            'Email':{},
+    docs = {
+            'Dataset':{},
+            'EmailAddress':{},
             'Event':{},
-            'Indicator':{},
-            'IP':{},
-            'PCAP':{},
-            'RawData':{},
-            'Sample':{},
-            'Target':{}}
+            'Hash':{},
+            'Target':{},
+            'UserName':{},
+           }
     for c in comments:
         c.comment_to_html()
         try:

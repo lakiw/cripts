@@ -339,7 +339,11 @@ class DownloadFileForm(forms.Form):
         total_max = getattr(cripts_config, 'total_max', settings.TOTAL_MAX)
         rel_max = getattr(cripts_config, 'rel_max', settings.REL_MAX)
         super(DownloadFileForm, self).__init__(*args, **kwargs)
-        self.fields['objects'].choices = []
+        self.fields['objects'].choices = [('Dataset', 'Datasets'),
+                                          ('EmailAddress', 'EmailAddresses'),
+                                          ('Hash', 'Hashes'),
+                                          ('Target', 'Targets'),
+                                          ('UserName', 'UserNames')]
         self.fields['total_limit'].initial = total_max
         self.fields['rel_limit'].initial = rel_max
         self.fields['depth_limit'].help_text = self.fields['depth_limit'].help_text % depth_max

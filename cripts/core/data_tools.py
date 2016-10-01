@@ -660,24 +660,3 @@ def validate_sha256_checksum(sha256_checksum):
         retVal['success'] = False
 
     return retVal
-
-def detect_pcap(data):
-    """
-    Detect if the data has the magic numbers for a PCAP.
-
-    :param data: The data to inspect.
-    :type data: str
-    :returns: bool
-    """
-
-    magic = ''.join(x.encode('hex') for x in data[:4])
-    if magic in (
-        'a1b2c3d4', #identical
-        'd4c3b2a1', #swapped
-        '4d3cb2a1',
-        'a1b23c4d', #nanosecond resolution
-        '0a0d0d0a', #pcap-ng
-    ):
-        return True
-    else:
-        return False

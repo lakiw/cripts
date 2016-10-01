@@ -591,42 +591,12 @@ class CRIPTsAPIResource(MongoEngineResource):
                 'action_remove' : coreh.action_remove,
                 'description_update' : coreh.description_update,
             },
-            'Actor': {
-                'update_actor_tags': ah.update_actor_tags,
-                'attribute_actor_identifier': ah.attribute_actor_identifier,
-                'set_identifier_confidence': ah.set_identifier_confidence,
-                'remove_attribution': ah.remove_attribution,
-                'set_actor_name': ah.set_actor_name,
-                'update_actor_aliases': ah.update_actor_aliases,
-            },
-            'Backdoor': {},
-            'Campaign': {},
-            'Certificate': {},
-            'Domain': {},
-            'Email': {},
+            'Dataset': {},
+            'EmailAddress': {},
             'Event': {},
-            'Exploit': {},
-            'Indicator': {
-                'modify_attack_types' : indh.modify_attack_types,
-                'modify_threat_types' : indh.modify_threat_types,
-                'activity_add' : indh.activity_add,
-                'activity_update' : indh.activity_update,
-                'activity_remove' : indh.activity_remove,
-                'ci_update' : indh.ci_update
-                          },
-            'IP': {},
-            'PCAP': {},
-            'RawData': {},
-            'Sample': {},
-            'Signature': {
-                'update_dependency': sigh.update_dependency,
-                'update_min_version': sigh.update_min_version,
-                'update_max_version': sigh.update_max_version,
-                'update_signature_data': sigh.update_signature_data,
-                'update_signature_type': sigh.update_signature_type,
-                'update_title': sigh.update_title
-            },
+            'Hash': {},
             'Target': {},
+            'UserName': {},
         }
 
         prefix = get_script_prefix()
@@ -636,12 +606,18 @@ class CRIPTsAPIResource(MongoEngineResource):
         view, args, kwargs = resolve(uri)
 
         type_ = kwargs['resource_name'].title()
-        if type_ == "Raw_Data":
-            type_ = "RawData"
-        if type_[-1] == 's':
+        if type_ == "Email_Address":
+            type_ = "EmailAddress"
+        elif type_ == "Username":
+            type_ = "UserName"
+        elif type_ == "Hashes":
+            type_ = "Hash"
+        elif type_ == "Email_Addresses":
+            type_ = "EmailAddress"
+        elif type_ == "EmailAddresses"
+            type_ = "EmailAddress"
+        elif type_[-1] == 's':
             type_ = type_[:-1]
-        if type_ in ("Pcap", "Ip"):
-            type_ = type_.upper()
         id_ = kwargs['pk']
 
         content = {'return_code': 0,

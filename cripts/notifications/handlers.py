@@ -522,7 +522,12 @@ def get_user_notifications(username, count=False, newer_than=None):
 
 __supported_notification_types__ = {
     'Comment': 'object_id',
+    'Dataset': 'id',
+    'EmailAddress': 'id',
     'Event': 'id',
+    'Hash': 'id',
+    'Target': 'id',
+    'UserName': 'id',
 }
 
 class NotificationLockManager(object):

@@ -482,10 +482,28 @@ class NotificationHeaderManager():
         return __notification_header_handler__.get(obj_type)
 
     @staticmethod
+    def generate_dataset_header(obj):
+        return "Dataset: %s" % (obj.title)
+    
+    @staticmethod
+    def generate_email_address_header(obj):
+        return "Email Address: %s" % (obj.title)
+    
+    @staticmethod
     def generate_event_header(obj):
         return "Event: %s" % (obj.title)
 
-
+    @staticmethod
+    def generate_hash_header(obj):
+        return "Hash %s" % (obj.title)
+    
+    @staticmethod
+    def generate_target_header(obj):
+        return "Target: %s" % (obj.title)
+    
+    @staticmethod
+    def generate_username_header(obj):
+        return "Username: %s" % (obj.title)
 
 # Use dictionaries to hold the list of handlers because dictionary
 # lookup time is O(1) whereas a list or a long 'if/else' block is worst
@@ -506,7 +524,12 @@ __specific_field_to_change_handler__ = {
 }
 
 __notification_header_handler__ = {
+    "Datast": NotificationHeaderManager.generate_dataset_header,
+    "EmailAddress": NotificationHeaderManager.generate_email_address_header,
     "Event": NotificationHeaderManager.generate_event_header,
+    "Hash": NotificationHeaderManager.generate_hash_header,
+    "Target": NotificationHeaderManager.generate_target_header,
+    "Username": NotificationHeaderManager.generate_username_header,
 }
 
 __general_mongo_to_doc_field__ = {

@@ -1288,45 +1288,9 @@ span.missing_binary {
     cursor: pointer;
 }
 
-span.campaign_nav_icon {
-    display: inline-block;
-    background-image: url('/new_images/STIX/STIX_Campaign.png');
-    background-size: 100%;
-    width: 21px;
-    height: 21px;
-    margin-top: 2px;
-}
-
-span.email_nav_icon {
-    display: inline-block;
-    background-image: url('/new_images/STIX/STIX_ExploitTarget.png');
-    background-size: 100%;
-    width: 21px;
-    height: 21px;
-    margin-top: 2px;
-}
-
 span.event_nav_icon {
     display: inline-block;
     background-image: url('/new_images/STIX/STIX_Incident.png');
-    background-size: 100%;
-    width: 21px;
-    height: 21px;
-    margin-top: 2px;
-}
-
-span.indicator_nav_icon {
-    display: inline-block;
-    background-image: url('/new_images/STIX/STIX_Indicator.png');
-    background-size: 100%;
-    width: 21px;
-    height: 21px;
-    margin-top: 2px;
-}
-
-span.pcap_nav_icon {
-    display: inline-block;
-    background-image: url('/new_images/STIX/STIX_ThreatActor.png');
     background-size: 100%;
     width: 21px;
     height: 21px;

@@ -73,7 +73,6 @@ class CRIPTsConfig(CriptsDocument, Document):
     zip7_path = StringField(default='/usr/bin/7z')
     zip7_password = StringField(default='hashes')
     
-    print "END"
 
     def migrate(self):
         """

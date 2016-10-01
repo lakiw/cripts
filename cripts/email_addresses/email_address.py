@@ -7,7 +7,7 @@ from cripts.core.cripts_mongoengine import CriptsBaseAttributes, CriptsSourceDoc
 from cripts.core.cripts_mongoengine import CriptsActionsDocument
 
 
-class EmailAddresss(CriptsBaseAttributes, CriptsSourceDocument, CriptsActionsDocument,
+class EmailAddress(CriptsBaseAttributes, CriptsSourceDocument, CriptsActionsDocument,
             Document):
     """
     EmailAddress class.

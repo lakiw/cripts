@@ -403,7 +403,7 @@ do
             then
                 printf "${PASS}Red Hat is Supported!${END}\n"
                 red_hat_install || exit_restart $STEP
-                depend_critps ||exit_restart $STEP
+                depend_cripts ||exit_restart $STEP
             elif [ "$OS" = 'freebsd' ]
             then
                 printf "${PASS}FreeBSD is Supported${END}\n"

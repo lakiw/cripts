@@ -14,6 +14,11 @@ urlpatterns = [
     url(r'^objects/', include('cripts.objects.urls')),             # Objects
     url(r'^relationships/', include('cripts.relationships.urls')), # Relationships
     url(r'^services/', include('cripts.services.urls')),           # Services
+    url(r'^datasets/', include('cripts.datasets.urls')),           # Datasets
+    url(r'^email_addresses/', include('cripts.email_addresses.urls')),  # Email Addresses
+    url(r'^hashes/', include('cripts.hashes.urls')),               # Hashes
+    url(r'^targets/', include('cripts.targets.urls')),             # Targets
+    url(r'^usernames/', include('cripts.usernames.urls')),         # Services
 ]
 
 # Error overrides

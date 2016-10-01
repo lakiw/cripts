@@ -12,7 +12,7 @@ except ImportError:
 
 from cripts.core import form_consts
 from cripts.core.class_mapper import class_from_id, class_from_type
-from cripts.core.data_tools import convert_string_to_bool, detect_pcap
+from cripts.core.data_tools import convert_string_to_bool
 from cripts.core.handsontable_tools import form_to_dict, get_field_from_label
 from cripts.core.mongo_tools import put_file, mongo_connector
 from cripts.core.user_tools import get_user_organization
@@ -274,10 +274,7 @@ def add_object(type_, id_, object_type, source, method, reference, user,
             col = settings.COL_OBJECTS
             grid = mongo_connector("%s.files" % col)
             if grid.find({'md5': md5sum}).count() == 0:
-                put_file(filename, data, collection=col)
-
-        if add_indicator and not is_validate_only:
-            campaign = tlo.campaign if hasattr(tlo, 'campaign') else None
+                put_file(filename, data, collection=col) 
 
         if is_sort_relationships == True:
             results['relationships'] = tlo.sort_relationships(user, meta=True)

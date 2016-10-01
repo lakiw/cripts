@@ -1444,7 +1444,12 @@ def collections(request):
     """
 
     colls = {}
+    colls['COL_DATASETS'] = settings.COL_DATASETS
+    colls['COL_EMAIL_ADDRESSES'] = settings.COL_EMAIL_ADDRESSES
     colls['COL_EVENTS'] = settings.COL_EVENTS
+    colls['COL_HASHES'] = settings.COL_HASHES
+    colls['COL_TARGETS'] = settings.COL_TARGETS
+    colls['COL_USERNAMES'] = settings.COL_USERNAMES
     return colls
 
 @user_passes_test(user_can_view_data)
@@ -1683,7 +1688,7 @@ def download_file(request, sample_md5):
     """
 
     dtype = request.GET.get("type", "sample")
-    if dtype in ('object', 'pcap', 'cert'):
+    if dtype in ('object'):
         return download_grid_file(request, dtype, sample_md5)
     else:
         return render_to_response('error.html',

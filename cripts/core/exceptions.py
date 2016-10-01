@@ -17,4 +17,4 @@ class ErrorMiddleware(object):
         import sys, traceback
         print("Exception : " + str(exception))
         traceback.print_exc(file=sys.stdout)
-        return none
+        return None

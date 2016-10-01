@@ -318,8 +318,28 @@
       <a href="{% url 'cripts.core.views.sector_list' %}">Sector Lists</a>
     </li>
     <li class='nav_objects mmenu_item'>
+      <a href="{% url 'cripts.datasets.views.datasets_listing' %}">Datasets</a>
+      <a href id="new-dataset" class="ui-icon ui-icon-plusthick add dialogClick" dialog="new-dataset" persona="new" title="New Dataset"></a>
+    </li>
+    <li class='nav_objects mmenu_item'>
+      <a href="{% url 'cripts.email_addresses.views.email_addresses_listing' %}">Events</a>
+      <a href id="new-email_address" class="ui-icon ui-icon-plusthick add dialogClick" dialog="new-email_address" persona="new" title="New Email Address"></a>
+    </li>
+    <li class='nav_objects mmenu_item'>
       <a href="{% url 'cripts.events.views.events_listing' %}">Events</a>
       <a href id="new-event" class="ui-icon ui-icon-plusthick add dialogClick" dialog="new-event" persona="new" title="New Event"></a>
+    </li>
+    <li class='nav_objects mmenu_item'>
+      <a href="{% url 'cripts.hashes.views.hashes_listing' %}">Hashes</a>
+      <a href id="new-hash" class="ui-icon ui-icon-plusthick add dialogClick" dialog="new-hash" persona="new" title="New Hash"></a>
+    </li>
+    <li class='nav_objects mmenu_item'>
+      <a href="{% url 'cripts.targets.views.targets_listing' %}">Targets</a>
+      <a href id="new-target" class="ui-icon ui-icon-plusthick add dialogClick" dialog="new-target" persona="new" title="New Target"></a>
+    </li>
+    <li class='nav_objects mmenu_item'>
+      <a href="{% url 'cripts.usernames.views.usernames_listing' %}">Usernames</a>
+      <a href id="new-username" class="ui-icon ui-icon-plusthick add dialogClick" dialog="new-username" persona="new" title="New Username"></a>
     </li>
     <li class='nav_services mmenu_item'>
       <a href class="noclick">Services</a>
