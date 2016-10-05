@@ -4,7 +4,7 @@ from django.core.management.base import BaseCommand
 from django.conf import settings
 from optparse import make_option
 
-from cripts.core.mongo_tools import mongo_connector
+from crits.core.mongo_tools import mongo_connector
 
 class Command(BaseCommand):
     """
@@ -40,9 +40,15 @@ def remove_indexes():
     coll_list = [
                  settings.COL_BUCKET_LISTS,
                  settings.COL_COMMENTS,
+                 settings.COL_DATASETS,
+                 settings.COL_EMAIL_ADDRESSES,
+                 settings.COL_EVENTS,
+                 settings.COL_HASHES,
                  settings.COL_NOTIFICATIONS,
                  '%s.files' % settings.COL_OBJECTS,
                  '%s.chunks' % settings.COL_OBJECTS,
+                 settings.COL_TARGETS,
+                 settings.COL_USERNAMES,
                  ]
 
     for coll in coll_list:
@@ -71,18 +77,22 @@ def create_indexes():
     bucket_lists = mongo_connector(settings.COL_BUCKET_LISTS)
     bucket_lists.ensure_index("name", background=True)
 
+    comments = mongo_connector(settings.COL_COMMENTS)
+    comments.ensure_index("obj_id", background=True)
+    comments.ensure_index("users", background=True)
+    comments.ensure_index("tags", background=True)
+    comments.ensure_index("status", background=True)
+
     events = mongo_connector(settings.COL_EVENTS)
     events.ensure_index("objects.value", background=True)
     events.ensure_index("title", background=True)
     events.ensure_index("relationships.value", background=True)
-    events.ensure_index("campaign.name", background=True)
     events.ensure_index("source.name", background=True)
     events.ensure_index("created", background=True)
     events.ensure_index("status", background=True)
     events.ensure_index("favorite", background=True)
     events.ensure_index("event_type", background=True)
     events.ensure_index("bucket_list", background=True)
- 
 
     if settings.FILE_DB == settings.GRIDFS:
         objects_files = mongo_connector('%s.files' % settings.COL_OBJECTS)

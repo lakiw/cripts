@@ -200,7 +200,7 @@
     <div class="bottom">
     {% endif %}
       <span class="right">
-        <b>CRIPTs</b> GPL v2
+        <b>CRIPTs</b>
       </span>
       {% if request.user.is_authenticated %}
       <span class="right" data-intro="Data Classification" data-position="top">
@@ -350,12 +350,6 @@
         {% for nav_template in service_nav_templates %}
         {% include nav_template %}
         {% endfor %}
-      </ul>
-    </li>
-    <li class='nav_timelines mmenu_item'>
-      <a href class="noclick">Timelines</a>
-      <ul class='sub-mmenu'>
-        
       </ul>
     </li>
     <li class='nav_main mmenu_item'>

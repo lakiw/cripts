@@ -1,0 +1,949 @@
+This file will document large changes that anyone tracking development branches
+should be aware of. This will also include things like dependency changes or
+references to changes in other repositories. Updates are sorted by commit date
+descending.
+
+Author: apolkosnik
+Date:   2016-08-06
+
+    Added support for Mongoengine 0.10.x while allowing you to use currently
+    supported version of mongoengine (0.10.x), in essence everything should
+    continue to work.
+    
+    If you want to go with mongoengine 0.10.x, you'll need to upgrade via pip.
+    
+        pip install -U -r requirements.txt
+    
+    It will install Mongoengine 0.10.6 and Pymongo 3.2.2 and then
+        also django_mongoengine from git.
+
+Author: apolkosnik
+Date:   2016-07-13
+
+    Support for Impfuzzy has been added, see:
+    https://github.com/JPCERTCC/aa-tools/tree/master/impfuzzy
+    And of course you'll need to install pyimpfuzzy via pip
+    In order to populate the hashes for our current sample set run the following:
+        python manage.py upgrade -Ss
+
+Author: mgoffin
+Date:   2016-07-28
+
+    Based on community feedback we've decided to change how Indicator Threat
+    Type and Attack Type work. Now instead of it being a single static value
+    which is used in determining duplicate indicators, they are now lists which
+    are not involved in determining duplicates. Now, when adding an Indicator
+    duplicates are once again determined based on type and value only. Threat
+    and Attack Types will be combined with existing ones if an Indicator gets
+    uploaded that would cause an existing indicator to get updated.
+
+    This caused a schema migration. To update your indicators, you can run:
+
+        python manage.py upgrade -si
+
+    If you want to detect the duplicates created by having different Threat or
+    Attack Types, you can run the following aggregation in mongo shell:
+
+        db.indicators.aggregate({$group:{_id:"$value",count:{$sum :1}}},
+                                {$project:{_id:0, val:"$_id", count:1}},
+                                {$match:{$count: {$gt: 1}}})
+
+    This will show you the value of the Indicator and the count of duplicates.
+    You can then search in the UI using a global search like:
+
+        type:indicator field:value foo
+
+    Where "foo" is the duplicate value returned in the aggregation results. You
+    can decide how you want to resolve the conflicts before removing the
+    duplicates.
+
+    If you use the API to update indicators, note that the actions have now
+    changed to "modify_attack_types" and "modify_threat_types" and take the
+    parameter "attack_types" and "threat_types" respectively. Note that using
+    these calls will *replace* the existing types there, so make sure to provide
+    the complete list you want to be there after the update is made.
+
+Author: apolkosnik
+Date:   2016-02-03
+
+    You can run your CRITs-master on Django 1.7 with the latest commit!
+    In order to run on 1.7 you'll have to add an one-liner to forms.py in your
+    custom-made services.
+    You'll need to add the following line:
+        kwargs.setdefault('label_suffix', ':')
+    before every occurrence of the following:
+        super(YourCustomServiceConfigForm, self).__init__(*args, **kwargs)
+    in forms.py inside your custom-made services.
+    
+    For CRITs to run on Django 1.7 you also need to update the following:
+    django-tastypie==0.12.2
+    django-tastypie-mongoengine==0.4.6
+
+Author: mgoffin
+Date: 2015-11-19
+
+    Actions have several changes.
+
+    1) Actions are now a feature of all TLOs, not just indicators.
+    2) Actions can be modified to specify a set of TLOs they apply to.
+
+        NOTE: Without setting this for existing Actions, none of them will show
+        up in the dropdown menu when adding an Action.
+
+    3) Actions can now set up preferred criteria. This allows you to specify the
+    conditions which make this Action preferred for a given TLO.
+        When editing an Action you will see a "Preferred" section. This section
+        is a comma-separated list of TLO Type, Field Name, and Value. Newlines
+        will separate different conditions. Conditions are an "OR".
+        For example: Indicator, ind_type, Domain
+            This will be a preferred action for any Indicator with a type of
+            Domain.
+
+Author: dreardon
+Date: 2015-11-18
+    The new Signature TLO has two backend reference lists which can be managed
+    by an Administrator in the Control Panel.
+        - The Data Type drop-down values that are available can be added to and disabled
+        just like other reference values (Raw Data Types, etc.) in the Control Panel
+        under "Signature Types"
+        - The Signature Type Dependency list featured in the type-ahead component
+        can also be added to and managed in the Control Panel under "Signature Dependency".
+        Unlike most other Control Panel lists, this list allows entries to be deleted so
+        that this list doesn't become cumbersome over time.
+
+Author: apolkosnik
+Date: 2015-08-31
+
+    Unzip functionality was set up to use the 7za rather than 7z. 7z suports
+    much wider variety of formats. The defaults are changed for new installs,
+    for existing installs just change the filename from  7za to 7z in 
+    CRITs Control Panel -> SYSTEM -> General -> "Zip7 path:".
+    7z comes with p7zip-plugins on RHEL/Centos, on Ubuntu it's in p7zip-full.
+
+Author: mgoffin
+Date: 2015-06-30
+
+    CybOX and STIX have been completely removed from core. There was too much
+    arguing and back-and-forth between the pro-standards and anti-standards
+    community members for it to stay as it is. Half of the people didn't want to
+    be forced to use them at all while the other half was not satisfied at the
+    level of feature parity and compatibility CRITs had with the standards.
+
+    The compromise that we came up with is to move any and all features that
+    involved CybOX/STIX over to the TAXII Service. That way if you use core you
+    are not required to interact or use the standards, but if you do want them
+    you can leverage the import/export capabilities via an optional service.
+
+    The following changes have taken place:
+
+        - CRITs has its own set of vocabularies for things like Event Type,
+          Relationships, Objects, Indicators, Actors, etc. Some of the values
+          might be the same, similar, or different than what was there before
+          depending on if those values made sense.
+            - We are not migrating old values and leaving the mapping of old
+              values to new ones up to organizations to handle. Due to the
+              confusion of what some of the old CybOX/STIX values meant, some
+              people used them in different ways and we didn't want to make
+              assumptions.
+        - STIX Import is gone and now a part of the TAXII Service. If you use
+          the TAXII service it can be found in the Nav Menu under "Services".
+        - Exporting a TLO in STIX format requires the TAXII Service's "Preview"
+          feature.
+        - The "Standards" API is gone but will work again if you include the
+          TAXII Service which extends the API.
+        - The TAXII Service has a new set of mappings to go from
+          CRITs->Standards->CRITs for the new vocabularies. It is less robust
+          than before but we are leaving it this way so people can submit PRs
+          for expanded support.
+        - Downloading a TLO no longer provides a STIX option. It is now
+          JSON-based.
+        - If you wish to upload a file as an Object, use the "File Upload"
+          Object Type.
+        - Indicators now have a "Threat Type" and "Attack Type" to provide more
+          context into what the Indicator means.
+        - The UI will now prevent you from trying to create an Indicator out of
+          an existing Object if there is no matching Indicator Type.
+        - If you had custom vocabulary additions before, we no longer use the
+          database to query for vocabulary values. They are now located in the
+          "vocabulary" directory of the project. You can add your vocabulary
+          items there as necessary and handle merge conflicts if needed.
+
+    This separation should put CRITs in the right position. We want to keep
+    CRITs as a collaborative analyst environment, not a sharing platform. If you
+    want to share by extending it with services that's excellent! CybOX and STIX
+    support can be expanded upon and rev'd more frequently in the TAXII Service
+    so people don't have to wait for new CRITs releases to get access to newer
+    versions of the standards. The core developers don't use the standards so
+    they are looking to the community to contribute enhancements to CybOX/STIX
+    support in the TAXII Service if it is something they need/want.
+
+    Here an examples of a query you can perform to update the values in
+    your database to align with the new vocabulary:
+
+    db.indicators.update({'type': 'Address - ipv4-addr'}, {$set: {'type': 'IPv4
+    Address'}}, {'multi': 1})
+
+
+Author: brlogan
+Date: 2015-05-07
+
+    Added support for sharing String Indicators via STIX. Because there is no
+    generic String type in CybOX, the CybOX Custom object must be used. This
+    requries updating python-stix and python-cybox.
+
+    Updated versions are:
+        cybox-2.1.0.11
+        stix-1.1.1.5
+
+Author: wxs
+Date:   2015-05-06
+
+    The add_relationship() function has been changed. If you have any place
+    using it with the rel_id and type_ arguments you need to change to pass
+    in rel_item. For more details please see this commit:
+
+    e9f0a6e545ec18e8f951b4709aab8fd06b973537
+
+Author: wxs
+Date:   2015-05-06
+
+    Backdoor and Exploit TLOs have been added to CRITs. This provides for
+    better tracking of TTPs over time. The old "exploits" collection will need
+    to be removed first by running the following from a mongo shell:
+
+    db.exploits.drop()
+
+    If you have existing samples with backdoor or exploit information you can
+    migrate these to new objects in the new collections using:
+
+    python manage.py upgrade -S
+
+    The above will create new objects in the collections for each exploit and
+    backdoor attribute of a Sample, and relate the Sample to them. It will also
+    create indexes for the new "backdoors" and "exploits" collection.
+
+    Finally, you can drop the backdoor_details and exploit_details collections
+    by running the following from a mongo shell:
+
+    db.backdoor_details.drop()
+    db.exploit_details.drop()
+
+Author: mgoffin
+Date:   2015-04-28
+
+    Locations has been added to CRITs. This is a new feature for each TLO.
+    Locations allows you to track where a TLO has been seen originating from as
+    well as destined to. Uniqueness of a location entry is based on a
+    combination of its type, location, and date of entry. This allows you to
+    have multiple instances of originating from the same place. Each location
+    comes with an optional description as well as optional lat/long.
+
+    In order for this to work you will need to populate your system with
+    locations to choose. Locations are based on country/territory. You can add
+    them by running the following:
+
+        python manage.py create_locations
+
+Author: apolkosnik
+Date:   2015-04-17
+
+    Bundled version of OleFileIO_PL has been removed and replaced with
+    system-installed olefile >= 0.40. In order to get it working one needs to
+    install olefile module by either building it and installing from
+    source (https://pypi.python.org/pypi/olefile) download the zip, unzip, cd
+    to the extracted folder and run:
+
+        python setup build & sudo python setup.py install
+
+    or through pip:
+
+        pip install olefile
+
+Author: wxs
+Date:   2015-01-17
+
+    Notifications had an incorrect index set on them, causing them not to
+    expire after 30 days. This can be fixed by executing the following command
+    from a mongo shell:
+
+    db.notifications.ensureIndex({"date": 1}, {expireAfterSeconds: 2592000, background: true})
+
+Author: wxs
+Date:   2014-12-30
+
+    Domains got an overhaul to split the WHOIS feature out to a service. You
+    will need to migrate all your domains. This can be done with:
+
+    python manage.py upgrade -D
+
+    If you do not have any WHOIS information for existing domains in your
+    database you can ignore this update. If you do have WHOIS information a
+    script has been provided which will run the WHOIS service with default
+    configuration against all domains which have WHOIS information already. It
+    is recommended that you use this script to create service analysis results
+    for these domains.
+
+    The WHOIS service supports three different query modes: live, pydat and
+    domaintools. If you wish to use the domaintools or pydat modes you must
+    configure the service first and then specify your runtime options to the
+    migrate script using the -c option.
+
+    If you only want to do live queries then run this:
+
+    python manage.py runscript whois_service migrate -- -v
+
+    If you want to do a pydat lookup then run this:
+
+    python manage.py runscript whois_service migrate -- -v -c "{'pydat_query': True}"
+
+    If you want to do a domaintools lookup then run this:
+
+    python manage.py runscript whois_service migrate -- -v -c "{'dt_query': True}"
+    The config options can be combined too. So all three modes would be:
+
+    "{'dt_query': True, 'pydat_query': True, 'live_query': True}"
+
+    Please use the -h argument to the script to get extra help.
+
+Author: dsnellgrove
+Date:   2014-10-30
+
+    The python library "ushlex" has been added as a dependency and will need to
+    be installed.
+
+Author: dbuchta
+Date:   2014-10-14
+
+    Dashboards are now saved objects in the db containing a list of tables 
+    affiliated with it. They also have a name and have the option to be 
+    public. These can all by changed on the Dashboard Configurations page
+    although only an admin can make a dashboard public. When a user other
+    then the original creator saves a public dashboard, it creates a clone
+    with their own customization applied and the public one is removed
+    from the user's list of dashboards. In order to revert the clone back to 
+    the public, simply delete it and public one will show again. Users also 
+    have the choice of picking their default dashboard from the Dashboard 
+    Configurations page.
+    
+    A key feature to these new dashboards are users having the ability to save
+    their favorite searches. This can be done by entering your search criteria 
+    in the Global Quick Search and clicking the "Configure for Dashboard" button
+    on the search results page. Once clicked, you will be redirected to another
+    page where you can customize the table to your liking, name it, and choose 
+    which dashboard to pin it to, or to  create a new one.
+    
+    In order for the dashboard to work correctly, the initial default dashboard
+    must be created in the database. This can be done with the following 
+    management command:
+    
+        python manage.py create_default_dashboard
+        
+Author: mgoffin
+Date:   2014-10-04
+
+    We have removed the requirement to use /crits/ when using Apache. It will
+    now function with a similar URL as runserver. This removes backwards
+    compatibility with old links, but if you wish to make them work, you can use
+    your own custom Apache config to redirect /crits/ to /.
+
+    Please reference the example Apache config files in the extras folder for
+    how to configure Apache to work with CRITs.
+
+Author: mgoffin
+Date:   2014-09-25
+
+    There is a drastic change to Analysis Results. Historically, analysis
+    results were stored within the document of the TLO they were derived from.
+    This was fine but as time went on more services were developed which had
+    more robust output. Each TLO is bound by MongoDBs 16MB max document size. As
+    services are being executed they are consuming part of that 16MB for the
+    TLO. This results in contention for space and has sometimes led to documents
+    which can no longer be modified due to hitting the cap.
+
+    The change that has been implemented is to move all Analysis Results to
+    their own collection. This gives service developers almost 16MB of space
+    dedicated to the results their service output. There is no more contention
+    with other service output to deal with. Each execution of a service will
+    have its own document in the collection making it easier to work with.
+
+    With this change you will need to run some commands:
+
+    In mongo shell:
+        use crits
+        db.analysis_results.ensureIndex({'service_name': 1}, {'background': true})
+        db.analysis_results.ensureIndex({'object_type': 1}, {'background': true})
+        db.analysis_results.ensureIndex({'object_id': 1}, {'background': true})
+
+    If you run a clustered database you'll also need to run:
+        use admin
+        db.runCommand({shardcollection:"crits.analysis_results",key:{"object_id":1}})
+
+    Once the indexes (and sharding if applicable) are set, you can then begin
+    migrating your Analysis Results to the new collection. This can be skipped
+    if you wish to have them migrated as you view content through the interface
+    but keep in mind search results will not be accurate until all of them are
+    moved.
+
+    To migrate the Analysis Results, you can run the following management
+    command:
+
+        python manage.py upgrade -as
+
+    You can use -h to get more information, but this tells the command to skip
+    preparation (there is no need to do this at this time) and to upgrade all
+    documents in all collections. You can use the individual options to migrate
+    a collection at a time (this is useful if you have bad data in your database
+    that you need to hunt down as the migration happens).
+
+    After everything is migrated and verified, if you want to ensure all of the
+    old analysis results were cleaned up, you can run the following in mongo
+    shell for each TLO collection (replace "collection" with the collection you
+    wish to update):
+
+    db.collection.update({}, {$unset: {'unsupported_attrs.analysis': 1}}, {'multi': true})
+
+    There is a new Nav Menu option under Services called "Analysis Results" to
+    get to the jTable listing of the results.
+
+Author: wxs
+Date:   2014-08-13
+
+    Services are getting an overhaul. They no longer use the Context concept.
+    Contexts existed from a time before we had real objects to pass around.
+    Now that we have real objects Contexts are no longer needed and are a
+    layer of indirection we can do without.
+
+    If you are a service author you need to update your code to work on an
+    object.
+
+    Services have also received a major rewrite in how they are configured
+    and run. The wiki page will be updated accordingly.
+
+Author: mgoffin
+Date:   2014-09-03
+
+    The way we handle URLs is changing drastically. Now, each TLO and major
+    section of CRITs is going to handle its own urls.py file. They are imported
+    in the normal `crits/urls.py` file. If you've made any changes to your
+    urls.py file, you will need to determine the correct new location and adjust
+    accordingly.
+
+    This change was made because we exceeded the 255 argument limit when trying
+    to jam them all into one file.
+
+Author: mgoffin
+Date:   2014-09-02
+
+    Actors are a new TLO that come with a lot of attribution content. In order
+    to get Actors working, you will need to populate your database with several
+    things:
+
+        python manage.py create_actors_content
+
+    That will populate the available Threat Types, Motivations, Sophistications,
+    and Intended Effects from STIX into your database to make available.
+
+    You will also need to add some Actor Identifier Types to your system. You
+    can do this via the Control Panel or under "Add New Item". Once you have one
+    or more of these set, you can add Actor Identifiers. More information on
+    Actors, Actor Identifiers, etc. can be found on the wiki.
+
+Author: mgoffin
+Date:   2014-08-13
+
+    The Sample API has been updated. The Method will default to an empty string
+    now to stay in-line with the behavior of the backend handler function. Also,
+    parent_md5 is now related_md5 as that option was renamed in the same
+    function. Expanded to include related_id and related_type so you can relate
+    the Sample to more than just another Sample (common case an Email). Be aware
+    if you use this feature to make the appropriate changes.
+
+Author: mgoffin
+Date:   2014-08-12
+
+    Updated DEPENDENCIES. We are now supporting Django 1.6.5 (in preparation for
+    their 1.7 release), MongoDB 2.6.4, and PyMongo 2.7.2. I also bumped dateutil
+    and Yara to 2.1.0 so people using the service push to upgrade and stay on
+    the latest code base (new features which will help us enhance the service).
+
+Author: mgoffin
+Date:   2014-07-16
+
+    The "adduser" management command has been renamed to the "users" management
+    command. It's been expanded past just adding users. You can now add and edit
+    users. The only thing this doesn't allow you to do is assign sources,
+    subscriptions, favorites, or alter user preferences. Please review the new
+    list of arguments.
+
+Author: mgoffin
+Date: 2014-06-26
+
+    Adding a "Sectors" feature. This will allow you to track which sector(s) a
+    top-level object pertains to. The available sectors list is based off of the
+    DHS Critical Infrastructure Sectors list and cannot be modified through the
+    interface (to allow sharing between instances).
+
+    You will need to run the following to populate the database with the sector
+    list:
+
+        python manage.py create_sectors
+
+    There is also a management command to update counts if they get out of whack
+    for some reason:
+
+        python manage.py sector_counts
+
+Author: ssnow
+Date: 2014-06-23
+
+    Updating CRITs to expand the TAXII service. Within this repository, this
+    involves creating a to_stix method for crits objects within
+    crits_mongoengine.py. This method will need to be updated as more crits
+    objects can be converted into the STIX standard and potentially shared
+    via TAXII.
+
+    Related: updating STIX to v1.1.1.0 and CybOX to 2.1.0.5.
+
+Author: mgoffin
+Date: 2014-06-06
+
+    Adding in the start of the Screenshot storage feature. This comes with a
+    dependency on python's pillow (v 2.4.0) library. It is also adding an index.
+    It is:
+
+    db.screenshots.ensureIndex({'tags': 1}, {'background': true})
+
+    It is possible, but not yet decided, that the GridFS portion of this
+    collection should be sharded. Going to think about that a bit while the
+    feature matures.
+
+Author: mgoffin
+Date:  2014-05-15
+
+    Notifications are getting an overhaul. They are now stored in their own
+    separate collection instead of being mixed in with comment and embedded in a
+    user's document.
+
+    There is one document per notification, and it contains a list of users that
+    notification pertains to.
+
+    The generate_notifications management script has two jobs now:
+
+        - send out email notifications to users who wish to receive them.
+        - delete notifications if all of the users it pertains to have been
+          notified.
+
+    The create_indexes management command has been updated to include indexes
+    for notifications.
+
+        db.notifications.ensureIndex({'users': 1}, {'background': true})
+        db.notifications.ensureIndex({'obj_id': 1},
+                                     {'background': true,
+                                      'expireAfterSeconds': 2592000})
+
+    NOTE: There is an expiration index which is set for 30 days. Notifications
+    which have been in the database for 30 days will automatically get deleted
+    by MongoDB! If you wish to keep them around indefinitely or want to adjust
+    the length of time, please manually generate the indexes or alter your
+    create_indexes management script accordingly.
+
+    If you wish to clean up any existing notifications, you'll need to look at
+    the following MongoDB commands:
+
+    - User documents which contain notifications:
+        db.users.update({}, {$unset: {'notifications': 1}}, {'multi': 1})
+        db.users.update({},
+                        {$unset: {'unsupported_attrs.notifications': 1}},
+                        {'multi': 1})
+    - Existing notifications in the comments collection:
+        db.comments.remove({'type': 'notification'}, {'multi': 1})
+
+Author: apolkosnik
+Date:   2014-04-28
+
+    Some LDAP servers might set an urgent flag on some of their messages, and
+    cause python-ldap to throw an exception, and not allow an user to log-in.
+    This happens with certain Oracle based LDAP servers, and the known solution
+    is to import ldap.controls.pwdpolicy.
+    
+    ldap.controls.pwdpolicy module is not distributed before 2.4.15, and with
+    prior version you wil get a message in you crits log:
+    "INFO <date> <time> crits.core.user ldap.controls.pwdpolicy not present."
+
+Author: mgoffin
+Date:   2014-04-17
+
+    To facilitate the API and to fix some issues, we will now require new
+    versions of Django, MongoDB, MongoEngine, and PyMongo. All of the versions
+    are available in the DEPENDENCIES file.
+
+    Also, there is an issue with chunk collection indexes. There is a change to
+    the Python MongoDB driver which does a sanity check for the chunks index.
+    The options for the index differ from the ones we used in create_indexes
+    (specifically we added background=true, they did not and require
+    unique=true). I have updated create_indexes to support the proper format.
+    For anyone with an existing database, you will need to drop and recreate the
+    indexes for the objects, sample, and pcaps chunks collections. From mongo
+    shell, you can run the following:
+
+    db.objects.chunks.dropIndex({'files_id': 1,'n': 1})
+    db.pcaps.chunks.dropIndex({'files_id': 1,'n': 1})
+    db.sample.chunks.dropIndex({'files_id': 1,'n': 1})
+    db.objects.chunks.ensureIndex( { files_id: 1, n: 1 }, { unique: true } );
+    db.pcaps.chunks.ensureIndex( { files_id: 1, n: 1 }, { unique: true } );
+    db.sample.chunks.ensureIndex( { files_id: 1, n: 1 }, { unique: true } );
+
+Author: mgoffin
+Date: 2014-04-04
+
+    In order to facilitate API Key authorization when using Apache with
+    mod_wsgi, you will need to add "WSGIPassAuthorization On" to your Apache
+    configuration.
+
+Author: mgoffin
+Date:   2014-04-04
+
+    It has come to our attention that there has been some issues with memory
+    consumption and lots of swapping since the upgrade to 3.0. This is a result
+    of a default change in MongoEngine which uses a cached QuerySet. By default
+    it will store the results of each query in memory so multiple iterations of
+    the results will not hammer the database. This wound up improving
+    performance but at the cost of more significant memory requirements.
+
+    The community has given MongoEngine feedback and in a future version they
+    plan on making the default a non-caching QuerySet, but provide the ability
+    to cache if you wish to.
+
+    Until such a time comes and we can properly optimize our queries between
+    those two options, we have decided to expose a Control Panel option which
+    will determine whether or not we should be caching all queries globally.
+    By default this option is off so there will be no caching. This means you
+    might see slightly slower response times but you'll improve memory/swap
+    issues. If you have the hardware and would prefer the performance
+    improvements of the query caching, you can enable this in the Control Panel
+    and restart your web server.
+
+Author: wxs
+Date:   2014-02-03
+
+    The SECRET_KEY setting is no longer stored in the config. It is now
+    required that you set that in crits/config/database.py. DO NOT EDIT
+    crits/config/database_example.py to make this change. Instead, please
+    make copy database_example.py to database.py and put your secret key
+    there.
+
+Author: wxs
+Date:   2014-01-27
+
+    You need to migrate your samples.
+
+    The 'hashes' sub-document has been removed and individual hashes are
+    now top-level objects. Please see the "Sample Migration" section in
+    release_notes/3.0.txt for details information.
+
+Author: mgoffin
+Date:   2013-01-22
+
+    There has been a change to the create_indexes management script.
+    Historically we made a lot of indexes "sparse". These indexes only included
+    documents which has a value defined in the indexed field. The issue with
+    this now is that our search and sorting capabilities have been enhanced. We
+    are trying to search and sort and are coming up with subsets of results due
+    to sorting on fields which are sparse indexed. This removes a lot of
+    relevent documents from the results.
+
+    The change to create_indexes removes all sparse indexes from being created.
+    This will make the index size requirements a little larger, but not anything
+    current servers shouldn't be able to handle. If you already have indexes
+    made and try to run this script, MongoDB will ignore the creation because an
+    index on that field already exists. You will need to manually drop the
+    sparse indexes and then use this script to recreate them.
+
+    This is not a requirement for CRITs to continue functioning, but if you
+    happen to notice frequent issues with sorting removing some search results,
+    this will be your fix.
+
+
+Author: inray
+Date: 2013-01-22
+
+    The XFrameOptionsMiddleware has been added which is used by Django to help
+    prevent clickjacking attacks.  This adds the X-Frame-Options HTTP header
+    to all outgoing HTTP Responses.  The header restricts the page from being
+    loaded within an IFRAME.  Default policy is SAMEORIGIN which allows viewing
+    the Control Panel pages.  Deployments where CRITs is loaded inside an
+    IFRAME may use the ALLOW-FROM <URI> policy to allow loading CRITs within
+    a frame as long as the top-level browsing context is the same as the
+    supplied URI.
+
+    See these articles for details:
+    http://blogs.msdn.com/b/ieinternals/archive/2010/03/30/combating-clickjacking-with-x-frame-options.aspx
+    https://developer.mozilla.org/en-US/docs/HTTP/X-Frame-Options
+
+Author: mgoffin
+Date:   2013-12-12
+
+    There are two new dependencies if you want to generate a QR Code on the
+    login page for users who are settings up TOTP. You can install them with:
+
+        sudo pip install qrcode
+        sudo pip install pillow
+
+    If you do not install these dependencies, users will still get their string
+    to setup their authenticator, but will have to manually enter it.
+
+    Also, the Nav menu on the login screen has been removed. Since it only
+    contained a link to the password reset page, I included that link near the
+    login form on the page instead.
+
+Author: bdray
+Date:   2013-12-10
+
+    An effort that started out mainly to extract the dialogs from the core base
+    templates led to a fairly lengthy overhaul of many of the dialogs and
+    supporting javascript behind them (#921).  The initial intent was to reduce
+    the size of the base template given that in any given "load" of a page
+    view, you are likely to only use a few of the dialogs, so now most dialogs
+    are loaded on demand when you request them.  Future work will add some
+    caching in to make this even more performant, but this effort brings us
+    closer to that and streamlined a lot of JS.
+
+    For developers, dialogs are currently structured in "mini templates"
+    located in the templates/dialogs/ folder.  These dialogs are served by the
+    get_dialog function.  Client side, two new JS modules have been introduced
+    to make working with them easier.  The first of these modules handles the
+    "lazy loading", jquery.ui.dialog-lazy.js -- this module allows you to
+    define your dialog mostly as normal, but an added 'href' option is passed
+    to the the Dialog function which references the mentioned view.  When a
+    user clicks to open the dialog it is ajax fetched and displayed.
+
+    A second module, jquery.ui.dialog-persona adds a built-in option
+    flexibility quality called "personas" onto the dialog constructs, enabling
+    the easy ability for the same dialog template/form to be reused in multiple
+    ways.  For example the 'new' persona can be used to add new entries, and
+    the 'update' persona can be used to make changes to existing ones.
+    Comments added a 'reply' persona to handle that use case.  By simply
+    defining these personas on the dialog and where the dialogClick happens,
+    different titles, button labels, setup callback and submit actions can be
+    changed to permit this "multi-personality" flexibility.
+
+    As hinted above, opening dialogs is also standardized across the board.
+    There are two new classes, 'dialogClick' and 'deleteClick' that were added
+    to open up any dialog of the respective type.  So a lot of "on click binding"
+    can be alleviated by simply applying the right class.  These functions look for
+    additional params on the clicked element to understand the persona and
+    dialog they are to open.
+
+    Much of the support code for dialogs has been moved into the dialogs.js
+    file, or the respective "apps" file if it is not globally required.  Where
+    possible, the functionality has been refactored to support multiple types
+    of dialogs with the same backend functions.  Additional work could be done
+    to refactor this code in the future.  For example, a lot of code in the
+    global namespace could be localized and "contained" to permit both clean
+    interfaces as well as possibly enable focused JS unit testing in the future.
+
+    Establishing what dialogs are available also follows a new standardized
+    pattern.  You can see this pattern in dialogs.js where stdDialogs,
+    fileDialogs, commentsDialogs etc are all defined.  They include the special
+    parameters relative to the given dialog, but are essentially all built from
+    the stdDialog and stdPersona functions that provide the base functionality
+    for all dialogs while allowing you to overlay "specific" options easily.
+    If dialogs are specific to certain apps or views, we can save some
+    initialization code by only including those in the respective apps JS file
+    where "localDialogs" is defined.
+
+
+Author: mgoffin
+Date:   2013-11-19
+
+    With the changes to the directory structure to be more compliant with newer
+    versions of Django, this allows us to simplify and use a more default
+    django.wsgi file. I have removed the extra crud from that file, but it
+    results in the requirement to add the WSGIPythonPath to the Apache config
+    files. I have made those changes in our example files, but be aware that you
+    will need to add the following line to your httpd.conf (Unbuntu) or your
+    ssl.conf file (RHEL):
+
+        WSGIPythonPath /data/crits
+
+    Of course, adjust that line according to your installation if you've
+    customized anything.
+
+Author: inray
+Date:   2013-10-22
+
+    The directory structure has been updated to stay compatible with newer
+    version of Django (1.4+).  The change involved moving most CRITs code to a 
+    subdirectory called 'crits' and pointing the configuration and management
+    files to the new directory.  The 'DocumentRoot' configuration option is
+    the only change required to be made on a normal CRITs installation and is
+    located in the Apache configuration files.  You must ensure the Apache
+    configuration is updated with the DocumentRoot directive pointing to the
+    new path: '/data/crits/crits/extras/www'.
+
+Author: mgoffin
+Date:   2013-10-10
+
+    Scripts executed using the `runscript` management command will now require
+    authentication against CRITs in order to run. That means you will need a
+    valid CRITs login to run scripts. This provides some benefits like auditing
+    activity and limiting resulting content based on ACLs (of course this
+    doesn't stop people from altering the scripts to bypass this if they have
+    access to do so).
+
+    There are several ways to authenticate with `runscript`. One way is doing
+    nothing and it will prompt you for a username and password (neither one will
+    show the characters as you type). Another way is to use the -u (username)
+    and -p (password) options. If you omit one of those it will prompt for the
+    missing one. The final way is to use the -e (environ-auth) option. This will
+    look for a CRITS_USER and CRITS_PASSWORD environment variable and use those
+    to authenticate. Again, if one or more is missing, it will prompt you to
+    provide that information. The -e option overrides using the -u or -p option.
+
+    Hopefully this combination of authentication options will provide enough
+    ways for people to continue using these scripts in automated tasks. If you
+    are currently using these scripts in an automated fashion, note that you
+    will need to alter how you execute them. Also if you have any custom scripts
+    that leverage runscript, note that you will need to adjust your scripts
+    `__init__` method to take a 'username' argument.
+
+Commit: 3d8cc17923fd8dbfd583c67cda782e97bf6bbec4
+Author: mgoffin
+Date:   2013-09-25
+
+    Certificates have been added as a top-level object. They act very similar to
+    PCAPs where there's no metadata extracted from the contents, but they are
+    Services-enabled so people can write their own tools and start
+    searching/pivoting off the metadata they create.
+
+Commit: fa263d493905a05912102d5e1fff9e627e6a7982
+Author: mgoffin
+Date:   2013-09-25
+
+    There is a new Control Panel option called "Secure Cookie". It's a Boolean
+    value which sets a template variable "secure_cookie" to "True" or "False".
+    This can be used by developers to determine if they should be using a cookie
+    in a secure or insecure manner. This defaults to "True".
+
+    If you are using the clipboard feature and it seems to not be working, you
+    might want to check to ensure that you've set this value properly.
+
+Commit: 979fb5127a50aad26c875518758e3f8404bf3f19
+Author: mgoffin
+Date:   2013-09-17
+
+    I created an AuditLog class. This class provides the standard structure for
+    existing documents in the audit_log collection, and should be used in the
+    future for any audit logging. The dates in the database for current audit
+    logs were stored as strings. I removed the old prep contents and added a
+    migration which converts them all to ISODate. You will need to run the
+    following to migrate the dates:
+
+        pythong manage.py prep
+
+    Currently the only thing we read audit_log documents for is determining the
+    recent samples on the profile page.
+
+Author: mgoffin
+Date:   2013-08-21
+
+    Django 1.5 introduced an ALLOWED_HOSTS list in settings.py. This is required
+    to be populated if you set DEBUG to False. Since we did not include this
+    already, anyone who sets DEBUG to False and restarts their web server will
+    get 500 errors. We have added it and set the default to ['*'] which
+    basically makes DEBUG a worthless setting. This is intentional so by default
+    anyone can get CRITs running (we can't possibly predict the hostnames of the
+    servers people run CRITs on or the URLs they will use to contact it, so this
+    seems like a sane default).
+
+    However, the installation process will require that you use setconfig to set
+    ALLOWED_HOSTS to a valid value in the database which will override the
+    default. Also, you can set this via the UI if you plan on changing DEBUG to
+    False.
+
+    When you update your code, please run the following command:
+
+        python manage.py setconfig allowed_hosts "foo"
+
+    Where "foo" is the host/domain name or list of names that your site will
+    serve. For more information on this, please visit the following URL:
+
+    https://docs.djangoproject.com/en/1.5/ref/settings/#std%3asetting-ALLOWED_HOSTS
+
+Commit: 827506c3f1e04e7d3f250ec61292baa9c325b372 (crits_dependencies)
+Author: wxs
+Date:   2013-08-02
+
+    The dependencies for supporting standards have been updated. The new
+    versions should improve peroformance when handling large XML files.
+
+    Updated versions are:
+
+        cybox-2.0.0b6
+        stix-1.0.0a7
+        libtaxii-1.0.105
+
+Commit: 8a11893d0aaaf5a1c111e946dfca2f654099b35b
+Author: wxs
+Date:   2013-07-29
+
+    We now have beta support for using Amazon S3 support. To enable this please
+    read the changes to config/database_example.py (look for "S3") and
+    make the corresponding changes in config/database.py.
+
+    If you choose to use S3 please note that it does require the boto package
+    be installed, which is available at https://github.com/boto/boto.
+
+Author: mgoffin
+Date:   2013-07-24
+
+    There is no longer a requirement on a secondary database for authentication
+    and session management. All of this is being done in MongoDB. Before moving
+    to this code, however, you need to get and run the migrate_users management
+    script. This needs to be done with your secondary database and
+    settings/custom_settings in-tact. After the user have been migrated into
+    MongoDB you can then update to this code.
+
+        python manage.py migrate_users
+
+    The only config file now to worry about is `config/database.py` which only
+    contains the MongoDB connection information.
+
+Author: mgoffin
+Date:   2013-07-23
+
+    Updated dependency requirements to Django 1.5 and MongoEngine 0.8.3. The
+    modifications necessary for this aren't 100% complete, so these haven't been
+    added to the crits_dependencies repository. I also haven't updated the
+    services which the necessary changes to their forms.py files for using in
+    Django 1.5.
+
+Commit: b2c9846bca48248c040129893728639bc105ffd8
+Author: mgoffin
+Date:   2013-07-16
+
+    Event Types are now driven by standards. We have removed the ability to add
+    new ones from the interface. You will need to run the following to get the
+    new Event Types into your db:
+
+        python manage.py create_event_types
+
+    Also, if you have Events in your system which have the old Event Types that
+    came with CRITs, the prep management command has been modified to migrate
+    them to the appropriate standards version. You can rerun the prep script to
+    get these migrated, or do so by hand if you have only a few to take care of.
+
+Commit: feb27c4b34721b705802bfe7459846f5e736c6fa
+Author: mgoffin
+Date:   2013-07-16
+
+    The 'scripts' directory has been removed from core and added to the
+    crits_services repository under 'crits_scripts'. If you were using the
+    mapreduces or notifications cronjob scripts, you will need to change them to
+    run like this:
+
+        python manage.py mapreduces
+        python manage.py generate_notifications
+
+    The 'mongo' directory which was in 'scripts' has been moved to the 'contrib'
+    directory.

@@ -491,7 +491,7 @@ def create_indicator_from_object(rel_type, rel_id, ind_type, value,
         source_name = source_name.strip()
 
         create_indicator_result = {}
-        
+
         result = {'success': False,
                      'message': "Could not create indicator"}
        
