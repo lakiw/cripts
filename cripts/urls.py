@@ -8,7 +8,7 @@ urlpatterns = [
 
     url(r'^', include('cripts.core.urls')),                        # Core
     url(r'^dashboards/', include('cripts.dashboards.urls')),       # Dashboard
-    url(r'^comments/', include('cripts.comments.urls')),           # Commentss
+    url(r'^comments/', include('cripts.comments.urls')),           # Comments
     url(r'^events/', include('cripts.events.urls')),               # Events
     url(r'^notifications/', include('cripts.notifications.urls')), # Notifications
     url(r'^objects/', include('cripts.objects.urls')),             # Objects
@@ -18,7 +18,7 @@ urlpatterns = [
     url(r'^email_addresses/', include('cripts.email_addresses.urls')),  # Email Addresses
     url(r'^hashes/', include('cripts.hashes.urls')),               # Hashes
     url(r'^targets/', include('cripts.targets.urls')),             # Targets
-    url(r'^usernames/', include('cripts.usernames.urls')),         # Services
+    url(r'^usernames/', include('cripts.usernames.urls')),         # Usernames
 ]
 
 # Error overrides
@@ -28,6 +28,7 @@ handler403 = 'cripts.core.errors.custom_403'
 handler400 = 'cripts.core.errors.custom_400'
 
 # Enable the API if configured
+# django_tastypie_mongoengine is broken with more recent versions of mongoengine
 if settings.ENABLE_API:
     from tastypie.api import Api
     from cripts.comments.api import CommentResource

@@ -16,7 +16,7 @@
     Alias /css/ /data/cripts/extras/www/css/
     Alias /ext/ /data/cripts/extras/www/ext/
     Alias /images/ /data/cripts/extras/www/images/
-    Alias /img/ /data/cripts/extras/www/images/
+    Alias /img/ /data/cripts/extras/www/img/
     Alias /new_images/ /data/cripts/extras/www/new_images/
     Alias /plugin/ /data/cripts/extras/www/plugin/
     Alias /favicon.ico /data/cripts/extras/www/favicon.ico
