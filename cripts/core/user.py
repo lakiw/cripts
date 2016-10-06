@@ -171,7 +171,6 @@ class CRIPTsUser(CriptsDocument, CriptsSchemaDocument, Document):
     """
     CRIPTs User object
     """
-
     meta = {
         "collection": settings.COL_USERS,
         'indexes': [

@@ -298,7 +298,6 @@ def help(request):
     :type request: :class:`django.http.HttpRequest`
     :returns: :class:`django.http.HttpResponse`
     """
-
     return render_to_response('help.html',
                               {},
                               RequestContext(request))
@@ -312,7 +311,6 @@ def login(request):
     :type request: :class:`django.http.HttpRequest`
     :returns: :class:`django.http.HttpResponse`
     """
-
     # Gather basic request information
     cripts_config = CRIPTsConfig.objects().first()
     url = request.GET.get('next')
@@ -381,7 +379,6 @@ If you are already setup with TOTP, please enter your PIN + Key above."""
         # Even if it is remote user, try to get password.
         # Remote user will not have one so we pass None.
         password = request.POST.get('password', None)
-
         # TOTP can still be required for Remote Users
         totp_pass = request.POST.get('totp_pass', None)
 
@@ -391,7 +388,7 @@ If you are already setup with TOTP, please enter your PIN + Key above."""
             response['message'] = 'Unknown user or bad password.'
             return HttpResponse(json.dumps(response),
                                 content_type="application/json")
-
+        
         #This casues auth failures with LDAP and upper case name parts
         #username = username.lower()
 

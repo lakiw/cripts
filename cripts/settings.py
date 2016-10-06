@@ -374,6 +374,7 @@ if old_mongoengine:
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'cripts.core.exceptions.ErrorMiddleware',
     # Only needed for mongoengine<0.10
     'cripts.core.user.AuthenticationMiddleware',
     )
@@ -383,7 +384,7 @@ if old_mongoengine:
     SESSION_SERIALIZER = 'mongoengine.django.sessions.BSONSerializer'
 
     AUTHENTICATION_BACKENDS = (
-        'cripts.core.user.CRITsAuthBackend',
+        'cripts.core.user.CRIPTsAuthBackend',
     )
 
 else:
@@ -403,7 +404,6 @@ else:
         'cripts.objects',
         'cripts.relationships',
         'cripts.services',
-        'cripts.signatures',
         'cripts.stats',
         'cripts.targets',
         'cripts.usernames',
@@ -420,6 +420,7 @@ else:
         'django.middleware.csrf.CsrfViewMiddleware',
         'django.contrib.messages.middleware.MessageMiddleware',
         'django.middleware.clickjacking.XFrameOptionsMiddleware',
+        'cripts.core.exceptions.ErrorMiddleware',
     )
     SESSION_ENGINE = 'django_mongoengine.sessions'
 
@@ -427,7 +428,7 @@ else:
 
     AUTHENTICATION_BACKENDS = (
         'django_mongoengine.mongo_auth.backends.MongoEngineBackend',
-        'cripts.core.user.CRITsAuthBackend',
+        'cripts.core.user.CRIPTsAuthBackend',
     )
 
 if REMOTE_USER:
@@ -444,6 +445,7 @@ if REMOTE_USER:
             'django.middleware.csrf.CsrfViewMiddleware',
             'cripts.core.user.AuthenticationMiddleware',
             'django.contrib.auth.middleware.RemoteUserMiddleware',
+            'cripts.core.exceptions.ErrorMiddleware',
         )
     else:
         MIDDLEWARE_CLASSES = (
@@ -454,6 +456,7 @@ if REMOTE_USER:
             'django.middleware.clickjacking.XFrameOptionsMiddleware',
             'django.middleware.csrf.CsrfViewMiddleware',
             'django.contrib.auth.middleware.RemoteUserMiddleware',
+            'cripts.core.exceptions.ErrorMiddleware',
         )
 
 MONGODB_DATABASES = {
