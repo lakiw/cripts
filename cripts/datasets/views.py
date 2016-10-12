@@ -12,7 +12,7 @@ from django.template.loader import render_to_string
 
 from cripts.core.user_tools import user_can_view_data
 
-from crits.datasets.handlers import generate_dataset_jtable, generate_dataset_csv
+from cripts.datasets.handlers import generate_dataset_jtable, generate_dataset_csv
 
 @user_passes_test(user_can_view_data)
 def datasets_listing(request,option=None):
