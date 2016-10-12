@@ -12,7 +12,7 @@ def generate_dataset_csv(request):
     response = csv_export(request,Dataset)
     return response
 
-def generate_ip_jtable(request, option):
+def generate_dataset_jtable(request, option):
     """
     Generate the jtable data for rendering in the list template.
     :param request: The request for this jtable.
@@ -22,8 +22,8 @@ def generate_ip_jtable(request, option):
     :returns: :class:`django.http.HttpResponse`
     """
 
-    obj_type = IP
-    type_ = "ip"
+    obj_type = Dataset
+    type_ = "dataset"
     mapper = obj_type._meta['jtable_opts']
     if option == "jtlist":
         # Sets display url
@@ -46,11 +46,11 @@ def generate_ip_jtable(request, option):
                                        default=json_handler),
                             content_type="application/json")
     jtopts = {
-        'title': "IPs",
+        'title': "Datasets",
         'default_sort': mapper['default_sort'],
-        'listurl': reverse('crits.%ss.views.%ss_listing' %
+        'listurl': reverse('cripts.%ss.views.%ss_listing' %
                            (type_, type_), args=('jtlist',)),
-        'deleteurl': reverse('crits.%ss.views.%ss_listing' %
+        'deleteurl': reverse('cripts.%ss.views.%ss_listing' %
                              (type_, type_), args=('jtdelete',)),
         'searchurl': reverse(mapper['searchurl']),
         'fields': mapper['jtopts_fields'],
@@ -62,39 +62,39 @@ def generate_ip_jtable(request, option):
     jtable = build_jtable(jtopts,request)
     jtable['toolbar'] = [
         {
-            'tooltip': "'All IPs'",
+            'tooltip': "'All Datasetss'",
             'text': "'All'",
-            'click': "function () {$('#ip_listing').jtable('load', {'refresh': 'yes'});}",
+            'click': "function () {$('#dataset_listing').jtable('load', {'refresh': 'yes'});}",
             'cssClass': "'jtable-toolbar-center'",
         },
         {
-            'tooltip': "'New IPs'",
+            'tooltip': "'New Datasets'",
             'text': "'New'",
-            'click': "function () {$('#ip_listing').jtable('load', {'refresh': 'yes', 'status': 'New'});}",
+            'click': "function () {$('#dataset_listing').jtable('load', {'refresh': 'yes', 'status': 'New'});}",
             'cssClass': "'jtable-toolbar-center'",
         },
         {
-            'tooltip': "'In Progress IPs'",
+            'tooltip': "'In Progress Datasets'",
             'text': "'In Progress'",
-            'click': "function () {$('#ip_listing').jtable('load', {'refresh': 'yes', 'status': 'In Progress'});}",
+            'click': "function () {$('#dataset_listing').jtable('load', {'refresh': 'yes', 'status': 'In Progress'});}",
             'cssClass': "'jtable-toolbar-center'",
         },
         {
-            'tooltip': "'Analyzed IPs'",
+            'tooltip': "'Analyzed Datasets'",
             'text': "'Analyzed'",
-            'click': "function () {$('#ip_listing').jtable('load', {'refresh': 'yes', 'status': 'Analyzed'});}",
+            'click': "function () {$('#dataset_listing').jtable('load', {'refresh': 'yes', 'status': 'Analyzed'});}",
             'cssClass': "'jtable-toolbar-center'",
         },
         {
-            'tooltip': "'Deprecated IPs'",
+            'tooltip': "'Deprecated Datasets'",
             'text': "'Deprecated'",
-            'click': "function () {$('#ip_listing').jtable('load', {'refresh': 'yes', 'status': 'Deprecated'});}",
+            'click': "function () {$('#dataset_listing').jtable('load', {'refresh': 'yes', 'status': 'Deprecated'});}",
             'cssClass': "'jtable-toolbar-center'",
         },
         {
-            'tooltip': "'Add IP'",
-            'text': "'Add IP'",
-            'click': "function () {$('#new-ip').click()}",
+            'tooltip': "'Add Dataset'",
+            'text': "'Add Dataset'",
+            'click': "function () {$('#new-dataset').click()}",
         },
     ]
     if option == "inline":
