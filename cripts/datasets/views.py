@@ -25,9 +25,6 @@ def datasets_listing(request,option=None):
     :returns: :class:`django.http.HttpResponse`
     """
     if option == "csv":
-        return generate_ip_csv(request)
+        return generate_dataset_csv(request)
     return generate_dataset_jtable(request, option)
-    #if option == "csv":
-    #   return generate_email_csv(request)
-    #return generate_email_jtable(request, option)
 

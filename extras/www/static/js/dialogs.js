@@ -131,7 +131,36 @@ function delete_object_click(e, item_type, del_label, data) {
 }
 
 function populate_id(id, type) {
-
+     $( "#dialog-new-dataset" ).on("dialogopen.add_related_dataset", function(e) {
+        if ($(this).dialog("persona") == "related") {
+        $(this).find("form #id_related_id").val(id);
+        $(this).find("form #id_related_type").val(type);
+        $(this).find("form").bind("addEditSubmitComplete",
+            function(e, response) {
+                    $.ajax({
+                      type: "POST",
+                      success: function() {
+                          $('#relationship_box_container').load(location.href + " #relationship_box_container");
+                      }
+                    })
+              });
+          }
+    });
+    $( "#dialog-new-email_address" ).on("dialogopen.add_related_email_address", function(e) {
+        if ($(this).dialog("persona") == "related") {
+        $(this).find("form #id_related_id").val(id);
+        $(this).find("form #id_related_type").val(type);
+        $(this).find("form").bind("addEditSubmitComplete",
+            function(e, response) {
+                    $.ajax({
+                      type: "POST",
+                      success: function() {
+                          $('#relationship_box_container').load(location.href + " #relationship_box_container");
+                      }
+                    })
+              });
+          }
+    });
     // Add a related Event (Using the related dialog persona)
     $( "#dialog-new-event" ).on("dialogopen.add_related_event", function(e) {
         if ($(this).dialog("persona") == "related") {
@@ -148,7 +177,51 @@ function populate_id(id, type) {
               });
           }
     });
-    
+    $( "#dialog-new-hash" ).on("dialogopen.add_related_hash", function(e) {
+        if ($(this).dialog("persona") == "related") {
+        $(this).find("form #id_related_id").val(id);
+        $(this).find("form #id_related_type").val(type);
+        $(this).find("form").bind("addEditSubmitComplete",
+            function(e, response) {
+                    $.ajax({
+                      type: "POST",
+                      success: function() {
+                          $('#relationship_box_container').load(location.href + " #relationship_box_container");
+                      }
+                    })
+              });
+          }
+    });
+    $( "#dialog-new-target" ).on("dialogopen.add_related_target", function(e) {
+        if ($(this).dialog("persona") == "related") {
+        $(this).find("form #id_related_id").val(id);
+        $(this).find("form #id_related_type").val(type);
+        $(this).find("form").bind("addEditSubmitComplete",
+            function(e, response) {
+                    $.ajax({
+                      type: "POST",
+                      success: function() {
+                          $('#relationship_box_container').load(location.href + " #relationship_box_container");
+                      }
+                    })
+              });
+          }
+    });
+    $( "#dialog-new-username" ).on("dialogopen.add_related_username", function(e) {
+        if ($(this).dialog("persona") == "related") {
+        $(this).find("form #id_related_id").val(id);
+        $(this).find("form #id_related_type").val(type);
+        $(this).find("form").bind("addEditSubmitComplete",
+            function(e, response) {
+                    $.ajax({
+                      type: "POST",
+                      success: function() {
+                          $('#relationship_box_container').load(location.href + " #relationship_box_container");
+                      }
+                    })
+              });
+          }
+    });
 }
 
 function delete_item_click(e, item_type, del_label, data) {
@@ -962,111 +1035,12 @@ function check_selected(type, dialog) {
     }
 }
 
-function new_ip_dialog(e) {
-    var dialog = $(this).find("form");
-    var ref = dialog.find('#id_indicator_reference').closest('tr');
-
-    dialog.find('#id_add_indicator').unbind('change')
-        .bind('change', function(e) {
-        if ($(this).prop('checked')) {
-            ref.show();
-        } else {
-            ref.hide();
-        }
-        }).trigger('change');
-
-    // If there is selected text, default the value in the form
-    check_selected('ip', dialog);
-}
-
-function new_domain_dialog(e) {
-    dialog = $(this).find("form"); // $("#form-new-domain");
-
-    //setup the Add Domain form to display and hide fields properly
-    //save on DOM lookups
-    var ip_check = dialog.find('#id_add_ip');
-    var ip_fields = dialog.find('.togglewithip').parents('tr');
-
-    //define function for seeing source dropdown should be visible
-    var toggle_source_visibility = function() {
-    //definitely should hide if use domain source is checked
-    if (dialog.find('#id_same_source').prop('checked')) {
-        dialog.find('.togglewithipsource').parents('tr').hide();
-            //otherwise, should show only if we're trying to add an ip
-    } else if (ip_check.prop('checked')) {
-        dialog.find('.togglewithipsource').parents('tr').show();
-    }
-    };
-
-    //define function for seeing if ip fields should be visible
-    var toggle_ip_visibility = function() {
-    if (ip_check.prop('checked')) {
-        ip_fields.show();
-        toggle_source_visibility();
-    } else {
-        ip_fields.hide();
-    }
-    };
-
-    //initialize with ip fields hidden
-    toggle_ip_visibility();
-
-    //setup checkbox events
-    //just make form look neater if they don't want to add an IP
-    dialog.find("#id_add_ip").change(toggle_ip_visibility);
-
-    //don't require selecting a source if they want to use the same source as the domain
-    // and initialize same source to true (will prob. be true in most cases...?)
-    dialog.find("#id_same_source").change(toggle_source_visibility).prop('checked', true);
-
-    //reinitialize ip date field (since this function can be called after page load)
+function new_dataset_dialog(e) {
     createPickers();
-
-    // If there is selected text, default the value in the form
-    check_selected('domain', dialog);
-
 }
 
 function new_event_dialog() {
     createPickers();
-}
-
-function add_email_yaml_template() {
-var template = "\
-to: \n\
-cc: \n\
-from_address: \n\
-sender: \n\
-reply_to: \n\
-date: \n\
-subject: \n\
-message_id: \n\
-x_mailer: \n\
-helo: \n\
-originating_ip: \n\
-x_originating_ip: \n\
-raw_header: \n\
-raw_body: ";
-$("#id_yaml_data").val(template);
-}
-
-function new_email_yaml_dialog(e) {
-    var buttons = $("#dialog-new-email-yaml").dialog("option", "buttons");
-    $.extend(buttons, {"Add Template": function() {
-                add_email_yaml_template();
-        // $('#upload-email-yaml-form').parent().find('button:contains("Add Template")').attr('disabled', true).addClass('ui-state-disabled');
-            }});
-    $("#dialog-new-email-yaml").dialog("option", "buttons", buttons);
-
-    file_upload_dialog(e);
-}
-
-function new_indicator_dialog(e) {
-    var dialog = $("#dialog-new-indicator").closest(".ui-dialog");
-    var form = dialog.find("form");
-
-    // If there is selected text, default the value in the form
-    check_selected('indicator', dialog);
 }
 
 // We may want to do something like this generally, but for now just doing it for single text entry form
@@ -1132,7 +1106,6 @@ var stdDialogs = {
                     }
                }},
 		       update: { open: update_dialog} },
-               
       "new-dataset": {title: "Dataset", personas: {related: newPersona("Add Related Dataset", {open: new_dataset_dialog}, addEditSubmit ) }, open: new_dataset_dialog },
       "new-email_address": {title: "EmailAddress", personas: {related: newPersona("Add Related Email Address", {open: new_email_address_dialog}, addEditSubmit ) }, open: new_email_address_dialog },
       "new-event": {title: "Event", personas: {related: newPersona("Add Related Event", {open: new_event_dialog}, addEditSubmit ) }, open: new_event_dialog },
@@ -1163,17 +1136,8 @@ var stdDialogs = {
 
   var fileDialogs = {
       // File Upload Dialogs
-      "new-email-outlook": {title: "Upload Outlook Email", personas: {related: newPersona("Upload Related Email (Outlook)", {open: file_upload_dialog}, defaultSubmit) }, open: file_upload_dialog },
-      "new-email-eml": {title: "Email", personas: {related: newPersona("Upload Related Email",
-                        {open: file_upload_dialog}, defaultSubmit) }, open: file_upload_dialog },
-      "new-pcap": {title: "PCAP", personas: {related: newPersona("Upload Related PCAP",
-                   {open: file_upload_dialog}, defaultSubmit) }, open: file_upload_dialog },
-      "upload_tlds": {title: "TLDS" },
-      "new-sample": {title: "Sample", personas: {related: newPersona("Upload Related Sample",
-                     {open: file_upload_dialog}, defaultSubmit) }, open: file_upload_dialog },
-      "new-certificate": {title: "Certificate", personas: {related: newPersona("Upload Related Certificate", {open: new_sample_dialog}, defaultSubmit) }, open: new_sample_dialog },
-      "new-raw-data-file": {title: "Raw Data File", personas: {related: newPersona("Upload Related Raw Data", {open: file_upload_dialog}, defaultSubmit) }, open: file_upload_dialog },
-      "new-indicator-csv": {title: "New Indicator CSV", personas: {related: newPersona("Upload Related Indicators", {open: file_upload_dialog}, defaultSubmit) }, open: file_upload_dialog },
+      "new-dataset": {title: "Dataset", personas:{related: newPersona("Upload Related Dataset",
+      {open: file_upload_dialog}, defaultSubmit) }, open: file_upload_dialog },
   };
 
   // Ok, now initialize all the dialogs, with the href they are lazy-loaded

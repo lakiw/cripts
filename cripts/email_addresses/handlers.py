@@ -8,21 +8,21 @@ from django.template import RequestContext
 
 from cripts.core.handlers import csv_export
 from cripts.core.handlers import build_jtable, jtable_ajax_list
-from cripts.datasets.dataset import Dataset
+from cripts.email_addresses.email_address import EmailAddress
 from cripts.core.cripts_mongoengine import create_embedded_source, json_handler
 
-def generate_dataset_csv(request):
+def generate_email_address_csv(request):
     """
-    Generate a CSV file of the Dataset information
+    Generate a CSV file of the Email Address information
     :param request: The request for this CSV.
     :type request: :class:`django.http.HttpRequest`
     :returns: :class:`django.http.HttpResponse`
     """
 
-    response = csv_export(request,Dataset)
+    response = csv_export(request,EmailAddress)
     return response
 
-def generate_dataset_jtable(request, option):
+def generate_email_address_jtable(request, option):
     """
     Generate the jtable data for rendering in the list template.
     :param request: The request for this jtable.
@@ -32,8 +32,8 @@ def generate_dataset_jtable(request, option):
     :returns: :class:`django.http.HttpResponse`
     """
 
-    obj_type = Dataset
-    type_ = "dataset"
+    obj_type = EmailAddress
+    type_ = "email_address"
     mapper = obj_type._meta['jtable_opts']
     if option == "jtlist":
         # Sets display url
@@ -56,7 +56,7 @@ def generate_dataset_jtable(request, option):
                                        default=json_handler),
                             content_type="application/json")
     jtopts = {
-        'title': "Datasets",
+        'title': "Email Addresses",
         'default_sort': mapper['default_sort'],
         'listurl': reverse('cripts.%ss.views.%ss_listing' %
                            (type_, type_), args=('jtlist',)),
@@ -72,39 +72,39 @@ def generate_dataset_jtable(request, option):
     jtable = build_jtable(jtopts,request)
     jtable['toolbar'] = [
         {
-            'tooltip': "'All Datasets'",
+            'tooltip': "'All Email Addresses'",
             'text': "'All'",
-            'click': "function () {$('#dataset_listing').jtable('load', {'refresh': 'yes'});}",
+            'click': "function () {$('#email_address_listing').jtable('load', {'refresh': 'yes'});}",
             'cssClass': "'jtable-toolbar-center'",
         },
         {
-            'tooltip': "'New Datasets'",
+            'tooltip': "'New Email Addresses'",
             'text': "'New'",
-            'click': "function () {$('#dataset_listing').jtable('load', {'refresh': 'yes', 'status': 'New'});}",
+            'click': "function () {$('#email_address_listing').jtable('load', {'refresh': 'yes', 'status': 'New'});}",
             'cssClass': "'jtable-toolbar-center'",
         },
         {
-            'tooltip': "'In Progress Datasets'",
+            'tooltip': "'In Progress Email Addresess'",
             'text': "'In Progress'",
-            'click': "function () {$('#dataset_listing').jtable('load', {'refresh': 'yes', 'status': 'In Progress'});}",
+            'click': "function () {$('#email_address_listing').jtable('load', {'refresh': 'yes', 'status': 'In Progress'});}",
             'cssClass': "'jtable-toolbar-center'",
         },
         {
-            'tooltip': "'Analyzed Datasets'",
+            'tooltip': "'Analyzed Email Addresses'",
             'text': "'Analyzed'",
-            'click': "function () {$('#dataset_listing').jtable('load', {'refresh': 'yes', 'status': 'Analyzed'});}",
+            'click': "function () {$('#email_address_listing').jtable('load', {'refresh': 'yes', 'status': 'Analyzed'});}",
             'cssClass': "'jtable-toolbar-center'",
         },
         {
-            'tooltip': "'Deprecated Datasets'",
+            'tooltip': "'Deprecated Email Addresses'",
             'text': "'Deprecated'",
-            'click': "function () {$('#dataset_listing').jtable('load', {'refresh': 'yes', 'status': 'Deprecated'});}",
+            'click': "function () {$('#email_address_listing').jtable('load', {'refresh': 'yes', 'status': 'Deprecated'});}",
             'cssClass': "'jtable-toolbar-center'",
         },
         {
-            'tooltip': "'Add Dataset'",
-            'text': "'Add Dataset'",
-            'click': "function () {$('#new-dataset').click()}",
+            'tooltip': "'Add Email Address'",
+            'text': "'Add Email Address'",
+            'click': "function () {$('#new-email_address').click()}",
         },
     ]
     if option == "inline":

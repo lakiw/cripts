@@ -8,21 +8,21 @@ from django.template import RequestContext
 
 from cripts.core.handlers import csv_export
 from cripts.core.handlers import build_jtable, jtable_ajax_list
-from cripts.datasets.dataset import Dataset
+from cripts.hashes.hash import Hash
 from cripts.core.cripts_mongoengine import create_embedded_source, json_handler
 
-def generate_dataset_csv(request):
+def generate_hash_csv(request):
     """
-    Generate a CSV file of the Dataset information
+    Generate a CSV file of the Hash information
     :param request: The request for this CSV.
     :type request: :class:`django.http.HttpRequest`
     :returns: :class:`django.http.HttpResponse`
     """
 
-    response = csv_export(request,Dataset)
+    response = csv_export(request,Hash)
     return response
 
-def generate_dataset_jtable(request, option):
+def generate_hash_jtable(request, option):
     """
     Generate the jtable data for rendering in the list template.
     :param request: The request for this jtable.
@@ -32,8 +32,8 @@ def generate_dataset_jtable(request, option):
     :returns: :class:`django.http.HttpResponse`
     """
 
-    obj_type = Dataset
-    type_ = "dataset"
+    obj_type = Hash
+    type_ = "hash"
     mapper = obj_type._meta['jtable_opts']
     if option == "jtlist":
         # Sets display url
@@ -56,7 +56,7 @@ def generate_dataset_jtable(request, option):
                                        default=json_handler),
                             content_type="application/json")
     jtopts = {
-        'title': "Datasets",
+        'title': "Hashes",
         'default_sort': mapper['default_sort'],
         'listurl': reverse('cripts.%ss.views.%ss_listing' %
                            (type_, type_), args=('jtlist',)),
@@ -72,39 +72,39 @@ def generate_dataset_jtable(request, option):
     jtable = build_jtable(jtopts,request)
     jtable['toolbar'] = [
         {
-            'tooltip': "'All Datasets'",
+            'tooltip': "'All Hashes'",
             'text': "'All'",
-            'click': "function () {$('#dataset_listing').jtable('load', {'refresh': 'yes'});}",
+            'click': "function () {$('#hash_listing').jtable('load', {'refresh': 'yes'});}",
             'cssClass': "'jtable-toolbar-center'",
         },
         {
-            'tooltip': "'New Datasets'",
+            'tooltip': "'New Hashes'",
             'text': "'New'",
-            'click': "function () {$('#dataset_listing').jtable('load', {'refresh': 'yes', 'status': 'New'});}",
+            'click': "function () {$('#hash_listing').jtable('load', {'refresh': 'yes', 'status': 'New'});}",
             'cssClass': "'jtable-toolbar-center'",
         },
         {
-            'tooltip': "'In Progress Datasets'",
+            'tooltip': "'In Progress Hashes'",
             'text': "'In Progress'",
-            'click': "function () {$('#dataset_listing').jtable('load', {'refresh': 'yes', 'status': 'In Progress'});}",
+            'click': "function () {$('#hash_listing').jtable('load', {'refresh': 'yes', 'status': 'In Progress'});}",
             'cssClass': "'jtable-toolbar-center'",
         },
         {
-            'tooltip': "'Analyzed Datasets'",
+            'tooltip': "'Analyzed Hashes'",
             'text': "'Analyzed'",
-            'click': "function () {$('#dataset_listing').jtable('load', {'refresh': 'yes', 'status': 'Analyzed'});}",
+            'click': "function () {$('#hash_listing').jtable('load', {'refresh': 'yes', 'status': 'Analyzed'});}",
             'cssClass': "'jtable-toolbar-center'",
         },
         {
-            'tooltip': "'Deprecated Datasets'",
+            'tooltip': "'Deprecated Hashes'",
             'text': "'Deprecated'",
-            'click': "function () {$('#dataset_listing').jtable('load', {'refresh': 'yes', 'status': 'Deprecated'});}",
+            'click': "function () {$('#hash_listing').jtable('load', {'refresh': 'yes', 'status': 'Deprecated'});}",
             'cssClass': "'jtable-toolbar-center'",
         },
         {
-            'tooltip': "'Add Dataset'",
-            'text': "'Add Dataset'",
-            'click': "function () {$('#new-dataset').click()}",
+            'tooltip': "'Add Hash'",
+            'text': "'Add Hash'",
+            'click': "function () {$('#new-hash').click()}",
         },
     ]
     if option == "inline":
