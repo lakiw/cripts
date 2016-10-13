@@ -31,7 +31,7 @@ class EmailAddress(CriptsBaseAttributes, CriptsSourceDocument, CriptsActionsDocu
                          'details_url_key': 'id',
                          'default_sort': "created DESC",
                          'searchurl': 'cripts.email_addresses.views.email_addresses_listing',
-                         'fields': [ "addresss", "created",
+                         'fields': [ "addresses", "created",
                                      "source", "id"],
                          'jtopts_fields': [ "address",
                                             "created",
