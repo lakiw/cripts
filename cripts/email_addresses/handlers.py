@@ -58,9 +58,9 @@ def generate_email_address_jtable(request, option):
     jtopts = {
         'title': "Email Addresses",
         'default_sort': mapper['default_sort'],
-        'listurl': reverse('cripts.%ss.views.%ss_listing' %
+        'listurl': reverse('cripts.%ses.views.%ses_listing' %
                            (type_, type_), args=('jtlist',)),
-        'deleteurl': reverse('cripts.%ss.views.%ss_listing' %
+        'deleteurl': reverse('cripts.%ses.views.%ses_listing' %
                              (type_, type_), args=('jtdelete',)),
         'searchurl': reverse(mapper['searchurl']),
         'fields': mapper['jtopts_fields'],
@@ -111,7 +111,7 @@ def generate_email_address_jtable(request, option):
         return render_to_response("jtable.html",
                                   {'jtable': jtable,
                                    'jtid': '%s_listing' % type_,
-                                   'button' : '%ss_tab' % type_},
+                                   'button' : '%ses_tab' % type_},
                                   RequestContext(request))
     else:
         return render_to_response("%s_listing.html" % type_,
