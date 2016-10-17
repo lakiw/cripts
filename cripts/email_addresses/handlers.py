@@ -74,7 +74,7 @@ def generate_email_address_jtable(request, option):
         {
             'tooltip': "'All Email Addresses'",
             'text': "'All'",
-            'click': "function () {$('#email_address_listing').jtable('load', {'refresh': 'yes'});}",
+            'click': "function () {$('#email_address_listing').jtable('load', {'refresh': 'yes','status': 'All'});}",
             'cssClass': "'jtable-toolbar-center'",
         },
         {

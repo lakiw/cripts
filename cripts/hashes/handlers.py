@@ -74,13 +74,13 @@ def generate_hash_jtable(request, option):
         {
             'tooltip': "'All Hashes'",
             'text': "'All'",
-            'click': "function () {$('#hash_listing').jtable('load', {'refresh': 'yes'});}",
+            'click': "function () {$('#hash_listing').jtable('load', {'refresh': 'yes','status': 'All'});}",
             'cssClass': "'jtable-toolbar-center'",
         },
         {
             'tooltip': "'New Hashes'",
             'text': "'New'",
-            'click on () {$('#hash_listing').jtable('load', {'refresh': 'yes', 'status': 'New'});}",
+            'click': "function () {$('#hash_listing').jtable('load', {'refresh': 'yes', 'status': 'New'});}",
             'cssClass': "'jtable-toolbar-center'",
         },
         {

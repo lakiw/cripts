@@ -194,7 +194,7 @@ def generate_event_jtable(request, option):
         {
             'tooltip': "'All Events'",
             'text': "'All'",
-            'click': "function () {$('#event_listing').jtable('load', {'refresh': 'yes'});}",
+            'click': "function () {$('#event_listing').jtable('load', {'refresh': 'yes','status': 'All'});}",
             'cssClass': "'jtable-toolbar-center'",
         },
         {

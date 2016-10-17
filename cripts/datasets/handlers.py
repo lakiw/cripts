@@ -74,7 +74,7 @@ def generate_dataset_jtable(request, option):
         {
             'tooltip': "'All Datasets'",
             'text': "'All'",
-            'click': "function () {$('#dataset_listing').jtable('load', {'refresh': 'yes'});}",
+            'click': "function () {$('#dataset_listing').jtable('load', {'refresh': 'yes','status': 'All'});}",
             'cssClass': "'jtable-toolbar-center'",
         },
         {
