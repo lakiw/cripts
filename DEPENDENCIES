@@ -1,16 +1,16 @@
 This is a list of all core dependencies for CRIPTs. Please be aware if you
 leverage services they may require their own dependencies. Since we import
 services into core when the web server loads, failure to install dependencies
-for these services may cause CRITs to break!
+for these services may cause CRIPTs to break!
 
 ========================
 Required System Programs
 ========================
 python 2.7.x
-Provides: The language CRITs is written in. 2.7.x is a minimum requirement!
+Provides: The language CRIPTs is written in. 2.7.x is a minimum requirement!
 
 mongodb 2.6.4
-Provides: MongoDB which is the backend database CRITs uses.
+Provides: MongoDB which is the backend database CRIPTs uses.
 
 zip
 Provides: zip
@@ -23,10 +23,10 @@ Provides: 7z
 Optional System Programs
 ========================
 Apache
-Provides: The web server used to run CRITs if you are not using Django runserver.
+Provides: The web server used to run CRIPTs if you are not using Django runserver.
 
 mod-wsgi
-Provides: The module for Apache necessary for running CRITs.
+Provides: The module for Apache necessary for running CRIPTs.
 
 
 =========================
@@ -86,7 +86,7 @@ Provides: tastypie
 django-tastypie-mongoengine==0.4.6
 Requires: Django>=1.5, django-tastypie>=0.9.12,<=0.10.0, mongoengine>=0.8.1,<0.8.2, python-dateutil>=2.1, lxml, PyYAML, defusedxml, biplist, python-mimeparse>=0.1.4
 Provides: tastypie_mongoengine
-Note: CRITs requires you to ignore/override the mongoengine and django-tastypie version restrictions on this library.
+Note: CRIPTs requires you to ignore/override the mongoengine and django-tastypie version restrictions on this library.
 
 
 =========================
