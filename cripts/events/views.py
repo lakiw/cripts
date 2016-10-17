@@ -40,7 +40,7 @@ def events_listing(request, option=None):
 @user_passes_test(user_can_view_data)
 def add_event(request):
     """
-    Add an event to CRITs. Should be an AJAX POST.
+    Add an event to CRIPTs. Should be an AJAX POST.
 
     :param request: Django request object (Required)
     :type request: :class:`django.http.HttpRequest`
