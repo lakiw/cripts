@@ -11,7 +11,7 @@ class EmailAddressForm(forms.Form):
     """
     Django form for creating a new Email Address.
     """
-
+    print("Email address form")
     error_css_class = 'error'
     required_css_class = 'required'
     title = forms.CharField(widget=forms.TextInput, required=True)
@@ -32,7 +32,6 @@ class EmailAddressForm(forms.Form):
                              label=form_consts.EmailAddress.SOURCE_METHOD)
     reference = forms.CharField(required=False, widget=forms.TextInput,
                                 label=form_consts.EmailAddress.SOURCE_REFERENCE)
-
 
 
     def __init__(self, username, *args, **kwargs):

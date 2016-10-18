@@ -37,7 +37,7 @@ def add_email_address(request):
     :type request: :class:`django.http.HttpRequest`
     :returns: :class:`django.http.HttpResponse`
     """
-
+    print("adding email address")
     if request.method == "POST" and request.is_ajax():
         email_address_form = EmailAddressForm(request.user, request.POST)
         if event_form.is_valid():
