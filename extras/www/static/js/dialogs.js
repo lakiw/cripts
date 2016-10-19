@@ -1035,12 +1035,111 @@ function check_selected(type, dialog) {
     }
 }
 
-function new_dataset_dialog(e) {
+function new_ip_dialog(e) {
+    var dialog = $(this).find("form");
+    var ref = dialog.find('#id_indicator_reference').closest('tr');
+
+    dialog.find('#id_add_indicator').unbind('change')
+        .bind('change', function(e) {
+        if ($(this).prop('checked')) {
+            ref.show();
+        } else {
+            ref.hide();
+        }
+        }).trigger('change');
+
+    // If there is selected text, default the value in the form
+    check_selected('ip', dialog);
+}
+
+function new_domain_dialog(e) {
+    dialog = $(this).find("form"); // $("#form-new-domain");
+
+    //setup the Add Domain form to display and hide fields properly
+    //save on DOM lookups
+    var ip_check = dialog.find('#id_add_ip');
+    var ip_fields = dialog.find('.togglewithip').parents('tr');
+
+    //define function for seeing source dropdown should be visible
+    var toggle_source_visibility = function() {
+    //definitely should hide if use domain source is checked
+    if (dialog.find('#id_same_source').prop('checked')) {
+        dialog.find('.togglewithipsource').parents('tr').hide();
+            //otherwise, should show only if we're trying to add an ip
+    } else if (ip_check.prop('checked')) {
+        dialog.find('.togglewithipsource').parents('tr').show();
+    }
+    };
+
+    //define function for seeing if ip fields should be visible
+    var toggle_ip_visibility = function() {
+    if (ip_check.prop('checked')) {
+        ip_fields.show();
+        toggle_source_visibility();
+    } else {
+        ip_fields.hide();
+    }
+    };
+
+    //initialize with ip fields hidden
+    toggle_ip_visibility();
+
+    //setup checkbox events
+    //just make form look neater if they don't want to add an IP
+    dialog.find("#id_add_ip").change(toggle_ip_visibility);
+
+    //don't require selecting a source if they want to use the same source as the domain
+    // and initialize same source to true (will prob. be true in most cases...?)
+    dialog.find("#id_same_source").change(toggle_source_visibility).prop('checked', true);
+
+    //reinitialize ip date field (since this function can be called after page load)
     createPickers();
+
+    // If there is selected text, default the value in the form
+    check_selected('domain', dialog);
+
 }
 
 function new_event_dialog() {
     createPickers();
+}
+
+function add_email_yaml_template() {
+var template = "\
+to: \n\
+cc: \n\
+from_address: \n\
+sender: \n\
+reply_to: \n\
+date: \n\
+subject: \n\
+message_id: \n\
+x_mailer: \n\
+helo: \n\
+originating_ip: \n\
+x_originating_ip: \n\
+raw_header: \n\
+raw_body: ";
+$("#id_yaml_data").val(template);
+}
+
+function new_email_yaml_dialog(e) {
+    var buttons = $("#dialog-new-email-yaml").dialog("option", "buttons");
+    $.extend(buttons, {"Add Template": function() {
+                add_email_yaml_template();
+        // $('#upload-email-yaml-form').parent().find('button:contains("Add Template")').attr('disabled', true).addClass('ui-state-disabled');
+            }});
+    $("#dialog-new-email-yaml").dialog("option", "buttons", buttons);
+
+    file_upload_dialog(e);
+}
+
+function new_indicator_dialog(e) {
+    var dialog = $("#dialog-new-indicator").closest(".ui-dialog");
+    var form = dialog.find("form");
+
+    // If there is selected text, default the value in the form
+    check_selected('indicator', dialog);
 }
 
 // We may want to do something like this generally, but for now just doing it for single text entry form
@@ -1086,6 +1185,17 @@ function new_target_dialog(e) {
 /// Standard Dialog setup below
 
 var stdDialogs = {
+      "new-actor": {title: "Actor", personas: {related: newPersona("Add Related Actor", {}, addEditSubmit) } },
+      "new-actor-identifier": {title: "Actor Identifier"},
+      "actor_identifier_type_add": {title: "Actor Identifier Type"},
+      "new-email-raw": {title: "Email (Raw)", personas: {related: newPersona("Add Related Email (raw)", {}, addEditSubmit) } },
+      "new-email-fields": {title: "Email", personas: {related: newPersona("Add Related Email", {}, addEditSubmit) } },
+      "new-email-yaml": {title: "Email (YAML)", personas: {related: newPersona("Add Related Email (YAML)", {open: new_email_yaml_dialog}, addEditSubmit ) }, open: new_email_yaml_dialog },
+      "new-campaign": {title: "Campaign", personas: {related: newPersona("Add Related Campaign", {}, addEditSubmit) } },
+      "new-backdoor": {title: "Backdoor", personas: {related: newPersona("Add Related Backdoor", {}, addEditSubmit) } },
+      "new-exploit": {title: "Exploit", personas: {related: newPersona("Add Related Exploit",{}, addEditSubmit) } },
+      "new-domain": {title: "Domain", personas: {related: newPersona("Add Related Domain", {open: new_domain_dialog}, addEditSubmit ) }, open: new_domain_dialog },
+      "new-indicator": {title: "Indicator",  personas: {related: newPersona("Add Related Indicator", {open: new_indicator_dialog}, addEditSubmit ) }, open: new_indicator_dialog},
       "action_add": {title: "Action"},
       "add-action": {title: "Action", href:"",
 		       new: {open: function(e) {
@@ -1106,15 +1216,29 @@ var stdDialogs = {
                     }
                }},
 		       update: { open: update_dialog} },
-      "new-dataset": {title: "Dataset", personas: {related: newPersona("Add Related Dataset", {open: new_dataset_dialog}, addEditSubmit ) }, open: new_dataset_dialog },
-      "new-email_address": {title: "EmailAddress", personas: {related: newPersona("Add Related Email Address", {open: new_email_address_dialog}, addEditSubmit ) }, open: new_email_address_dialog },
+      "indicator-blob": {title: "New Indicator Blob", personas: {related: newPersona("Add Related Indicator Blob", {open: new_indicator_dialog}, addEditSubmit ) }, open: new_indicator_dialog },
+
       "new-event": {title: "Event", personas: {related: newPersona("Add Related Event", {open: new_event_dialog}, addEditSubmit ) }, open: new_event_dialog },
-      "new-hash": {title: "Hash", personas: {related: newPersona("Add Related Hash", {open: new_hash_dialog}, addEditSubmit ) }, open: new_hash_dialog },
+      "new-ip": {title: "IP Address", personas: {related: newPersona("Add Related IP", {open: new_ip_dialog}, addEditSubmit ) }, open: new_ip_dialog },
+      "new-raw-data": {title: "Raw Data", personas: {related: newPersona("Add Related Raw Data", {}, addEditSubmit) } },
+      "raw_data_type_add": {title: "Raw Data Type"},
+
+      "new-signature": {title: "Signature", personas: {related: newPersona("Add Related Signature", {}, addEditSubmit) } },
+      "signature_type_add": {title: "Signature Type"},
+      "signature_dependency_add": {title: "Signature Dependency"},
+
       "new-target": {title: "Target", personas: {related: newPersona("Add Related Target", {open: new_target_dialog}, addEditSubmit ) }, open: new_target_dialog },
-      "new-username": {title: "UserName", personas: {related: newPersona("Add Related Username", {open: new_username_dialog}, addEditSubmit ) }, open: new_username_dialog },
+
       "source_create": {title: "Source"},
       "user_role": {title: "User Role"},
 
+      "campaign-add": { title: "Assign Campaign", personas: {
+          promote: newPersona("Promote to Campaign",
+                  { title: "Promote to Campaign" },
+                  addEditSubmit)
+      }
+      },
+      "location-add": {title: "Add Location"},
       "ticket": {title: "Ticket",
          update: { open: update_dialog} },
 
