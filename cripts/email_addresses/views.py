@@ -29,6 +29,7 @@ def email_addresses_listing(request,option=None):
         return generate_email_address_csv(request)
     return generate_email_address_jtable(request, option)
 
+@user_passes_test(user_can_view_data)
 def add_email_address(request):
     """
     Add an email address to CRIPTs. Should be an AJAX POST.
@@ -37,11 +38,10 @@ def add_email_address(request):
     :type request: :class:`django.http.HttpRequest`
     :returns: :class:`django.http.HttpResponse`
     """
-    print("adding email address")
     if request.method == "POST" and request.is_ajax():
         email_address_form = EmailAddressForm(request.user, request.POST)
-        if event_form.is_valid():
-            data = email_address.cleaned_data
+        if email_address_form.is_valid():
+            data = email_address_form.cleaned_data
 #            result = add_new_event(title=data['title'],
 #                                   description=data['description'],
 #                                   event_type=data['event_type'],
@@ -60,7 +60,7 @@ def add_email_address(request):
             result = None
             return HttpResponse(json.dumps(result), content_type="application/json")
         else:
-            return HttpResponse(json.dumps({'form': event_form.as_table(),
+            return HttpResponse(json.dumps({'form': email_address_form.as_table(),
                                             'success': False}),
                                 content_type="application/json")
     else:

@@ -144,7 +144,7 @@ table.form .errorlist li {
     margin: 0 0 3px 0;
     border: 1px solid red;
     color: white;
-    background: red url(/static/admin/img/icon_alert.gif) 5px .3em no-repeat;
+    background-color: red; // url (/static/admin/img/icon_alert.gif) 5px .3em no-repeat;
 }
 
 .errorlist li a {

@@ -153,11 +153,6 @@ class CRIPTsSerializer(Serializer):
                     if filedata:
                         filedata = self._format_data(filedata, file_format)
                         files.append([filename, filedata])
-                elif hasattr(data.obj, 'screenshot'):
-                    filename = "%s.png" % data.obj.md5
-                    filedata = data.obj.screenshot.read()
-                    if filedata:
-                        files.append([filename, filedata])
             elif 'objects' in data:
                 try:
                     objs = data['objects']
@@ -168,11 +163,6 @@ class CRIPTsSerializer(Serializer):
                             if filedata:
                                 filedata = self._format_data(filedata,
                                                              file_format)
-                                files.append([filename, filedata])
-                        elif hasattr(obj_.obj, 'screenshot'):
-                            filename = "%s.png" % data.obj.md5
-                            filedata = data.obj.screenshot.read()
-                            if filedata:
                                 files.append([filename, filedata])
                 except:
                     pass
