@@ -62,7 +62,7 @@ class EmailAddress():
     """
     Constants for EmailAddresses
     """
-    NAME = "Name"
+    EMAIL_ADDRESS = "Email Address"
     SOURCE = Common.SOURCE
     SOURCE_METHOD = "Source Method"
     SOURCE_REFERENCE = Common.SOURCE_REFERENCE

@@ -131,7 +131,36 @@ function delete_object_click(e, item_type, del_label, data) {
 }
 
 function populate_id(id, type) {
-
+     $( "#dialog-new-dataset" ).on("dialogopen.add_related_dataset", function(e) {
+        if ($(this).dialog("persona") == "related") {
+        $(this).find("form #id_related_id").val(id);
+        $(this).find("form #id_related_type").val(type);
+        $(this).find("form").bind("addEditSubmitComplete",
+            function(e, response) {
+                    $.ajax({
+                      type: "POST",
+                      success: function() {
+                          $('#relationship_box_container').load(location.href + " #relationship_box_container");
+                      }
+                    })
+              });
+          }
+    });
+    $( "#dialog-new-email_address" ).on("dialogopen.add_related_email_address", function(e) {
+        if ($(this).dialog("persona") == "related") {
+        $(this).find("form #id_related_id").val(id);
+        $(this).find("form #id_related_type").val(type);
+        $(this).find("form").bind("addEditSubmitComplete",
+            function(e, response) {
+                    $.ajax({
+                      type: "POST",
+                      success: function() {
+                          $('#relationship_box_container').load(location.href + " #relationship_box_container");
+                      }
+                    })
+              });
+          }
+    });
     // Add a related Event (Using the related dialog persona)
     $( "#dialog-new-event" ).on("dialogopen.add_related_event", function(e) {
         if ($(this).dialog("persona") == "related") {
@@ -148,7 +177,51 @@ function populate_id(id, type) {
               });
           }
     });
-    
+    $( "#dialog-new-hash" ).on("dialogopen.add_related_hash", function(e) {
+        if ($(this).dialog("persona") == "related") {
+        $(this).find("form #id_related_id").val(id);
+        $(this).find("form #id_related_type").val(type);
+        $(this).find("form").bind("addEditSubmitComplete",
+            function(e, response) {
+                    $.ajax({
+                      type: "POST",
+                      success: function() {
+                          $('#relationship_box_container').load(location.href + " #relationship_box_container");
+                      }
+                    })
+              });
+          }
+    });
+    $( "#dialog-new-target" ).on("dialogopen.add_related_target", function(e) {
+        if ($(this).dialog("persona") == "related") {
+        $(this).find("form #id_related_id").val(id);
+        $(this).find("form #id_related_type").val(type);
+        $(this).find("form").bind("addEditSubmitComplete",
+            function(e, response) {
+                    $.ajax({
+                      type: "POST",
+                      success: function() {
+                          $('#relationship_box_container').load(location.href + " #relationship_box_container");
+                      }
+                    })
+              });
+          }
+    });
+    $( "#dialog-new-username" ).on("dialogopen.add_related_username", function(e) {
+        if ($(this).dialog("persona") == "related") {
+        $(this).find("form #id_related_id").val(id);
+        $(this).find("form #id_related_type").val(type);
+        $(this).find("form").bind("addEditSubmitComplete",
+            function(e, response) {
+                    $.ajax({
+                      type: "POST",
+                      success: function() {
+                          $('#relationship_box_container').load(location.href + " #relationship_box_container");
+                      }
+                    })
+              });
+          }
+    });
 }
 
 function delete_item_click(e, item_type, del_label, data) {
@@ -1187,17 +1260,8 @@ var stdDialogs = {
 
   var fileDialogs = {
       // File Upload Dialogs
-      "new-email-outlook": {title: "Upload Outlook Email", personas: {related: newPersona("Upload Related Email (Outlook)", {open: file_upload_dialog}, defaultSubmit) }, open: file_upload_dialog },
-      "new-email-eml": {title: "Email", personas: {related: newPersona("Upload Related Email",
-                        {open: file_upload_dialog}, defaultSubmit) }, open: file_upload_dialog },
-      "new-pcap": {title: "PCAP", personas: {related: newPersona("Upload Related PCAP",
-                   {open: file_upload_dialog}, defaultSubmit) }, open: file_upload_dialog },
-      "upload_tlds": {title: "TLDS" },
-      "new-sample": {title: "Sample", personas: {related: newPersona("Upload Related Sample",
-                     {open: file_upload_dialog}, defaultSubmit) }, open: file_upload_dialog },
-      "new-certificate": {title: "Certificate", personas: {related: newPersona("Upload Related Certificate", {open: new_sample_dialog}, defaultSubmit) }, open: new_sample_dialog },
-      "new-raw-data-file": {title: "Raw Data File", personas: {related: newPersona("Upload Related Raw Data", {open: file_upload_dialog}, defaultSubmit) }, open: file_upload_dialog },
-      "new-indicator-csv": {title: "New Indicator CSV", personas: {related: newPersona("Upload Related Indicators", {open: file_upload_dialog}, defaultSubmit) }, open: file_upload_dialog },
+      "new-dataset": {title: "Dataset", personas:{related: newPersona("Upload Related Dataset",
+      {open: file_upload_dialog}, defaultSubmit) }, open: file_upload_dialog },
   };
 
   // Ok, now initialize all the dialogs, with the href they are lazy-loaded

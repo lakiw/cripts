@@ -3616,11 +3616,13 @@ def generate_sector_jtable(request, option):
             url = reverse('cripts.core.views.global_search_listing') + '?search_type=sectors&search=Search&force_full=1'
         else:
             lower = ctype.lower()
-            if lower != "rawdata":
-                url = reverse('cripts.%ss.views.%ss_listing' % (lower, lower))
+            
+            if lower == "emailaddress":
+                url = reverse('cripts.email_addresses.views.email_addresses_listing')
+            elif lower == "hash":
+                url = reverse('cripts.%ses.views.%ses_listing' % (lower, lower))
             else:
-                lower = "raw_data"
-                url = reverse('cripts.%s.views.%s_listing' % (lower, lower))
+                url = reverse('cripts.%ss.views.%ss_listing' % (lower, lower))
 
         for field in jtable['fields']:
             if field['fieldname'].startswith("'" + ctype):

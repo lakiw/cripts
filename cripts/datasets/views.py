@@ -12,6 +12,8 @@ from django.template.loader import render_to_string
 
 from cripts.core.user_tools import user_can_view_data
 
+from cripts.datasets.handlers import generate_dataset_jtable, generate_dataset_csv
+
 @user_passes_test(user_can_view_data)
 def datasets_listing(request,option=None):
     """
@@ -22,8 +24,7 @@ def datasets_listing(request,option=None):
     :type option: str
     :returns: :class:`django.http.HttpResponse`
     """
-    return None
-    #if option == "csv":
-    #   return generate_email_csv(request)
-    #return generate_email_jtable(request, option)
+    if option == "csv":
+        return generate_dataset_csv(request)
+    return generate_dataset_jtable(request, option)
 

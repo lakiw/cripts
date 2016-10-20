@@ -261,11 +261,11 @@
             <tbody>
             {% for dataset in subscriptions.Dataset %}
                 <tr>
-                    <td><a href="{% url 'crits.datasets.views.dataset_detail' dataset.id %}">{{ dataset.id }}</a></td>
+                    <td><a href="{% url 'cripts.datasets.views.dataset_detail' dataset.id %}">{{ dataset.id }}</a></td>
                     <td>{{ target.date }}</td>
                     <td>
                         <span class="ui-state-default ui-corner-all" style="border: 0px;">
-                        <a href="#" class="subscription_button" action="{% url 'crits.core.views.change_subscription' 'Dataset' dataset.id %}">
+                        <a href="#" class="subscription_button" action="{% url 'cripts.core.views.change_subscription' 'Dataset' dataset.id %}">
                         <span class="ui-icon ui-icon-close subscription_link_enable" title="Unsubscribe"></span>
                         </a>
                         </span>
@@ -340,11 +340,11 @@
             <tbody>
             {% for target in subscriptions.Target %}
                 <tr>
-                    <td><a href="{% url 'crits.targets.views.target_detail' target.id %}">{{ target.id }}</a></td>
+                    <td><a href="{% url 'cripts.targets.views.target_detail' target.id %}">{{ target.id }}</a></td>
                     <td>{{ target.date }}</td>
                     <td>
                         <span class="ui-state-default ui-corner-all" style="border: 0px;">
-                        <a href="#" class="subscription_button" action="{% url 'crits.core.views.change_subscription' 'Target' target.id %}">
+                        <a href="#" class="subscription_button" action="{% url 'cripts.core.views.change_subscription' 'Target' target.id %}">
                         <span class="ui-icon ui-icon-close subscription_link_enable" title="Unsubscribe"></span>
                         </a>
                         </span>

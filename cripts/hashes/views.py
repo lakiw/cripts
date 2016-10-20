@@ -11,6 +11,7 @@ from django.template import RequestContext
 from django.template.loader import render_to_string
 
 from cripts.core.user_tools import user_can_view_data
+from cripts.hashes.handlers import generate_hash_jtable, generate_hash_csv
 
 @user_passes_test(user_can_view_data)
 def hashes_listing(request,option=None):
@@ -22,7 +23,6 @@ def hashes_listing(request,option=None):
     :type option: str
     :returns: :class:`django.http.HttpResponse`
     """
-    return None
-    #if option == "csv":
-    #   return generate_email_csv(request)
-    #return generate_email_jtable(request, option)
+    if option == "csv":
+        return generate_hash_csv(request)
+    return generate_hash_jtable(request, option)

@@ -1219,7 +1219,6 @@ class CriptsBaseAttributes(CriptsDocument, CriptsBaseDocument,
     obj = ListField(EmbeddedDocumentField(EmbeddedObject), db_field="objects")
     relationships = ListField(EmbeddedDocumentField(EmbeddedRelationship))
     releasability = ListField(EmbeddedDocumentField(Releasability))
-    screenshots = ListField(StringField())
     sectors = ListField(StringField())
 
     def add_campaign(self, campaign_item=None, update=True):

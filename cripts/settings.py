@@ -427,7 +427,7 @@ else:
     SESSION_SERIALIZER = 'django_mongoengine.sessions.BSONSerializer'
 
     AUTHENTICATION_BACKENDS = (
-        'django_mongoengine.mongo_auth.backends.MongoEngineBackend',
+        #'django_mongoengine.mongo_auth.backends.MongoEngineBackend',
         'cripts.core.user.CRIPTsAuthBackend',
     )
 
