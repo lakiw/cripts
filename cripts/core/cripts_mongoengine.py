@@ -518,8 +518,6 @@ class CriptsDocument(BaseDocument):
                 data = ""
                 if field == "aliases" and self._has_method("get_aliases"):
                     data = ";".join(self.get_aliases())
-                elif field == "campaign" and self._has_method("get_campaign_names"):
-                    data = ';'.join(self.get_campaign_names())
                 elif field == "source" and self._has_method("get_source_names"):
                     data = ';'.join(self.get_source_names())
                 elif field == "tickets":
@@ -1213,74 +1211,12 @@ class CriptsBaseAttributes(CriptsDocument, CriptsBaseDocument,
 
     analyst = StringField()
     bucket_list = ListField(StringField())
-    campaign = ListField(EmbeddedDocumentField(EmbeddedCampaign))
     locations = ListField(EmbeddedDocumentField(EmbeddedLocation))
     description = StringField()
     obj = ListField(EmbeddedDocumentField(EmbeddedObject), db_field="objects")
     relationships = ListField(EmbeddedDocumentField(EmbeddedRelationship))
     releasability = ListField(EmbeddedDocumentField(Releasability))
     sectors = ListField(StringField())
-
-    def add_campaign(self, campaign_item=None, update=True):
-        """
-        Add a campaign to this top-level object.
-
-        :param campaign_item: The campaign to add.
-        :type campaign_item: :class:`cripts.core.cripts_mongoengine.EmbeddedCampaign`
-        :param update: If True, allow merge with pre-existing campaigns
-        :              If False, do not change any pre-existing campaigns
-        :type update:  boolean
-        :returns: dict with keys "success" (boolean) and "message" (str)
-        """
-
-        if isinstance(campaign_item, EmbeddedCampaign):
-            if campaign_item.name != None and campaign_item.name.strip() != '':
-                campaign_item.confidence = campaign_item.confidence.strip().lower()
-                if campaign_item.confidence == '':
-                    campaign_item.confidence = 'low'
-                for c, campaign in enumerate(self.campaign):
-                    if campaign.name == campaign_item.name:
-                        if not update:
-                            return {'success': False, 'message': 'This Campaign is already assigned.'}
-                        con = {'low': 1, 'medium': 2, 'high': 3}
-                        if con.get(campaign.confidence, 0) < con.get(campaign_item.confidence):
-                            self.campaign[c].confidence = campaign_item.confidence
-                            self.campaign[c].analyst = campaign_item.analyst
-                        break
-                else:
-                    self.campaign.append(campaign_item)
-                return {'success': True, 'message': 'Campaign assigned successfully!'}
-        return {'success': False, 'message': 'Campaign is invalid'}
-
-    def remove_campaign(self, campaign_name=None, campaign_date=None):
-        """
-        Remove a campaign from this top-level object.
-
-        :param campaign_name: The campaign to remove.
-        :type campaign_name: str
-        :param campaign_date: The date the campaign was added.
-        :type campaign_date: datetime.datetime.
-        """
-
-        for campaign in self.campaign:
-            if campaign.name == campaign_name or campaign.date == campaign_date:
-                self.campaign.remove(campaign)
-                break
-
-    def edit_campaign(self, campaign_name=None, campaign_item=None):
-        """
-        Edit an existing Campaign. This just removes the old entry and adds a
-        new one.
-
-        :param campaign_name: The campaign to remove.
-        :type campaign_name: str
-        :param campaign_item: The campaign to add.
-        :type campaign_item: :class:`cripts.core.cripts_mongoengine.EmbeddedCampaign`
-        """
-
-        if isinstance(campaign_item, EmbeddedCampaign):
-            self.remove_campaign(campaign_name=campaign_item.name)
-            self.add_campaign(campaign_item=campaign_item)
 
     def add_location(self, location_item=None):
         """
@@ -1631,25 +1567,6 @@ class CriptsBaseAttributes(CriptsDocument, CriptsBaseDocument,
                                                  analyst=analyst)]
                 self.obj[c].source = source
                 break
-
-    def format_campaign(self, campaign, analyst):
-        """
-        Render a campaign to HTML to prepare for inclusion in a template.
-
-        :param campaign: The campaign to templetize.
-        :type campaign: :class:`cripts.core.cripts_mongoengine.EmbeddedCampaign`
-        :param analyst: The user requesting the Campaign.
-        :type analyst: str
-        :returns: str
-        """
-
-        html = render_to_string('campaigns_display_row_widget.html',
-                                {'campaign': campaign,
-                                 'hit': self,
-                                 'obj': None,
-                                 'admin': is_admin(analyst),
-                                 'relationship': {'type': self._meta['cripts_type']}})
-        return html
 
     def format_location(self, location, analyst):
         """
@@ -2351,16 +2268,6 @@ class CriptsBaseAttributes(CriptsDocument, CriptsBaseDocument,
             if rels:
                 if hasattr(self, 'relationships'):
                     self.sanitize_relationships(username, sources)
-
-    def get_campaign_names(self):
-        """
-        Get the campaigns associated with this top-level object as a list of
-        names.
-
-        :returns: list
-        """
-
-        return [obj['name'] for obj in self._data['campaign']]
 
 
     def get_analysis_results(self):

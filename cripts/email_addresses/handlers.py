@@ -6,6 +6,11 @@ from django.http import HttpResponse
 from django.shortcuts import render_to_response
 from django.template import RequestContext
 
+try:
+    from mongoengine.base import ValidationError
+except ImportError:
+    from mongoengine.errors import ValidationError
+
 from cripts.core.handlers import csv_export
 from cripts.core.handlers import build_jtable, jtable_ajax_list
 from cripts.email_addresses.email_address import EmailAddress
@@ -74,7 +79,7 @@ def generate_email_address_jtable(request, option):
         {
             'tooltip': "'All Email Addresses'",
             'text': "'All'",
-            'click': "function () {$('#email_address_listing').jtable('load', {'refresh': 'yes','status': 'All'});}",
+            'click': "function () {$('#email_address_listing').jtable('load', {'refresh': 'yes'});}",
             'cssClass': "'jtable-toolbar-center'",
         },
         {
@@ -118,3 +123,163 @@ def generate_email_address_jtable(request, option):
                                   {'jtable': jtable,
                                    'jtid': '%s_listing' % type_},
                                   RequestContext(request))
+   
+   
+def add_new_email_address(address, description, source, method, reference,
+                  analyst, datasets=None, bucket_list=None, ticket=None,
+                  related_id=None,
+                  related_type=None, relationship_type=None):
+    """
+    Add a new Email Address to CRIPTs.
+
+    :param address: The actual e-mail address
+    :type address: str
+    :param description: Email Address description.
+    :type description: str
+    :param source: The source which provided this information.
+    :type source: str
+    :param method: THe method of acquiring this information.
+    :type method: str
+    :param reference: Reference to this data.
+    :type reference: str
+    :param analyst: The user adding this Email Address.
+    :type analyst: str
+    :param datasets: The dataset(s) to associate with this Email Address.
+    :type: list[str]
+    :param bucket_list: The bucket(s) to associate with this Email Address.
+    :type: str
+    :param ticket: Ticket to associate with this Email Address.
+    :type ticket: str
+    :returns: dict with keys "success" (boolean) and "message" (str)
+    """
+    result = dict()
+    if not source:
+        return {'success': False, 'message': "Missing source information."}
+
+    email_address = EmailAddress()
+    email_address.address = address
+    email_address.description = description
+
+    s = create_embedded_source(name=source,
+                               reference=reference,
+                               method=method,
+                               analyst=analyst)
+    email_address.add_source(s)
+
+    if bucket_list:
+        email_address.add_bucket_list(bucket_list, analyst)
+
+    if ticket:
+        email_address.add_ticket(ticket, analyst)
+
+    related_obj = None
+    if related_id:
+        related_obj = class_from_id(related_type, related_id)
+        if not related_obj:
+            retVal['success'] = False
+            retVal['message'] = 'Related Object not found.'
+            return retVal
+
+    try:
+        email_address.save(username=analyst)
+
+        if related_obj and email_address and relationship_type:
+            relationship_type=RelationshipTypes.inverse(relationship=relationship_type)
+            email_address.add_relationship(related_obj,
+                                  relationship_type,
+                                  analyst=analyst,
+                                  get_rels=False)
+            email_address.save(username=analyst)
+
+        # run email_address triage
+        email_address.reload()
+        run_triage(email_address, analyst)
+
+        message = ('<div>Success! Click here to view the new email address: <a href='
+                   '"%s">%s</a></div>' % (reverse('cripts.email_address.views.email_address_detail',
+                                                  args=[email_address.id]),
+                                          title))
+        result = {'success': True,
+                  'message': message,
+                  'id': str(email_address.id),
+                  'object': email_address}
+
+    except ValidationError, e:
+        result = {'success': False,
+                  'message': e}
+    return result
+    
+def get_email_address_details(address, analyst):
+    """
+    Generate the data to render the Email Address details template.
+
+    :param address: The name of the Address to get details for.
+    :type address: str
+    :param analyst: The user requesting this information.
+    :type analyst: str
+    :returns: template (str), arguments (dict)
+    """
+
+    template = None
+    allowed_sources = user_sources(analyst)
+    address_object = EmailAddress.objects(address=address,
+                           source__name__in=allowed_sources).first()
+    if not address_object:
+        error = ("Either no data exists for this email address"
+                 " or you do not have permission to view it.")
+        template = "error.html"
+        args = {'error': error}
+        return template, args
+
+    address_object.sanitize_sources(username="%s" % analyst,
+                           sources=allowed_sources)
+
+    # remove pending notifications for user
+    remove_user_from_notification("%s" % analyst, address_object.id, 'EmailAddress')
+
+    # subscription
+    subscription = {
+            'type': 'EmailAddress',
+            'id': address_object.id,
+            'subscribed': is_user_subscribed("%s" % analyst,
+                                             'EmailAddress',
+                                             address_object.id),
+    }
+
+    #objects
+    objects = address_object.sort_objects()
+
+    #relationships
+    relationships = address_object.sort_relationships("%s" % analyst, meta=True)
+
+    # relationship
+    relationship = {
+            'type': 'EmailAddress',
+            'value': address_object.id
+    }
+
+    #comments
+    comments = {'comments': address_object.get_comments(),
+                'url_key':address_object.address}
+
+    # favorites
+    favorite = is_user_favorite("%s" % analyst, 'EmailAddress', address_object.id)
+
+    # services
+    service_list = get_supported_services('EmailAddress')
+
+    # analysis results
+    service_results = address_object.get_analysis_results()
+
+    args = {'objects': objects,
+            'relationships': relationships,
+            'comments': comments,
+            'favorite': favorite,
+            'relationship': relationship,
+            'subscription': subscription,
+            'screenshots': screenshots,
+            'address': address_object,
+            'service_list': service_list,
+            'service_results': service_results}
+
+    return template, args

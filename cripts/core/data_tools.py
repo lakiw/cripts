@@ -230,7 +230,7 @@ def convert_string_to_bool(value):
 
 def format_object(obj_type, obj_id, data_format="yaml", cleanse=True,
                   obj_sources=[], remove_source=False, remove_rels=False,
-                  remove_schema_version=False, remove_campaign=False,
+                  remove_schema_version=False,
                   remove_buckets=False, remove_releasability=False,
                   remove_unsupported=False):
     """
@@ -259,8 +259,6 @@ def format_object(obj_type, obj_id, data_format="yaml", cleanse=True,
     :param remove_schema_version: Remove the schema_version key from the
                                   document.
     :type remove_schema_version: boolean
-    :param remove_campaign: Remove the campaign key from the document.
-    :type remove_campaign: boolean
     :param remove_buckets: Remove the bucket_list key from the document.
     :type remove_buckets: boolean
     :param remove_releasability: Remove the releasability key from the document.
@@ -310,9 +308,6 @@ def format_object(obj_type, obj_id, data_format="yaml", cleanse=True,
 
     if remove_schema_version and 'schema_version' in data:
         del data["schema_version"]
-
-    if remove_campaign and 'campaign' in data:
-        del data["campaign"]
 
     del data["_id"]
     if data.has_key("modified"):

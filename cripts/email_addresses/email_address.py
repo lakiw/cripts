@@ -27,13 +27,13 @@ class EmailAddress(CriptsBaseAttributes, CriptsSourceDocument, CriptsActionsDocu
                 ' email address')
         },
         "jtable_opts": {
-                         'details_url': 'cripts.email_addresses.views.view_email_address',
+                         'details_url': 'cripts.email_addresses.views.email_address_detail',
                          'details_url_key': 'id',
                          'default_sort': "created DESC",
                          'searchurl': 'cripts.email_addresses.views.email_addresses_listing',
-                         'fields': [ "created",
+                         'fields': [ "address", "created",
                                      "source", "id"],
-                         'jtopts_fields': [ 
+                         'jtopts_fields': [ "address",
                                             "created",
                                             "source",
                                             "favorite",
@@ -45,5 +45,6 @@ class EmailAddress(CriptsBaseAttributes, CriptsSourceDocument, CriptsActionsDocu
                        }
 
     }
-
+    address = StringField(required=True)
+    description = StringField(required=True)
     

@@ -309,19 +309,6 @@ def add_new_event(title, description, event_type, source, method, reference,
     for c in Campaign.objects(active='on'):
         valid_campaigns[c['name'].lower()] = c['name']
 
-    if campaign:
-        if isinstance(campaign, basestring) and len(campaign) > 0:
-            if campaign.lower() not in valid_campaigns:
-                result = {'success':False, 'message':'{} is not a valid campaign.'.format(campaign)}
-            else:
-                confidence = valid_campaign_confidence.get(campaign_confidence, 'low')
-                campaign = EmbeddedCampaign(name=campaign,
-                                                   confidence=confidence,
-                                                   description="",
-                                                   analyst=analyst,
-                                                   date=datetime.datetime.now())
-                event.add_campaign(campaign)
-
     if bucket_list:
         event.add_bucket_list(bucket_list, analyst)
 
