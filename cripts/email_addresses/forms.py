@@ -13,7 +13,7 @@ class EmailAddressForm(forms.Form):
     """
     error_css_class = 'error'
     required_css_class = 'required'
-    raw_email_address = forms.CharField(widget=forms.TextInput, required=True,
+    address = forms.CharField(widget=forms.TextInput, required=True,
                                label=form_consts.EmailAddress.EMAIL_ADDRESS)
     description = forms.CharField(widget=forms.Textarea(attrs={'cols': '30',
                                                                'rows': '3'}),
@@ -25,7 +25,7 @@ class EmailAddressForm(forms.Form):
                              label=form_consts.EmailAddress.SOURCE_METHOD)
     reference = forms.CharField(required=False, widget=forms.TextInput,
                                 label=form_consts.EmailAddress.SOURCE_REFERENCE)
-
+                                
 
     def __init__(self, username, *args, **kwargs):
         super(EmailAddressForm, self).__init__(*args, **kwargs)

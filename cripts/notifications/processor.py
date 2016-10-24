@@ -487,7 +487,7 @@ class NotificationHeaderManager():
     
     @staticmethod
     def generate_email_address_header(obj):
-        return "Email Address: %s" % (obj.title)
+        return "Email Address: %s" % (obj.address)
     
     @staticmethod
     def generate_event_header(obj):
