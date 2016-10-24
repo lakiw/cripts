@@ -10,11 +10,15 @@ try:
     from mongoengine.base import ValidationError
 except ImportError:
     from mongoengine.errors import ValidationError
-
+    
+from cripts.core.user_tools import is_admin, user_sources, is_user_favorite
+from cripts.core.user_tools import is_user_subscribed
 from cripts.core.handlers import csv_export
 from cripts.core.handlers import build_jtable, jtable_ajax_list
 from cripts.email_addresses.email_address import EmailAddress
 from cripts.core.cripts_mongoengine import create_embedded_source, json_handler
+from cripts.services.handlers import run_triage, get_supported_services
+from cripts.notifications.handlers import remove_user_from_notification
 
 def generate_email_address_csv(request):
     """
@@ -158,6 +162,7 @@ def add_new_email_address(address, description, source, method, reference,
 
     email_address = EmailAddress()
     email_address.address = address
+    email_address.domain = 'gmail.com'
     email_address.description = description
 
     s = create_embedded_source(name=source,
@@ -196,13 +201,12 @@ def add_new_email_address(address, description, source, method, reference,
         run_triage(email_address, analyst)
 
         message = ('<div>Success! Click here to view the new email address: <a href='
-                   '"%s">%s</a></div>' % (reverse('cripts.email_address.views.email_address_detail',
-                                                  args=[email_address.id]),
-                                          title))
+                   '"%s">%s</a></div>' % (reverse('cripts.email_addresses.views.email_address_detail',
+                                                  args=[email_address.address]),
+                                          address))
         result = {'success': True,
                   'message': message,
-                  'id': str(email_address.id),
-                  'object': email_address}
+                  'object': list(email_address)}
 
     except ValidationError, e:
         result = {'success': False,
@@ -277,7 +281,6 @@ def get_email_address_details(address, analyst):
             'favorite': favorite,
             'relationship': relationship,
             'subscription': subscription,
-            'screenshots': screenshots,
             'address': address_object,
             'service_list': service_list,
             'service_results': service_results}

@@ -25,7 +25,7 @@ class EmailAddressForm(forms.Form):
                              label=form_consts.EmailAddress.SOURCE_METHOD)
     reference = forms.CharField(required=False, widget=forms.TextInput,
                                 label=form_consts.EmailAddress.SOURCE_REFERENCE)
-
+                                
 
     def __init__(self, username, *args, **kwargs):
         super(EmailAddressForm, self).__init__(*args, **kwargs)

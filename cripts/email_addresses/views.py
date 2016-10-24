@@ -65,7 +65,7 @@ def add_email_address(request):
                 
                 
 @user_passes_test(user_can_view_data)
-def email_address_detail(request, domain):
+def email_address_detail(request, address):
     """
     Generate the Email Address details page.
 
