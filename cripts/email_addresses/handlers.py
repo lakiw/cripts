@@ -156,13 +156,36 @@ def add_new_email_address(address, description, source, method, reference,
     :type ticket: str
     :returns: dict with keys "success" (boolean) and "message" (str)
     """
-    result = dict()
+    
+    # Parse out the e-mail address. Return an error if it looks invalid, (aka missing the @, has whitespace, etc)
+    try:
+        if ' ' in address:
+            raise ValueError
+        local_name, domain_part = address.strip().split('@', 1)
+    except ValueError:
+        return {'success': False, 'message': "Invalid Email Address Format"}
+    else:
+        # lowercase the domain name and recreate the e-mail address
+        address = '@'.join([local_name, domain_part.lower()])
+    
+    # Check to see if the e-mail address exists already
+    email_address = EmailAddress.objects(address=address).first()
+    if email_address:
+        message = ('<div>Email Address already exists. Click here to view: <a href='
+                   '"%s">%s</a></div>' % (reverse('cripts.email_addresses.views.email_address_detail',
+                                                  args=[email_address.address]),email_address.address))
+        result = {'success': True,
+                  'message': message,
+                  'address': email_address.address}
+        return result
+    
     if not source:
         return {'success': False, 'message': "Missing source information."}
-
+    
     email_address = EmailAddress()
     email_address.address = address
-    email_address.domain = 'gmail.com'
+    email_address.local_name = local_name
+    email_address.domain = domain_part.lower()
     email_address.description = description
 
     s = create_embedded_source(name=source,
@@ -202,11 +225,10 @@ def add_new_email_address(address, description, source, method, reference,
 
         message = ('<div>Success! Click here to view the new email address: <a href='
                    '"%s">%s</a></div>' % (reverse('cripts.email_addresses.views.email_address_detail',
-                                                  args=[email_address.address]),
-                                          address))
+                                                  args=[email_address.address]), email_address.address))
         result = {'success': True,
                   'message': message,
-                  'object': list(email_address)}
+                  'address': email_address.address}
 
     except ValidationError, e:
         result = {'success': False,
@@ -275,13 +297,14 @@ def get_email_address_details(address, analyst):
     # analysis results
     service_results = address_object.get_analysis_results()
 
-    args = {'objects': objects,
+    args = {'email_address': address_object,
+            'objects': objects,
             'relationships': relationships,
             'comments': comments,
             'favorite': favorite,
             'relationship': relationship,
             'subscription': subscription,
-            'address': address_object,
+            'address': address_object.address,
             'service_list': service_list,
             'service_results': service_results}
 

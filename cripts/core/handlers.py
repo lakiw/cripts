@@ -320,7 +320,8 @@ def favorite_update(type_, id_, analyst):
     :type analyst: str
     :returns: dict with keys "success" (boolean) and "message" (str)
     """
-
+    print ("type = " + str(type_))
+    print ("id = " +   str(id_ ))
     user = CRIPTsUser.objects(username=analyst).first()
     if not user:
         return {'success': False, 'message': 'Could not find user.'}

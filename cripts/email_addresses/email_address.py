@@ -22,6 +22,7 @@ class EmailAddress(CriptsBaseAttributes, CriptsSourceDocument, CriptsActionsDocu
             'datasets': ('List [] of datasets this email_address'
                 ' appeared in'),
             'domain': 'Domain of the e-mail address, eg test.com',
+            'local_name': 'The front part of the e-mail address. Eg. "user" of user@test.com',
             'description': 'Description of the e-mail address',
             'source': ('List [] of sources who provided information about this'
                 ' email address')
@@ -31,13 +32,15 @@ class EmailAddress(CriptsBaseAttributes, CriptsSourceDocument, CriptsActionsDocu
                          'details_url_key': "address",
                          'default_sort': "address",
                          'searchurl': 'cripts.email_addresses.views.email_addresses_listing',
-                         'fields': [ "address", "created",
-                                     "source"],
+                         'fields': [ "address", "local_name", "domain", "created",
+                                     "source", "id"],
                          'jtopts_fields': [ "address",
+                                            "local_name",
                                             "domain",
                                             "created",
                                             "source",
-                                            "favorite"],
+                                            "favorite",
+                                            "id"],
                          'hidden_fields': [],
                          'linked_fields': ["source","address" ],
                          'details_link': "address",
@@ -48,5 +51,6 @@ class EmailAddress(CriptsBaseAttributes, CriptsSourceDocument, CriptsActionsDocu
     address = StringField(required=True)
     description = StringField(required=True)
     domain = StringField(required=True)
+    local_name = StringField(required=True)
     datasets = ListField(required=False)
   

@@ -35,7 +35,7 @@ $(document).ready(function() {
     };
 
     $.each(localDialogs, function(id,opt) { stdDialog(id, opt); });
-    populate_id(event_id, 'EmailAddress');
+    populate_id(email_address_id, 'EmailAddress');
     details_copy_id('EmailAddress');
     toggle_favorite('EmailAddress');
 }); //document.ready
