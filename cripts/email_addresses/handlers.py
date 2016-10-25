@@ -10,12 +10,15 @@ try:
     from mongoengine.base import ValidationError
 except ImportError:
     from mongoengine.errors import ValidationError
-    
+
+from cripts.core import form_consts
 from cripts.core.user_tools import is_admin, user_sources, is_user_favorite
 from cripts.core.user_tools import is_user_subscribed
 from cripts.core.handlers import csv_export
-from cripts.core.handlers import build_jtable, jtable_ajax_list
+from cripts.core.handlers import build_jtable, jtable_ajax_list, jtable_ajax_delete
+from cripts.core.handsontable_tools import convert_handsontable_to_rows, parse_bulk_upload
 from cripts.email_addresses.email_address import EmailAddress
+from cripts.email_addresses.forms import EmailAddressForm
 from cripts.core.cripts_mongoengine import create_embedded_source, json_handler
 from cripts.services.handlers import run_triage, get_supported_services
 from cripts.notifications.handlers import remove_user_from_notification
@@ -93,24 +96,6 @@ def generate_email_address_jtable(request, option):
             'cssClass': "'jtable-toolbar-center'",
         },
         {
-            'tooltip': "'In Progress Email Addresess'",
-            'text': "'In Progress'",
-            'click': "function () {$('#email_address_listing').jtable('load', {'refresh': 'yes', 'status': 'In Progress'});}",
-            'cssClass': "'jtable-toolbar-center'",
-        },
-        {
-            'tooltip': "'Analyzed Email Addresses'",
-            'text': "'Analyzed'",
-            'click': "function () {$('#email_address_listing').jtable('load', {'refresh': 'yes', 'status': 'Analyzed'});}",
-            'cssClass': "'jtable-toolbar-center'",
-        },
-        {
-            'tooltip': "'Deprecated Email Addresses'",
-            'text': "'Deprecated'",
-            'click': "function () {$('#email_address_listing').jtable('load', {'refresh': 'yes', 'status': 'Deprecated'});}",
-            'cssClass': "'jtable-toolbar-center'",
-        },
-        {
             'tooltip': "'Add Email Address'",
             'text': "'Add Email Address'",
             'click': "function () {$('#new-email_address').click()}",
@@ -129,34 +114,183 @@ def generate_email_address_jtable(request, option):
                                   RequestContext(request))
    
    
-def add_new_email_address(address, description, source, method, reference,
-                  analyst, datasets=None, bucket_list=None, ticket=None,
-                  related_id=None,
-                  related_type=None, relationship_type=None):
+def parse_row_to_bound_email_form(request, rowData, cache):
+    """
+    Parse a row out of mass object email adder into the
+    :class:`cripts.email_addresses.forms.EmailForm`.
+    :param request: The Django request.
+    :type request: :class:`django.http.HttpRequest`
+    :param rowData: The data for that row.
+    :type rowData: dict
+    :param cache: Cached data, typically for performance enhancements
+                  during bulk operations.
+    :type cache: dict
+    :returns: :class:`cripts.email_addresses.forms.EmailForm`.
+    """
+
+    address = rowData.get(form_consts.EmailAddress.EMAIL_ADDRESS, "")
+    description = rowData.get(form_consts.EmailAddress.DESCRIPTION, "")
+    analyst = request.user
+    source = rowData.get(form_consts.EmailAddress.SOURCE, "")
+    source_method = rowData.get(form_consts.EmailAddress.SOURCE_METHOD, "")
+    source_reference = rowData.get(form_consts.EmailAddress.SOURCE_REFERENCE, "")
+    bucket_list = rowData.get(form_consts.Common.BUCKET_LIST, "")
+    ticket = rowData.get(form_consts.Common.TICKET, "")
+
+    data = {
+        'address': address,
+        'description': description,
+        'analyst': analyst,
+        'source': source,
+        'source_method': source_method,
+        'source_reference': source_reference,
+        'bucket_list': bucket_list,
+        'ticket': ticket}
+
+    bound_form = cache.get('email_form')
+
+    if bound_form == None:
+        bound_form = EmailAddressForm(request.user, None, data)
+        cache['email_form'] = bound_form
+    else:
+        bound_form.data = data
+
+    bound_form.full_clean()
+    return bound_form
+
+   
+def process_bulk_add_email_addresses(request, formdict):
+    """
+    Performs the bulk add of email addreesses by parsing the request data. Batches
+    some data into a cache object for performance by reducing large
+    amounts of single database queries.
+    :param request: Django request.
+    :type request: :class:`django.http.HttpRequest`
+    :param formdict: The form representing the bulk uploaded data.
+    :type formdict: dict
+    :returns: :class:`django.http.HttpResponse`
+    """
+    email_names = []
+    cached_results = {}
+
+    cleanedRowsData = convert_handsontable_to_rows(request)
+    for rowData in cleanedRowsData:
+        if rowData != None and rowData.get(form_consts.EmailAddress.EMAIL_ADDRESS) != None:
+            email_names.append(rowData.get(form_consts.EmailAddress.EMAIL_ADDRESS).lower())
+            
+    email_results = EmailAddress.objects(address__in=email_names)
+
+    for email_result in email_results:
+        cached_results[email_result.address] = email_result
+
+    cache = {form_consts.EmailAddress.CACHED_RESULTS: cached_results, 'cleaned_rows_data': cleanedRowsData}
+
+    response = parse_bulk_upload(request, parse_row_to_bound_email_form, add_new_email_via_bulk, formdict, cache)
+    
+    return response
+
+
+def add_new_email_via_bulk(data, rowData, request, errors, is_validate_only=False, cache={}):
+    """
+    Bulk add wrapper for the add_new_email_address() function.
+    """
+
+    return add_new_email_address(data, rowData, request, errors, is_validate_only=is_validate_only, cache=cache)
+    
+   
+def add_new_email_address(data, rowData, request, errors, is_validate_only=False, cache={}):
     """
     Add a new Email Address to CRIPTs.
-
-    :param address: The actual e-mail address
-    :type address: str
-    :param description: Email Address description.
-    :type description: str
-    :param source: The source which provided this information.
-    :type source: str
-    :param method: THe method of acquiring this information.
-    :type method: str
-    :param reference: Reference to this data.
-    :type reference: str
-    :param analyst: The user adding this Email Address.
-    :type analyst: str
-    :param datasets: The dataset(s) to associate with this Email Address.
-    :type: list[str]
-    :param bucket_list: The bucket(s) to associate with this Email Address.
-    :type: str
-    :param ticket: Ticket to associate with this Email Address.
-    :type ticket: str
-    :returns: dict with keys "success" (boolean) and "message" (str)
+    :param data: Data for the email address.
+    :type data: dict
+    :param rowData: Extra data from rows used by mass object uploader.
+    :type rowData: dict
+    :param request: The request for adding this Email Address.
+    :type request: :class:`django.http.HttpRequest`
+    :param errors: A list of current errors prior to processing this Email Address.
+    :type errors: list
+    :param is_validate_only: Whether or not we should validate or add.
+    :type is_validate_only: bool
+    :param cache: Cached data, typically for performance enhancements
+                  during bulk operations.
+    :type cache: dict
+    :returns: tuple with (<result>, <errors>, <retval>)
     """
     
+    result = False
+
+    address = data.get('address')
+    description = data.get('description')
+    analyst = data.get('analyst')
+    source = data.get('source')
+    method = data.get('method')
+    reference = data.get('reference')
+    bucket_list = data.get(form_consts.Common.BUCKET_LIST_VARIABLE_NAME)
+    ticket = data.get(form_consts.Common.TICKET_VARIABLE_NAME)
+
+    retVal = email_address_add_update(address, description,
+            source=source,
+            method=method,
+            reference=reference,
+            analyst=analyst,
+            bucket_list=bucket_list,
+            ticket=ticket,
+            is_validate_only=is_validate_only,
+            cache=cache)
+
+    if not retVal['success']:
+        errors.append(retVal.get('message'))
+        retVal['message'] = ""
+
+    # This block tries to add objects to the item
+    if retVal['success'] == True or is_validate_only == True:
+        result = True
+        objectsData = rowData.get(form_consts.Common.OBJECTS_DATA)
+
+        # add new objects if they exist
+        if objectsData:
+            objectsData = json.loads(objectsData)
+
+            for object_row_counter, objectData in enumerate(objectsData, 1):
+                new_email = retVal.get('object')
+
+                if new_email != None and is_validate_only == False:
+                    objectDict = object_array_to_dict(objectData,
+                                                      "EmailAddress", new_email.id)
+                else:
+                    if new_email != None:
+                        if new_ip.id:
+                            objectDict = object_array_to_dict(objectData,
+                                                              "EmailAddress", new_email.id)
+                        else:
+                            objectDict = object_array_to_dict(objectData,
+                                                              "EmailAddress", "")
+                    else:
+                        objectDict = object_array_to_dict(objectData,
+                                                          "EmailAddress", "")
+
+                (obj_result,
+                 errors,
+                 obj_retVal) = validate_and_add_new_handler_object(
+                        None, objectDict, request, errors, object_row_counter,
+                        is_validate_only=is_validate_only, cache=cache)
+
+                if not obj_result:
+                    retVal['success'] = False
+
+    return result, errors, retVal
+
+ 
+def email_address_add_update(address, description, source=None, method='', reference='',
+                  analyst=None, datasets=None, bucket_list=None, ticket=None,
+                  is_validate_only=False, cache={}, related_id=None,
+                  related_type=None, relationship_type=None):
+
+    retVal = {}
+    
+    if not source:
+        return {"success" : False, "message" : "Missing source information."}              
+                  
     # Parse out the e-mail address. Return an error if it looks invalid, (aka missing the @, has whitespace, etc)
     try:
         if ' ' in address:
@@ -167,38 +301,51 @@ def add_new_email_address(address, description, source, method, reference,
     else:
         # lowercase the domain name and recreate the e-mail address
         address = '@'.join([local_name, domain_part.lower()])
-    
-    # Check to see if the e-mail address exists already
-    email_address = EmailAddress.objects(address=address).first()
-    if email_address:
-        message = ('<div>Email Address already exists. Click here to view: <a href='
-                   '"%s">%s</a></div>' % (reverse('cripts.email_addresses.views.email_address_detail',
-                                                  args=[email_address.address]),email_address.address))
-        result = {'success': True,
-                  'message': message,
-                  'address': email_address.address}
-        return result
-    
-    if not source:
-        return {'success': False, 'message': "Missing source information."}
-    
-    email_address = EmailAddress()
-    email_address.address = address
-    email_address.local_name = local_name
-    email_address.domain = domain_part.lower()
-    email_address.description = description
 
-    s = create_embedded_source(name=source,
-                               reference=reference,
-                               method=method,
-                               analyst=analyst)
-    email_address.add_source(s)
+        
+    is_item_new = False
+
+    email_object = None
+    cached_results = cache.get(form_consts.EmailAddress.CACHED_RESULTS)
+
+    if cached_results != None:
+        email_object = cached_results.get(address)
+    else:
+        email_object = EmailAddress.objects(address=address).first()
+    
+    if not email_object:
+        email_object = EmailAddress()
+        email_object.address = address
+        email_object.description = description
+        email_object.local_name = local_name
+        email_object.domain = domain_part.lower()
+        is_item_new = True
+
+        if cached_results != None:
+            cached_results[address] = email_object
+
+    if not email_object.description:
+        email_object.description = description or ''
+    elif email_object.description != description:
+        email_object.description += "\n" + (description or '')
+
+    if isinstance(source, basestring):
+        source = [create_embedded_source(source,
+                                         reference=reference,
+                                         method=method,
+                                         analyst=analyst)]
+
+    if source:
+        for s in source:
+            email_object.add_source(s)
+    else:
+        return {"success" : False, "message" : "Missing source information."}
 
     if bucket_list:
-        email_address.add_bucket_list(bucket_list, analyst)
+        email_object.add_bucket_list(bucket_list, analyst)
 
     if ticket:
-        email_address.add_ticket(ticket, analyst)
+        email_object.add_ticket(ticket, analyst)
 
     related_obj = None
     if related_id:
@@ -208,32 +355,48 @@ def add_new_email_address(address, description, source, method, reference,
             retVal['message'] = 'Related Object not found.'
             return retVal
 
-    try:
-        email_address.save(username=analyst)
+    resp_url = reverse('cripts.email_addresses.views.email_address_detail', args=[email_object.address])
 
-        if related_obj and email_address and relationship_type:
-            relationship_type=RelationshipTypes.inverse(relationship=relationship_type)
-            email_address.add_relationship(related_obj,
-                                  relationship_type,
-                                  analyst=analyst,
-                                  get_rels=False)
-            email_address.save(username=analyst)
+    if is_validate_only == False:
+        email_object.save(username=analyst)
 
-        # run email_address triage
-        email_address.reload()
-        run_triage(email_address, analyst)
+        #set the URL for viewing the new data
+        if is_item_new == True:
+            retVal['message'] = ('Success! Click here to view the new Email: '
+                                 '<a href="%s">%s</a>' % (resp_url, email_object.address))
+        else:
+            message = ('Updated existing Email: '
+                                 '<a href="%s">%s</a>' % (resp_url, email_object.address))
+            retVal['message'] = message
+            retVal['status'] = form_consts.Status.DUPLICATE
+            retVal['warning'] = message
 
-        message = ('<div>Success! Click here to view the new email address: <a href='
-                   '"%s">%s</a></div>' % (reverse('cripts.email_addresses.views.email_address_detail',
-                                                  args=[email_address.address]), email_address.address))
-        result = {'success': True,
-                  'message': message,
-                  'address': email_address.address}
+    elif is_validate_only == True:
+        if email_object.id != None and is_item_new == False:
+            message = ('Warning: Email already exists: '
+                                 '<a href="%s">%s</a>' % (resp_url, email_object.address))
+            retVal['message'] = message
+            retVal['status'] = form_consts.Status.DUPLICATE
+            retVal['warning'] = message
 
-    except ValidationError, e:
-        result = {'success': False,
-                  'message': e}
-    return result
+    if related_obj and email_object and relationship_type:
+        relationship_type=RelationshipTypes.inverse(relationship=relationship_type)
+        email_object.add_relationship(related_obj,
+                              relationship_type,
+                              analyst=analyst,
+                              get_rels=False)
+        email_object.save(username=analyst)
+
+    # run email triage
+    if is_item_new and is_validate_only == False:
+        email_object.reload()
+        run_triage(email_object, analyst)
+
+    retVal['success'] = True
+    retVal['object'] = email_object
+
+    return retVal
+    
     
 def get_email_address_details(address, analyst):
     """
@@ -309,3 +472,24 @@ def get_email_address_details(address, analyst):
             'service_results': service_results}
 
     return template, args
+
+    
+def email_address_remove(email_address_id, username):
+    """
+    Remove an Email Address from CRIPTs.
+    :param email_address_id: The ObjectId of the Email Address to remove.
+    :type email_address_id: str
+    :param username: The user removing this IP.
+    :type username: str
+    :returns: dict with keys "success" (boolean) and "message" (str) if failed.
+    """
+
+    if is_admin(username):
+        email_address = EmailAddress.objects(id=email_address_id).first()
+        if email_address:
+            email_address.delete(username=username)
+            return {'success': True}
+        else:
+            return {'success':False, 'message':'Could not find Email Address.'}
+    else:
+        return {'success':False, 'message': 'Must be an admin to remove'}    

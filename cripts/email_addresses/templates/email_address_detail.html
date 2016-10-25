@@ -39,12 +39,11 @@
                         {% endwith %}
                     </tr>
                     <tr>
-                        <td class="key">Analyst</td>
-                        <td>{{email_address.analyst}}</td>
-                    </tr>
-                    <tr>
                         <td class="key">Status
                             <span style="float: right;" class="object_status_response"></span>
+                        </td>
+                        <td>
+                            <span class="edit" id="object_status" action="{% url 'cripts.core.views.update_status' subscription.type subscription.id %}">{{email_address.status}}</span>
                         </td>
                     </tr>
                     {% with sectors=email_address.sectors %}

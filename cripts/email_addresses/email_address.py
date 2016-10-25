@@ -42,7 +42,7 @@ class EmailAddress(CriptsBaseAttributes, CriptsSourceDocument, CriptsActionsDocu
                                             "favorite",
                                             "id"],
                          'hidden_fields': [],
-                         'linked_fields': ["source","address" ],
+                         'linked_fields': ["source","local_name","domain" ],
                          'details_link': "address",
                          'no_sort': []
                        }

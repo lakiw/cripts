@@ -63,9 +63,11 @@ class EmailAddress():
     Constants for EmailAddresses
     """
     EMAIL_ADDRESS = "Email Address"
+    DESCRIPTION = "Description"
     SOURCE = Common.SOURCE
     SOURCE_METHOD = "Source Method"
     SOURCE_REFERENCE = Common.SOURCE_REFERENCE
+    CACHED_RESULTS = "email_cached_results"
 
 class Event():
     """
