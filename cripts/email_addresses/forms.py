@@ -17,7 +17,7 @@ class EmailAddressForm(forms.Form):
                                label=form_consts.EmailAddress.EMAIL_ADDRESS)
     description = forms.CharField(widget=forms.Textarea(attrs={'cols': '30',
                                                                'rows': '3'}),
-                                  required=False)
+                                  label=form_consts.EmailAddress.DESCRIPTION, required=False)
     source = forms.ChoiceField(required=True,
                                widget=forms.Select(attrs={'class': 'no_clear'}),
                                label=form_consts.EmailAddress.SOURCE)
@@ -34,6 +34,6 @@ class EmailAddressForm(forms.Form):
                                                                                True,
                                                                                username)]
         self.fields['source'].initial = get_user_organization(username)
-
+        
         add_bucketlist_to_form(self)
         add_ticket_to_form(self)

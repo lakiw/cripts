@@ -748,25 +748,6 @@ function getSelected() {
 
 $(document).ready(function() {
 
-    $(document).mouseup(function(e) {
-        var selected = getSelected();
-        if (selected.toString().length > 0) {
-            selected_text = selected.toString()
-            var span = $('<span>')
-            .attr('id', 'tmpSelectedNode');
-            var range = selected.getRangeAt(0);
-            range.insertNode($(span).get(0));
-            var position = $('#tmpSelectedNode').position();
-            var fspan = $('#selectedNodeMenu')
-            .css('top', position.top)
-            .css('left', position.left)
-            .attr('data-selected', selected_text)
-            .show();
-            $('#tmpSelectedNode').remove();
-        } else {
-            $('#selectedNodeMenu').hide();
-        }
-    });
 
     $(document).on('click', '.selected_text_button', function(e) {
         var selected = $(this).parent().attr('data-selected');

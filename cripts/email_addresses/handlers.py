@@ -127,7 +127,8 @@ def parse_row_to_bound_email_form(request, rowData, cache):
     :type cache: dict
     :returns: :class:`cripts.email_addresses.forms.EmailForm`.
     """
-
+    print(form_consts.EmailAddress.EMAIL_ADDRESS, "")
+    print(rowData.get(form_consts.EmailAddress.EMAIL_ADDRESS, ""))
     address = rowData.get(form_consts.EmailAddress.EMAIL_ADDRESS, "")
     description = rowData.get(form_consts.EmailAddress.DESCRIPTION, "")
     analyst = request.user
@@ -136,7 +137,6 @@ def parse_row_to_bound_email_form(request, rowData, cache):
     source_reference = rowData.get(form_consts.EmailAddress.SOURCE_REFERENCE, "")
     bucket_list = rowData.get(form_consts.Common.BUCKET_LIST, "")
     ticket = rowData.get(form_consts.Common.TICKET, "")
-
     data = {
         'address': address,
         'description': description,
@@ -151,9 +151,13 @@ def parse_row_to_bound_email_form(request, rowData, cache):
 
     if bound_form == None:
         bound_form = EmailAddressForm(request.user, None, data)
+        bound_form.data = data
         cache['email_form'] = bound_form
     else:
         bound_form.data = data
+    print(bound_form.data)
+    print("actual form")
+    print(bound_form)
 
     bound_form.full_clean()
     return bound_form

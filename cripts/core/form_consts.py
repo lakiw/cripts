@@ -64,6 +64,7 @@ class EmailAddress():
     """
     EMAIL_ADDRESS = "Email Address"
     DESCRIPTION = "Description"
+    SECTOR = "Sector"
     SOURCE = Common.SOURCE
     SOURCE_METHOD = "Source Method"
     SOURCE_REFERENCE = Common.SOURCE_REFERENCE
