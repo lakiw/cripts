@@ -133,8 +133,7 @@ def email_address_detail(request, address):
                                               analyst)
     if new_template:
         template = new_template
-    print("args")
-    print(args)
+        
     return render_to_response(template,
                               args,
                               RequestContext(request))

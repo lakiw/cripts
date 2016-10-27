@@ -1909,7 +1909,7 @@ class CriptsBaseAttributes(CriptsDocument, CriptsBaseDocument,
         rel_dict = dict((r.rel_type,[]) for r in self.relationships)
         query_dict = {
             'Dataset': ('id'),
-            'EmailAddress': ('id'),
+            'EmailAddress': ('id','address'),
             'Event': ('id', 'title', 'event_type', 'description'),
             'Hash': ('id'),
             'Target': ('id'),

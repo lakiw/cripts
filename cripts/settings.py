@@ -528,7 +528,7 @@ CRIPTS_TYPES = {
     'AnalysisResult': COL_ANALYSIS_RESULTS,
     'Comment': COL_COMMENTS,
     'Dataset': COL_DATASETS,
-    'EmailAdress': COL_EMAIL_ADDRESSES,
+    'EmailAddress': COL_EMAIL_ADDRESSES,
     'Event': COL_EVENTS,
     'Hash': COL_HASHES,
     'Target': COL_TARGETS,

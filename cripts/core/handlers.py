@@ -976,11 +976,17 @@ def generate_bucket_jtable(request, option):
             url = reverse('cripts.core.views.bucket_promote')
         else:
             lower = ctype.lower()
-            if lower != "rawdata":
-                url = reverse('cripts.%ss.views.%ss_listing' % (lower, lower))
-            else:
+            if lower == "raw_data":
                 lower = "raw_data"
                 url = reverse('cripts.%s.views.%s_listing' % (lower, lower))
+            elif lower == "emailaddress":
+                lower = "email_addresses"
+                url = reverse('cripts.%s.views.%s_listing' % (lower, lower))
+            elif lower == "hash":
+                lower = "hashes"
+                url = reverse('cripts.%s.views.%s_listing' % (lower, lower))
+            else:
+                url = reverse('cripts.%ss.views.%ss_listing' % (lower, lower))
 
         for field in jtable['fields']:
             if field['fieldname'].startswith("'" + ctype):
@@ -3312,7 +3318,7 @@ def details_from_id(type_, id_):
         if type_ == 'EmailAddress':
             arg = class_from_id(type_, id_)
             if arg:
-                arg = arg.name
+                arg = arg.address
         if type_ == 'Hash':
             arg = class_from_id(type_, id_)
             if arg:
