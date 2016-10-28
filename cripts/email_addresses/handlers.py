@@ -5,12 +5,14 @@ from django.core.urlresolvers import reverse
 from django.http import HttpResponse
 from django.shortcuts import render_to_response
 from django.template import RequestContext
+from django.conf import settings
 
 try:
     from mongoengine.base import ValidationError
 except ImportError:
     from mongoengine.errors import ValidationError
 
+from cripts.core.mongo_tools import mongo_connector
 from cripts.core import form_consts
 from cripts.core.user_tools import is_admin, user_sources, is_user_favorite
 from cripts.core.user_tools import is_user_subscribed
@@ -366,6 +368,14 @@ def email_address_add_update(address, description, source=None, method='', refer
 
         #set the URL for viewing the new data
         if is_item_new == True:
+            
+            # Update the email stats
+            count = mongo_connector(settings.COL_COUNTS)
+            counts = count.find_one({'name': 'counts'})
+            if counts:
+                print(counts)
+            
+            
             retVal['message'] = ('Success! Click here to view the new Email: '
                                  '<a href="%s">%s</a>' % (resp_url, email_object.address))
         else:
