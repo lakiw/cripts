@@ -1,0 +1,8 @@
+<div id="dialog-{{ request.GET.dialog }}" title="Add New UserName">
+    <form id="form-{{ request.GET.dialog }}" 
+	  action='{% url "cripts.usernames.views.add_username" %}' 
+	  method='POST' enctype="multipart/form-data" 
+	  item-type="username">
+    <table class="form">{{ upload_username.as_table }}</table>
+    </form>
+</div>

@@ -65,6 +65,7 @@ from cripts.core.user_tools import revoke_api_key_by_name, make_default_api_key_
 from cripts.core.class_mapper import class_from_id
 from cripts.events.forms import EventForm
 from cripts.email_addresses.forms import EmailAddressForm
+from cripts.usernames.forms import UserNameForm
 from cripts.notifications.handlers import get_user_notifications
 from cripts.notifications.handlers import remove_user_from_notification
 from cripts.notifications.handlers import remove_user_notifications
@@ -1065,6 +1066,10 @@ def base_context(request):
             base_context['upload_email_address'] = EmailAddressForm(user)
         except Exception, e:
             logger.warning("Base Context EmailAddressForm Error: %s" %e)
+        try:
+            base_context['upload_username'] = UserNameForm(user)
+        except Exception, e:
+            logger.warning("Base Context UserNameForm Error: %s" %e)
         try:
             base_context['object_form'] = AddObjectForm(user, None)
         except Exception, e:

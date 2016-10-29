@@ -284,7 +284,7 @@ def add_new_username(data, rowData, request, errors, is_validate_only=False, cac
     return result, errors, retVal
 
  
-def username_add_update(username, description, source=None, method='', reference='',
+def username_add_update(name, description, source=None, method='', reference='',
                   analyst=None, datasets=None, bucket_list=None, ticket=None,
                   is_validate_only=False, cache={}, related_id=None,
                   related_type=None, relationship_type=None):
@@ -302,11 +302,11 @@ def username_add_update(username, description, source=None, method='', reference
     if cached_results != None:
         username_object = cached_results.get(username)
     else:
-        username_object = UserName.objects(username=username).first()
+        username_object = UserName.objects(name=name).first()
     
     if not username_object:
         username_object = UserName()
-        username_object.username = username
+        username_object.name = name
         username_object.description = description
         is_item_new = True
 
@@ -344,7 +344,7 @@ def username_add_update(username, description, source=None, method='', reference
             retVal['message'] = 'Related Object not found.'
             return retVal
 
-    resp_url = reverse('cripts.username.views.username_detail', args=[username_object.username_id])
+    resp_url = reverse('cripts.usernames.views.username_detail', args=[username_object.username_id])
 
     if is_validate_only == False:
         username_object.save(username=analyst)
@@ -354,7 +354,7 @@ def username_add_update(username, description, source=None, method='', reference
             
             # Update the username stats
             counts = mongo_connector(settings.COL_COUNTS)
-            count_stats = count.find_one({'name': 'counts'})
+            count_stats = counts.find_one({'name': 'counts'})
             if not count_stats:
                 count_stats = {}
             if 'UserNames' not in count_stats:
@@ -365,10 +365,10 @@ def username_add_update(username, description, source=None, method='', reference
             counts.update({'name': "counts"}, {'$set': {'counts': count_stats}}, upsert=True)
             
             retVal['message'] = ('Success! Click here to view the new UserName: '
-                                 '<a href="%s">%s</a>' % (resp_url, username_object.username_id))
+                                 '<a href="%s">%s</a>' % (resp_url, username_object.name))
         else:
             message = ('Updated existing UserName: '
-                                 '<a href="%s">%s</a>' % (resp_url, username_object.username_id))
+                                 '<a href="%s">%s</a>' % (resp_url, username_object.name))
             retVal['message'] = message
             retVal['status'] = form_consts.Status.DUPLICATE
             retVal['warning'] = message
@@ -376,7 +376,7 @@ def username_add_update(username, description, source=None, method='', reference
     elif is_validate_only == True:
         if username_object.id != None and is_item_new == False:
             message = ('Warning: UserName already exists: '
-                                 '<a href="%s">%s</a>' % (resp_url, username_object.username_id))
+                                 '<a href="%s">%s</a>' % (resp_url, username_object.name))
             retVal['message'] = message
             retVal['status'] = form_consts.Status.DUPLICATE
             retVal['warning'] = message
@@ -495,3 +495,15 @@ def username_remove(username_id, username):
             return {'success':False, 'message':'Could not find UserName.'}
     else:
         return {'success':False, 'message': 'Must be an admin to remove'}    
+        
+        
+def generate_username_id(name):
+    """
+    Generate an Username ID.
+
+    :param name: The name of the user.
+    :type UserName: :class:`cripts.usernames.username.UserName`
+    :returns: `uuid.uuid4()`
+    """
+
+    return uuid.uuid4()

@@ -1,6 +1,6 @@
 import uuid
 
-from mongoengine import Document, StringField, UUIDField
+from mongoengine import Document, StringField, ListField, UUIDField
 from django.conf import settings
 
 from cripts.core.cripts_mongoengine import CriptsBaseAttributes, CriptsSourceDocument
@@ -28,17 +28,17 @@ class UserName(CriptsBaseAttributes, CriptsSourceDocument, CriptsActionsDocument
         },
         "jtable_opts": {
                          'details_url': 'cripts.usernames.views.username_detail',
-                         'details_url_key': 'usernamae_id',
+                         'details_url_key': 'username_id',
                          'default_sort': "name",
                          'searchurl': 'cripts.usernames.views.usernames_listing',
                          'fields': [ "name", "created",
-                                     "source", "id"],
+                                     "source", "id", "username_id"],
                          'jtopts_fields': [ "name",
                                             "created",
                                             "source",
                                             "favorite",
-                                            "id"],
-                         'hidden_fields': [],
+                                            "id", "username_id"],
+                         'hidden_fields': ["username_id", "id"],
                          'linked_fields': ["source", ],
                          'details_link': 'name',
                          'no_sort': []
@@ -48,7 +48,7 @@ class UserName(CriptsBaseAttributes, CriptsSourceDocument, CriptsActionsDocument
     
     name = StringField(required=True)
     description = StringField(required=True)
-    username_id = UUIDField(binary=True, required=True, default=uuid.uuid4
+    username_id = UUIDField(binary=True, required=True, default=uuid.uuid4)
     datasets = ListField(required=False)
 
     

@@ -365,7 +365,7 @@ def email_address_add_update(address, description, source=None, method='', refer
             
             # Update the email stats
             counts = mongo_connector(settings.COL_COUNTS)
-            count_stats = count.find_one({'name': 'counts'})
+            count_stats = counts.find_one({'name': 'counts'})
             if not count_stats:
                 count_stats = {}
             if 'Email Addresses' not in count_stats:

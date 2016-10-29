@@ -17,7 +17,7 @@ from cripts.core.data_tools import json_handler
 
 from cripts.usernames.handlers import username_add_update, get_username_details
 from cripts.usernames.handlers import generate_username_jtable, generate_username_csv
-from cripts.usernames.handlers import username_remove, process_bulk_add_username
+from cripts.usernames.handlers import username_remove, process_bulk_add_usernames
 from cripts.usernames.forms import UserNameForm
 
 
@@ -45,6 +45,7 @@ def add_username(request):
     :type request: :class:`django.http.HttpRequest`
     :returns: :class:`django.http.HttpResponse`
     """
+    print("starting")
     if request.method == "POST" and request.is_ajax():
         username_form = UserNameForm(request.user, request.POST)
         if username_form.is_valid():
