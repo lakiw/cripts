@@ -20,5 +20,6 @@ def generate_counts():
     
     count = {}
     count['Email Addresses'] = email_addresses.find().count()
+    count['UserNames'] = email_address.find().count()
 
     counts.update({'name': "counts"}, {'$set': {'counts': count}}, upsert=True)

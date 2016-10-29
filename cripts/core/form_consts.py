@@ -102,10 +102,13 @@ class UserName():
     """
     Constants for Usernames
     """
-    NAME = "Name"
+    NAME = "UserName"
+    DESCRIPTION = "Description"
+    SECTOR = "Sector"
     SOURCE = Common.SOURCE
     SOURCE_METHOD = "Source Method"
     SOURCE_REFERENCE = Common.SOURCE_REFERENCE
+    CACHED_RESULTS = "username_cached_results"
     
 class NotificationType():
     ALERT = 'alert'

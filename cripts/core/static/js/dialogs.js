@@ -1108,6 +1108,10 @@ function new_email_address_dialog() {
     createPickers();
 }
 
+function new_username_dialog() {
+    createPickers();
+}
+
 function add_email_yaml_template() {
 var template = "\
 to: \n\
@@ -1214,6 +1218,8 @@ var stdDialogs = {
       "new-event": {title: "Event", personas: {related: newPersona("Add Related Event", {open: new_event_dialog}, addEditSubmit ) }, open: new_event_dialog },
 
       "new-target": {title: "Target", personas: {related: newPersona("Add Related Target", {open: new_target_dialog}, addEditSubmit ) }, open: new_target_dialog },
+      
+      "new-username": {title: "New UserName", personas: {related: newPersona("Add Related UserName", {}, addEditSubmit) }, open: new_username_dialog  },
 
       "source_create": {title: "Source"},
       "user_role": {title: "User Role"},

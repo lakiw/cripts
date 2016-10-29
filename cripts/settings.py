@@ -139,6 +139,7 @@ COL_EMAIL_ADDRESSES = "email_addresses"                   # An email address fou
 COL_EVENTS = "events"                                     # main events collection
 COL_EVENT_TYPES = "event_types"                           # event types for events
 COL_HASHES = "hashes"                                     # password hashes
+COL_HASH_STATS ="hash_stats"                              # statistics about the individual hash types
 COL_IDB_ACTIONS = "idb_actions"                           # list of available actions to be taken with indicators
 COL_LOCATIONS = "locations"                               # Locations collection
 COL_NOTIFICATIONS = "notifications"                       # notifications collection
@@ -314,6 +315,7 @@ _TEMPLATE_DIRS = [
     os.path.join(SITE_ROOT, 'email_addresses/templates'),
     os.path.join(SITE_ROOT, 'events/templates'),
     os.path.join(SITE_ROOT, 'hashes/templates'),
+    os.path.join(SITE_ROOT, 'hash_types/templates'),
     os.path.join(SITE_ROOT, 'objects/templates'),
     os.path.join(SITE_ROOT, 'relationships/templates'),
     os.path.join(SITE_ROOT, 'services/templates'),
@@ -356,6 +358,7 @@ if old_mongoengine:
         'cripts.email_addresses',
         'cripts.events',
         'cripts.hashes',
+        'cripts.hash_stats',
         'cripts.objects', 
         'cripts.relationships',
         'cripts.services',
@@ -401,6 +404,7 @@ else:
         'cripts.email_addresses',
         'cripts.events',
         'cripts.hashes',
+        'cripts.hash_stats',
         'cripts.objects',
         'cripts.relationships',
         'cripts.services',

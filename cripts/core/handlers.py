@@ -55,6 +55,7 @@ from cripts.targets.target import Target
 from cripts.hashes.hash import Hash
 from cripts.datasets.dataset import Dataset
 from cripts.email_addresses.email_address import EmailAddress
+from cripts.usernames.username import UserName
 
 from cripts.core.totp import valid_totp
 
@@ -3100,11 +3101,11 @@ def generate_global_search(request):
     if ObjectId.is_valid(searchtext):
         for obj_type, url, key in [
                 ['Dataset', 'cripts.datasets.views.dataset_details', 'id'],
-                ['EmailAddress', 'cripts.email_addresses.views.email_address_details', 'id'],
+                ['EmailAddress', 'cripts.email_addresses.views.email_address_details', 'address'],
                 ['Event', 'cripts.events.views.view_event', 'id'],
                 ['Hash', 'cripts.hashes.views.hash_details', 'id'],
                 ['Target', 'cripts.targets.views.target_details', 'id'],
-                ['UserName', 'cripts.usernames.views.username_details', 'id']]:
+                ['UserName', 'cripts.usernames.views.username_details', 'username_id']]:
             obj = class_from_id(obj_type, searchtext)
             if obj:
                 return {'url': url, 'key': obj[key]}
@@ -3330,7 +3331,7 @@ def details_from_id(type_, id_):
         if type_ == 'UserName':
             arg = class_from_id(type_, id_)
             if arg:
-                arg = arg.name
+                arg = arg.username_id
         else:
             arg = id_
 
