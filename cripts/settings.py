@@ -534,7 +534,7 @@ CRIPTS_TYPES = {
     'Event': COL_EVENTS,
     'Hash': COL_HASHES,
     'Target': COL_TARGETS,
-    'Username': COL_USERNAMES,
+    'UserName': COL_USERNAMES,
     'Notification': COL_NOTIFICATIONS,
 }
 

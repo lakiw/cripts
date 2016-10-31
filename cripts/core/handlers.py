@@ -959,7 +959,7 @@ def generate_bucket_jtable(request, option):
         return HttpResponse(json.dumps(response, default=json_handler),
                             content_type='application/json')
 
-    fields = ['name', 'Dataset', 'EmailAddress', 'Event', 'Hash', 'Target', 'Username', 'Promote']
+    fields = ['name', 'Dataset', 'EmailAddress', 'Event', 'Hash', 'Target', 'UserName', 'Promote']
     jtopts = {'title': 'Buckets',
               'fields': fields,
               'listurl': 'jtlist',

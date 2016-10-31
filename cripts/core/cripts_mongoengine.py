@@ -1913,7 +1913,7 @@ class CriptsBaseAttributes(CriptsDocument, CriptsBaseDocument,
             'Event': ('id', 'title', 'event_type', 'description'),
             'Hash': ('id'),
             'Target': ('id'),
-            'UserName': ('id'),
+            'UserName': ('id','name'),
         }
         rel_dict['Other'] = 0
         rel_dict['Count'] = len(self.relationships)

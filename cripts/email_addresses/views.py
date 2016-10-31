@@ -17,7 +17,7 @@ from cripts.core.data_tools import json_handler
 
 from cripts.email_addresses.handlers import email_address_add_update, get_email_address_details
 from cripts.email_addresses.handlers import generate_email_address_jtable, generate_email_address_csv
-from cripts.email_addresses.handlers import email_address_remove, process_bulk_add_email_addresses
+from cripts.email_addresses.handlers import process_bulk_add_email_addresses
 from cripts.email_addresses.forms import EmailAddressForm
 
 @user_passes_test(user_can_view_data)
@@ -137,27 +137,4 @@ def email_address_detail(request, address):
     return render_to_response(template,
                               args,
                               RequestContext(request))
-                              
-                              
-@user_passes_test(user_can_view_data)
-def remove_email_address(request):
-    """
-    Remove an Email Address. Should be an AJAX POST.
-    :param request: Django request.
-    :type request: :class:`django.http.HttpRequest`
-    :returns: :class:`django.http.HttpResponse`
-    """
-
-    if request.method == "POST" and request.is_ajax():
-        if is_admin(request.user):
-            result = email_address_remove(request.POST['key'],
-                               request.user.username)
-            return HttpResponse(json.dumps(result),
-                                content_type="application/json")
-        error = 'You do not have permission to remove this item.'
-        return render_to_response("error.html",
-                                  {'error': error},
-                                  RequestContext(request))
-    return render_to_response('error.html',
-                              {'error':'Expected AJAX/POST'},
-                              RequestContext(request))
+                     

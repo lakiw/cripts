@@ -12,6 +12,7 @@ def generate_counts():
 
     counts = mongo_connector(settings.COL_COUNTS)
     email_addresses = mongo_connector(settings.COL_EMAIL_ADDRESSES)
+    usernames = mongo_connector(settings.COL_USERNAMES)
     
     today = datetime.datetime.fromordinal(datetime.datetime.now().toordinal())
     start = datetime.datetime.now()
@@ -20,6 +21,6 @@ def generate_counts():
     
     count = {}
     count['Email Addresses'] = email_addresses.find().count()
-    count['UserNames'] = email_address.find().count()
+    count['UserNames'] = usernames.find().count()
 
     counts.update({'name': "counts"}, {'$set': {'counts': count}}, upsert=True)

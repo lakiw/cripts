@@ -65,6 +65,18 @@ def generate_email_address_jtable(request, option):
     if option == "jtdelete":
         response = {"Result": "ERROR"}
         if jtable_ajax_delete(obj_type,request):
+            
+            # Update the email stats
+            counts = mongo_connector(settings.COL_COUNTS)
+            count_stats = counts.find_one({'name': 'counts'})
+            if not count_stats or ('counts' not in count_stats):
+                count_stats = {'counts':{}}
+            if 'Email Addresses' not in count_stats['counts']:
+                count_stats['counts']['Email Addresses'] = 0
+            else:
+                count_stats['counts']['Email Addresses'] = count_stats['counts']['Email Addresses'] - 1                                
+            counts.update({'name': "counts"}, {'$set': {'counts': count_stats['counts']}}, upsert=True) 
+            
             response = {"Result": "OK"}
         return HttpResponse(json.dumps(response,
                                        default=json_handler),
@@ -366,14 +378,14 @@ def email_address_add_update(address, description, source=None, method='', refer
             # Update the email stats
             counts = mongo_connector(settings.COL_COUNTS)
             count_stats = counts.find_one({'name': 'counts'})
-            if not count_stats:
-                count_stats = {}
-            if 'Email Addresses' not in count_stats:
-                count_stats['Email Addresses'] = 0
+            if not count_stats or ('counts' not in count_stats):
+                count_stats = {'counts':{}}
+            if 'Email Addresses' not in count_stats['counts']:
+                count_stats['counts']['Email Addresses'] = 0
             else:
-                count_stats['Email Addresses'] = count_stats['Email Addresses'] + 1
+                count_stats['counts']['Email Addresses'] = count_stats['counts']['Email Addresses'] + 1
             
-            counts.update({'name': "counts"}, {'$set': {'counts': count_stats}}, upsert=True)
+            counts.update({'name': "counts"}, {'$set': {'counts': count_stats['counts']}}, upsert=True)
             
             retVal['message'] = ('Success! Click here to view the new Email: '
                                  '<a href="%s">%s</a>' % (resp_url, email_object.address))
@@ -485,24 +497,3 @@ def get_email_address_details(address, analyst):
             'service_results': service_results}
 
     return template, args
-
-    
-def email_address_remove(email_address_id, username):
-    """
-    Remove an Email Address from CRIPTs.
-    :param email_address_id: The ObjectId of the Email Address to remove.
-    :type email_address_id: str
-    :param username: The user removing this Email Address.
-    :type username: str
-    :returns: dict with keys "success" (boolean) and "message" (str) if failed.
-    """
-
-    if is_admin(username):
-        email_address = EmailAddress.objects(id=email_address_id).first()
-        if email_address:
-            email_address.delete(username=username)
-            return {'success': True}
-        else:
-            return {'success':False, 'message':'Could not find Email Address.'}
-    else:
-        return {'success':False, 'message': 'Must be an admin to remove'}    

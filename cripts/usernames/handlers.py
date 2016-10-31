@@ -68,6 +68,18 @@ def generate_username_jtable(request, option):
         response = {"Result": "ERROR"}
         if jtable_ajax_delete(obj_type,request):
             response = {"Result": "OK"}
+            
+            # Update the username stats
+            counts = mongo_connector(settings.COL_COUNTS)
+            count_stats = counts.find_one({'name': 'counts'})
+            if not count_stats or ('counts' not in count_stats):
+                count_stats = {'counts':{}}
+            if 'UserNames' not in count_stats['counts']:
+                count_stats['counts']['UserNames'] = 0
+            else:
+                count_stats['counts']['UserNames'] = count_stats['counts']['UserNames'] - 1 
+            counts.update({'name': "counts"}, {'$set': {'counts': count_stats['counts']}}, upsert=True)
+            
         return HttpResponse(json.dumps(response,
                                        default=json_handler),
                             content_type="application/json")
@@ -355,14 +367,14 @@ def username_add_update(name, description, source=None, method='', reference='',
             # Update the username stats
             counts = mongo_connector(settings.COL_COUNTS)
             count_stats = counts.find_one({'name': 'counts'})
-            if not count_stats:
-                count_stats = {}
-            if 'UserNames' not in count_stats:
-                count_stats['UserNames'] = 0
+            if not count_stats or ('counts' not in count_stats):
+                count_stats = {'counts':{}}
+            if 'UserNames' not in count_stats['counts']:
+                count_stats['counts']['UserNames'] = 0
             else:
-                count_stats['UserNames'] = count_stats['UserNames'] + 1
+                count_stats['counts']['UserNames'] = count_stats['counts']['UserNames'] + 1
             
-            counts.update({'name': "counts"}, {'$set': {'counts': count_stats}}, upsert=True)
+            counts.update({'name': "counts"}, {'$set': {'counts': count_stats['counts']}}, upsert=True)
             
             retVal['message'] = ('Success! Click here to view the new UserName: '
                                  '<a href="%s">%s</a>' % (resp_url, username_object.name))
@@ -475,28 +487,7 @@ def get_username_details(username_id, analyst):
 
     return template, args
 
-    
-def username_remove(username_id, username):
-    """
-    Remove an UserName from CRIPTs.
-    :param username_id: The ObjectId of the UserName to remove.
-    :type username_id: str
-    :param username: The user removing this UserName.
-    :type username: str
-    :returns: dict with keys "success" (boolean) and "message" (str) if failed.
-    """
-
-    if is_admin(username):
-        username = UserName.objects(id=username_id).first()
-        if username:
-            username.delete(username=username)
-            return {'success': True}
-        else:
-            return {'success':False, 'message':'Could not find UserName.'}
-    else:
-        return {'success':False, 'message': 'Must be an admin to remove'}    
-        
-        
+              
 def generate_username_id(name):
     """
     Generate an Username ID.

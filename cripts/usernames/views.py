@@ -17,7 +17,7 @@ from cripts.core.data_tools import json_handler
 
 from cripts.usernames.handlers import username_add_update, get_username_details
 from cripts.usernames.handlers import generate_username_jtable, generate_username_csv
-from cripts.usernames.handlers import username_remove, process_bulk_add_usernames
+from cripts.usernames.handlers import process_bulk_add_usernames
 from cripts.usernames.forms import UserNameForm
 
 
@@ -45,7 +45,7 @@ def add_username(request):
     :type request: :class:`django.http.HttpRequest`
     :returns: :class:`django.http.HttpResponse`
     """
-    print("starting")
+    
     if request.method == "POST" and request.is_ajax():
         username_form = UserNameForm(request.user, request.POST)
         if username_form.is_valid():
@@ -139,27 +139,4 @@ def username_detail(request, username_id):
     return render_to_response(template,
                               args,
                               RequestContext(request))
-                              
-                              
-@user_passes_test(user_can_view_data)
-def remove_username(request):
-    """
-    Remove an UserName. Should be an AJAX POST.
-    :param request: Django request.
-    :type request: :class:`django.http.HttpRequest`
-    :returns: :class:`django.http.HttpResponse`
-    """
-
-    if request.method == "POST" and request.is_ajax():
-        if is_admin(request.user):
-            result = username_remove(request.POST['key'],
-                               request.user.username)
-            return HttpResponse(json.dumps(result),
-                                content_type="application/json")
-        error = 'You do not have permission to remove this item.'
-        return render_to_response("error.html",
-                                  {'error': error},
-                                  RequestContext(request))
-    return render_to_response('error.html',
-                              {'error':'Expected AJAX/POST'},
-                              RequestContext(request))
+                                                     

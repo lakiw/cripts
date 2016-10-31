@@ -4,7 +4,10 @@
 </tr>
 <tr>
     <td>
-        <b>{{ rel_type}}{% if rel_type != 'RawData' %}s{% endif %}:</b>
+        <b>{% if rel_type == 'EmailAddress' %}Email Addresses
+           {% else %}{{rel_type}}s
+           {% endif %}:
+        </b>
         <span style="float: right;" class="ui-icon ui-icon-triangle-1-e relationships_dropdown"></span>
         <b><span class="rel_type_count">{{ rel_list|length }}</span></b>
     </td>
@@ -32,7 +35,8 @@
 					{% elif rel_type == 'Target' %}
                         <th>Value</th>       
 					{% elif rel_type == 'UserName' %}
-                        <th>Value</th>       
+                        <th>Name</th>
+                        <th>Description</th>                        
                     {% endif %}
                     <th>Analyst</th>
                     <th>Date</th>
@@ -63,7 +67,8 @@
 						{% elif rel_type == 'Target' %}
                             <td>{{ rel.value }}</td>
 						{% elif rel_type == 'UserName' %}
-                            <td>{{ rel.value }}</td>
+                            <td>{{ rel.name }}</td>
+                            <td>{{ rel.description|truncatechars:100 }}</td>
                         {% endif %}
 
                         <td width="125px">{{rel.analyst}}</td>

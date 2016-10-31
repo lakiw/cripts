@@ -135,7 +135,7 @@ function populate_id(id, type) {
         if ($(this).dialog("persona") == "related") {
         $(this).find("form #id_related_id").val(id);
         $(this).find("form #id_related_type").val(type);
-        $(this).find("form").bind("addEditSubmitComplete",
+        $(this).find("form").bind("fileUploadComplete",
             function(e, response) {
                     $.ajax({
                       type: "POST",
@@ -160,6 +160,21 @@ function populate_id(id, type) {
                     })
               });
           }
+    });
+    $( "#dialog-new-bulk-email" ).on("dialogopen.add_related_email_address", function(e) {
+        if ($(this).dialog("persona") == "related") {
+        $(this).find("form #id_related_id").val(id);
+        $(this).find("form #id_related_type").val(type);
+        $(this).find("form").bind("fileUploadComplete",
+                    function(e, response) {
+                    $.ajax({
+                      type: "POST",
+                      success: function() {
+                          $('#relationship_box_container').load(location.href + " #relationship_box_container");
+                      }
+                    })
+              });
+        }
     });
     // Add a related Event (Using the related dialog persona)
     $( "#dialog-new-event" ).on("dialogopen.add_related_event", function(e) {
@@ -1246,7 +1261,9 @@ var stdDialogs = {
 
   var fileDialogs = {
       // File Upload Dialogs
-      "new-dataset": {title: "Dataset", personas:{related: newPersona("Upload Related Dataset",
+      "new-dataset": {title: "Upload Dataset", personas:{related: newPersona("Upload Related Dataset",
+      {open: file_upload_dialog}, defaultSubmit) }, open: file_upload_dialog },
+      "new-bulk-email": {title: "Upload Bulk Email List", personas:{related: newPersona("Bulk Upload Related Email List",
       {open: file_upload_dialog}, defaultSubmit) }, open: file_upload_dialog },
   };
 
