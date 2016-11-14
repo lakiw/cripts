@@ -27,7 +27,7 @@ from cripts.core.handlers import add_releasability, add_releasability_instance
 from cripts.core.handlers import remove_releasability, remove_releasability_instance
 from cripts.core.handlers import add_new_source, generate_counts_jtable
 from cripts.core.handlers import source_add_update, source_remove, source_remove_all
-from cripts.core.handlers import modify_bucket_list, promote_bucket_list
+from cripts.core.handlers import modify_bucket_list
 from cripts.core.handlers import download_object_handler, unflatten
 from cripts.core.handlers import modify_sector_list, validate_next
 from cripts.core.handlers import generate_bucket_jtable, generate_bucket_csv
@@ -783,36 +783,7 @@ def remove_all_source(request, obj_type, obj_id):
                                       {'error': error},
                                       RequestContext(request))
     return HttpResponse({})
-
-@user_passes_test(user_can_view_data)
-def bucket_promote(request):
-    """
-    Promote a bucket to a Campaign. Should be an AJAX POST.
-
-    :param request: Django request.
-    :type request: :class:`django.http.HttpRequest`
-    :returns: :class:`django.http.HttpResponse`
-    """
-
-    bucket = request.GET.get("name", None)
-    if not bucket:
-        return render_to_response("error.html",
-                                  {'error': 'Need a bucket.'},
-                                  RequestContext(request))
-    form = CampaignForm(request.POST)
-    if form.is_valid():
-        analyst = request.user.username
-        confidence = form.cleaned_data['confidence']
-        name = form.cleaned_data['name']
-        related = form.cleaned_data['related']
-        description = form.cleaned_data['description']
-        result = promote_bucket_list(bucket,
-                                     confidence,
-                                     name,
-                                     related,
-                                     description,
-                                     analyst)
-        return HttpResponse(json.dumps(result), content_type="application/json")
+    
 
 @user_passes_test(user_can_view_data)
 def bucket_modify(request):

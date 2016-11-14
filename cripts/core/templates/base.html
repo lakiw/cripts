@@ -326,7 +326,10 @@
       <a href id="new-email_address" class="ui-icon ui-icon-plusthick add dialogClick" dialog="new-email_address" persona="new" title="New Email Address"></a>
       <ul class='sub-mmenu'>
         <li class='mmenu_item'>
-          <a href="{% url 'cripts.email_addresses.views.bulk_add_email_addresses' %}" id="bulk_upload_email_address">Bulk Upload Emails</a>
+          <a href="{% url 'cripts.email_addresses.views.bulk_add_email_addresses' %}" id="bulk_upload_email_address">Bulk Upload Emails (Web GUI)</a>
+        </li>
+        <li class='mmenu_item'>
+          <a href="{% url 'cripts.email_addresses.views.bulk_file_upload_email_addresses' %}" id="bulk_file_upload_email_address">Bulk Upload Emails (File Upload)</a>
         </li>
       </ul>
     </li>

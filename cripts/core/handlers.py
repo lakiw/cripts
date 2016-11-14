@@ -852,29 +852,6 @@ def get_item_names(obj, active=None):
             c = obj.objects(active='off').order_by('+name')
     return c
 
-def promote_bucket_list(bucket, confidence, name, related, description, analyst):
-    """
-    Promote a bucket to a Campaign. Every top-level object which is tagged with
-    this specific bucket will get attributed to the provided campaign.
-
-    :param bucket: The bucket to promote.
-    :type bucket: str
-    :param confidence: The Campaign confidence.
-    :type confidence: str
-    :param name: The Campaign name.
-    :type name: str
-    :param related: If we should extend this attribution to top-level objects
-                    related to these top-level objects.
-    :type related: boolean
-    :param description: A description of this Campaign attribution.
-    :type description: str
-    :param analyst: The user promoting this bucket.
-    :type analyst: str
-    :returns: dict with keys "success" (boolean) and "message" (str)
-    """
-
-    return {'success': False,
-            'message': 'Feature not implimented in CRIPTS yet -Lakiw'}
 
 def alter_bucket_list(obj, buckets, val):
     """
@@ -959,13 +936,13 @@ def generate_bucket_jtable(request, option):
         return HttpResponse(json.dumps(response, default=json_handler),
                             content_type='application/json')
 
-    fields = ['name', 'Dataset', 'EmailAddress', 'Event', 'Hash', 'Target', 'UserName', 'Promote']
+    fields = ['name', 'Dataset', 'EmailAddress', 'Event', 'Hash', 'Target', 'UserName']
     jtopts = {'title': 'Buckets',
               'fields': fields,
               'listurl': 'jtlist',
               'searchurl': reverse('cripts.core.views.global_search_listing'),
               'default_sort': 'name ASC',
-              'no_sort': ['Promote'],
+              'no_sort': [],
               'details_link': ''}
     jtable = build_jtable(jtopts, request)
     for ctype in fields:
@@ -995,17 +972,7 @@ def generate_bucket_jtable(request, option):
                     field['display'] = """ function (data) {
                     return '<a href="%s&q='+encodeURIComponent(data.record.name)+'">' + data.record.name + '</a>';
                     }
-                    """ % url
-                elif ctype == 'Promote':
-                    # This is really ugly. I don't know of a better way to
-                    # use the campaign addition form and also submit name of
-                    # the bucket. So the form is POSTed but the URL also
-                    # has a bucket parameter that is for the name of the
-                    # to operate on.
-                    field['display'] = """ function (data) {
-            return '<div class="icon-container"><span class="add_button" data-intro="Add a campaign" data-position="right"><a href="#" action="%s?name='+encodeURIComponent(data.record.name)+'" class="ui-icon ui-icon-plusthick dialogClick" dialog="campaign-add" persona="promote" title="Promote to campaign"></a></span></div>'
-                    }
-                    """ % url
+                    """ % url 
                 else:
                     field['display'] = """ function (data) {
                     return '<a href="%s?bucket_list='+encodeURIComponent(data.record.name)+'">'+data.record.%s+'</a>';

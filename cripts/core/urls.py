@@ -12,7 +12,6 @@ urlpatterns = [
     url(r'^bucket/list/(?P<option>.+)$', 'cripts.core.views.bucket_list'),
     url(r'^bucket/mod/$', 'cripts.core.views.bucket_modify'),
     url(r'^bucket/autocomplete/$', 'cripts.core.views.bucket_autocomplete'),
-    url(r'^bucket/promote/$', 'cripts.core.views.bucket_promote'),
 
     # Common functionality for all TLOs
     url(r'^status/update/(?P<type_>\S+)/(?P<id_>\S+)/$', 'cripts.core.views.update_status'),

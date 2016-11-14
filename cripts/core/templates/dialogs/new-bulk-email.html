@@ -1,0 +1,9 @@
+<div id="dialog-{{ request.GET.dialog }}" title="Bulk Upload Email Addresses">
+    <form id="form-{{ request.GET.dialog }}" 
+	  action='{% url "crits.emaiL_addresses.views.bulk_upload_email" %}' 
+	  method='POST' enctype="multipart/form-data" target="email-iframe" 
+	  item-type="new-email" submit-action="default">
+    <table class="form">{{ upload_email.as_table }}</table>
+    <iframe name="email-iframe" class="file-submit-iframe" style="display:none;"></iframe>
+    </form>
+</div>
