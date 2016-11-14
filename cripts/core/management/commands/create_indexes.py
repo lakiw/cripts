@@ -4,7 +4,7 @@ from django.core.management.base import BaseCommand
 from django.conf import settings
 from optparse import make_option
 
-from crits.core.mongo_tools import mongo_connector
+from cripts.core.mongo_tools import mongo_connector
 
 class Command(BaseCommand):
     """

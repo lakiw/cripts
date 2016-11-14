@@ -31,7 +31,7 @@
 	menu.find("a").attr('href', $("#control_panel").attr('href'));
 	$(hmenu).find(".nav_admin").appendTo(menu.find("ul"));
 
-	menu = $("<li><a href>CRITs</a><ul class='sub-mmenu'></ul></li>")
+	menu = $("<li><a href>CRIPTs</a><ul class='sub-mmenu'></ul></li>")
 	    .insertBefore($(hmenu).find(".nav_main").first());
 	menu.find("a").attr('href', $("#dashboard").attr('href'));
 	$(hmenu).find(".nav_main").appendTo(menu.find("ul"));

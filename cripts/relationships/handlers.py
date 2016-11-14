@@ -82,6 +82,8 @@ def forge_relationship(type_=None, id_=None,
             return {'success': False, 'message': "Failed to get left TLO"}
     if not right_class:
         if right_type and right_id:
+            print ("right type:" + str(right_type))
+            print ("right id:" + str(right_id))
             right_class = class_from_id(right_type, right_id)
         if not right_class:
             return {'success': False, 'message': "Failed to get right TLO"}

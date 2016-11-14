@@ -27,7 +27,7 @@ from cripts.core.handlers import add_releasability, add_releasability_instance
 from cripts.core.handlers import remove_releasability, remove_releasability_instance
 from cripts.core.handlers import add_new_source, generate_counts_jtable
 from cripts.core.handlers import source_add_update, source_remove, source_remove_all
-from cripts.core.handlers import modify_bucket_list, promote_bucket_list
+from cripts.core.handlers import modify_bucket_list
 from cripts.core.handlers import download_object_handler, unflatten
 from cripts.core.handlers import modify_sector_list, validate_next
 from cripts.core.handlers import generate_bucket_jtable, generate_bucket_csv
@@ -64,6 +64,8 @@ from cripts.core.user_tools import get_api_key_by_name, create_api_key_by_name
 from cripts.core.user_tools import revoke_api_key_by_name, make_default_api_key_by_name
 from cripts.core.class_mapper import class_from_id
 from cripts.events.forms import EventForm
+from cripts.email_addresses.forms import EmailAddressForm
+from cripts.usernames.forms import UserNameForm
 from cripts.notifications.handlers import get_user_notifications
 from cripts.notifications.handlers import remove_user_from_notification
 from cripts.notifications.handlers import remove_user_notifications
@@ -298,7 +300,6 @@ def help(request):
     :type request: :class:`django.http.HttpRequest`
     :returns: :class:`django.http.HttpResponse`
     """
-
     return render_to_response('help.html',
                               {},
                               RequestContext(request))
@@ -312,7 +313,6 @@ def login(request):
     :type request: :class:`django.http.HttpRequest`
     :returns: :class:`django.http.HttpResponse`
     """
-
     # Gather basic request information
     cripts_config = CRIPTsConfig.objects().first()
     url = request.GET.get('next')
@@ -381,7 +381,6 @@ If you are already setup with TOTP, please enter your PIN + Key above."""
         # Even if it is remote user, try to get password.
         # Remote user will not have one so we pass None.
         password = request.POST.get('password', None)
-
         # TOTP can still be required for Remote Users
         totp_pass = request.POST.get('totp_pass', None)
 
@@ -391,7 +390,7 @@ If you are already setup with TOTP, please enter your PIN + Key above."""
             response['message'] = 'Unknown user or bad password.'
             return HttpResponse(json.dumps(response),
                                 content_type="application/json")
-
+        
         #This casues auth failures with LDAP and upper case name parts
         #username = username.lower()
 
@@ -784,36 +783,7 @@ def remove_all_source(request, obj_type, obj_id):
                                       {'error': error},
                                       RequestContext(request))
     return HttpResponse({})
-
-@user_passes_test(user_can_view_data)
-def bucket_promote(request):
-    """
-    Promote a bucket to a Campaign. Should be an AJAX POST.
-
-    :param request: Django request.
-    :type request: :class:`django.http.HttpRequest`
-    :returns: :class:`django.http.HttpResponse`
-    """
-
-    bucket = request.GET.get("name", None)
-    if not bucket:
-        return render_to_response("error.html",
-                                  {'error': 'Need a bucket.'},
-                                  RequestContext(request))
-    form = CampaignForm(request.POST)
-    if form.is_valid():
-        analyst = request.user.username
-        confidence = form.cleaned_data['confidence']
-        name = form.cleaned_data['name']
-        related = form.cleaned_data['related']
-        description = form.cleaned_data['description']
-        result = promote_bucket_list(bucket,
-                                     confidence,
-                                     name,
-                                     related,
-                                     description,
-                                     analyst)
-        return HttpResponse(json.dumps(result), content_type="application/json")
+    
 
 @user_passes_test(user_can_view_data)
 def bucket_modify(request):
@@ -1063,6 +1033,14 @@ def base_context(request):
             base_context['upload_event'] = EventForm(user)
         except Exception, e:
             logger.warning("Base Context EventForm Error: %s" % e)
+        try:
+            base_context['upload_email_address'] = EmailAddressForm(user)
+        except Exception, e:
+            logger.warning("Base Context EmailAddressForm Error: %s" %e)
+        try:
+            base_context['upload_username'] = UserNameForm(user)
+        except Exception, e:
+            logger.warning("Base Context UserNameForm Error: %s" %e)
         try:
             base_context['object_form'] = AddObjectForm(user, None)
         except Exception, e:

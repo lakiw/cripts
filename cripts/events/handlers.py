@@ -15,7 +15,6 @@ except ImportError:
 from cripts.core import form_consts
 from cripts.core.class_mapper import class_from_id
 from cripts.core.cripts_mongoengine import create_embedded_source, json_handler
-from cripts.core.cripts_mongoengine import EmbeddedCampaign
 from cripts.core.exceptions import ZipFileError
 from cripts.core.forms import DownloadFileForm
 from cripts.core.handlers import build_jtable, jtable_ajax_list
@@ -64,7 +63,6 @@ def get_event_details(event_id, analyst):
 
     event.sanitize("%s" % analyst)
 
-    campaign_form = CampaignForm()
     download_form = DownloadFileForm(initial={"obj_type": 'Event',
                                               "obj_id": event_id})
 
@@ -100,9 +98,6 @@ def get_event_details(event_id, analyst):
     #comments
     comments = {'comments': event.get_comments(), 'url_key': event.id}
 
-    #screenshots
-    screenshots = event.get_screenshots(analyst)
-
     # favorites
     favorite = is_user_favorite("%s" % analyst, 'Event', event.id)
 
@@ -119,9 +114,7 @@ def get_event_details(event_id, analyst):
             'favorite': favorite,
             'relationship': relationship,
             'subscription': subscription,
-            'screenshots': screenshots,
             'event': event,
-            'campaign_form': campaign_form,
             'service_results': service_results,
             'download_form': download_form}
 
@@ -194,7 +187,7 @@ def generate_event_jtable(request, option):
         {
             'tooltip': "'All Events'",
             'text': "'All'",
-            'click': "function () {$('#event_listing').jtable('load', {'refresh': 'yes'});}",
+            'click': "function () {$('#event_listing').jtable('load', {'refresh': 'yes','status': 'All'});}",
             'cssClass': "'jtable-toolbar-center'",
         },
         {
@@ -284,10 +277,6 @@ def add_new_event(title, description, event_type, source, method, reference,
     :param relationship_type: Type of relationship to create.
     :type relationship_type: str
     :returns: dict with keys "success" (boolean) and "message" (str)
-    :param campaign: Campaign to associate with this Event
-    :type campaign: str
-    :param campaign_confidence: Confidence to associate with the Campaign
-    :type campaign_confidence: str
     """
     result = dict()
     if not source:
@@ -304,27 +293,6 @@ def add_new_event(title, description, event_type, source, method, reference,
                                analyst=analyst,
                                date=date)
     event.add_source(s)
-
-    valid_campaign_confidence = {
-        'low': 'low',
-        'medium': 'medium',
-        'high': 'high'}
-    valid_campaigns = {}
-    for c in Campaign.objects(active='on'):
-        valid_campaigns[c['name'].lower()] = c['name']
-
-    if campaign:
-        if isinstance(campaign, basestring) and len(campaign) > 0:
-            if campaign.lower() not in valid_campaigns:
-                result = {'success':False, 'message':'{} is not a valid campaign.'.format(campaign)}
-            else:
-                confidence = valid_campaign_confidence.get(campaign_confidence, 'low')
-                campaign = EmbeddedCampaign(name=campaign,
-                                                   confidence=confidence,
-                                                   description="",
-                                                   analyst=analyst,
-                                                   date=datetime.datetime.now())
-                event.add_campaign(campaign)
 
     if bucket_list:
         event.add_bucket_list(bucket_list, analyst)
@@ -468,8 +436,6 @@ def add_sample_for_event(event_id, data, analyst, filedata=None, filename=None,
     source = data['source']
     reference = data['reference']
     file_format = data['file_format']
-    campaign = data['campaign']
-    confidence = data['confidence']
     bucket_list = data[form_consts.Common.BUCKET_LIST_VARIABLE_NAME]
     ticket = data[form_consts.Common.TICKET_VARIABLE_NAME]
     method = data['method']
@@ -502,8 +468,6 @@ def add_sample_for_event(event_id, data, analyst, filedata=None, filename=None,
                                           file_format,
                                           None,
                                           analyst,
-                                          campaign,
-                                          confidence,
                                           related_id=event.id,
                                           related_type='Event',
                                           filename=filename,

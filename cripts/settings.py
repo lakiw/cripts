@@ -139,6 +139,7 @@ COL_EMAIL_ADDRESSES = "email_addresses"                   # An email address fou
 COL_EVENTS = "events"                                     # main events collection
 COL_EVENT_TYPES = "event_types"                           # event types for events
 COL_HASHES = "hashes"                                     # password hashes
+COL_HASH_STATS ="hash_stats"                              # statistics about the individual hash types
 COL_IDB_ACTIONS = "idb_actions"                           # list of available actions to be taken with indicators
 COL_LOCATIONS = "locations"                               # Locations collection
 COL_NOTIFICATIONS = "notifications"                       # notifications collection
@@ -314,6 +315,7 @@ _TEMPLATE_DIRS = [
     os.path.join(SITE_ROOT, 'email_addresses/templates'),
     os.path.join(SITE_ROOT, 'events/templates'),
     os.path.join(SITE_ROOT, 'hashes/templates'),
+    os.path.join(SITE_ROOT, 'hash_types/templates'),
     os.path.join(SITE_ROOT, 'objects/templates'),
     os.path.join(SITE_ROOT, 'relationships/templates'),
     os.path.join(SITE_ROOT, 'services/templates'),
@@ -374,6 +376,7 @@ if old_mongoengine:
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'cripts.core.exceptions.ErrorMiddleware',
     # Only needed for mongoengine<0.10
     'cripts.core.user.AuthenticationMiddleware',
     )
@@ -383,7 +386,7 @@ if old_mongoengine:
     SESSION_SERIALIZER = 'mongoengine.django.sessions.BSONSerializer'
 
     AUTHENTICATION_BACKENDS = (
-        'cripts.core.user.CRITsAuthBackend',
+        'cripts.core.user.CRIPTsAuthBackend',
     )
 
 else:
@@ -403,7 +406,6 @@ else:
         'cripts.objects',
         'cripts.relationships',
         'cripts.services',
-        'cripts.signatures',
         'cripts.stats',
         'cripts.targets',
         'cripts.usernames',
@@ -420,14 +422,15 @@ else:
         'django.middleware.csrf.CsrfViewMiddleware',
         'django.contrib.messages.middleware.MessageMiddleware',
         'django.middleware.clickjacking.XFrameOptionsMiddleware',
+        'cripts.core.exceptions.ErrorMiddleware',
     )
     SESSION_ENGINE = 'django_mongoengine.sessions'
 
     SESSION_SERIALIZER = 'django_mongoengine.sessions.BSONSerializer'
 
     AUTHENTICATION_BACKENDS = (
-        'django_mongoengine.mongo_auth.backends.MongoEngineBackend',
-        'cripts.core.user.CRITsAuthBackend',
+        #'django_mongoengine.mongo_auth.backends.MongoEngineBackend',
+        'cripts.core.user.CRIPTsAuthBackend',
     )
 
 if REMOTE_USER:
@@ -444,6 +447,7 @@ if REMOTE_USER:
             'django.middleware.csrf.CsrfViewMiddleware',
             'cripts.core.user.AuthenticationMiddleware',
             'django.contrib.auth.middleware.RemoteUserMiddleware',
+            'cripts.core.exceptions.ErrorMiddleware',
         )
     else:
         MIDDLEWARE_CLASSES = (
@@ -454,6 +458,7 @@ if REMOTE_USER:
             'django.middleware.clickjacking.XFrameOptionsMiddleware',
             'django.middleware.csrf.CsrfViewMiddleware',
             'django.contrib.auth.middleware.RemoteUserMiddleware',
+            'cripts.core.exceptions.ErrorMiddleware',
         )
 
 MONGODB_DATABASES = {
@@ -525,11 +530,11 @@ CRIPTS_TYPES = {
     'AnalysisResult': COL_ANALYSIS_RESULTS,
     'Comment': COL_COMMENTS,
     'Dataset': COL_DATASETS,
-    'EmailAdress': COL_EMAIL_ADDRESSES,
+    'EmailAddress': COL_EMAIL_ADDRESSES,
     'Event': COL_EVENTS,
     'Hash': COL_HASHES,
     'Target': COL_TARGETS,
-    'Username': COL_USERNAMES,
+    'UserName': COL_USERNAMES,
     'Notification': COL_NOTIFICATIONS,
 }
 

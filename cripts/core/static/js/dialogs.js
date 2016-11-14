@@ -135,7 +135,7 @@ function populate_id(id, type) {
         if ($(this).dialog("persona") == "related") {
         $(this).find("form #id_related_id").val(id);
         $(this).find("form #id_related_type").val(type);
-        $(this).find("form").bind("addEditSubmitComplete",
+        $(this).find("form").bind("fileUploadComplete",
             function(e, response) {
                     $.ajax({
                       type: "POST",
@@ -160,6 +160,21 @@ function populate_id(id, type) {
                     })
               });
           }
+    });
+    $( "#dialog-new-bulk-email" ).on("dialogopen.add_related_email_address", function(e) {
+        if ($(this).dialog("persona") == "related") {
+        $(this).find("form #id_related_id").val(id);
+        $(this).find("form #id_related_type").val(type);
+        $(this).find("form").bind("fileUploadComplete",
+                    function(e, response) {
+                    $.ajax({
+                      type: "POST",
+                      success: function() {
+                          $('#relationship_box_container').load(location.href + " #relationship_box_container");
+                      }
+                    })
+              });
+        }
     });
     // Add a related Event (Using the related dialog persona)
     $( "#dialog-new-event" ).on("dialogopen.add_related_event", function(e) {
@@ -1104,6 +1119,14 @@ function new_event_dialog() {
     createPickers();
 }
 
+function new_email_address_dialog() {
+    createPickers();
+}
+
+function new_username_dialog() {
+    createPickers();
+}
+
 function add_email_yaml_template() {
 var template = "\
 to: \n\
@@ -1185,17 +1208,7 @@ function new_target_dialog(e) {
 /// Standard Dialog setup below
 
 var stdDialogs = {
-      "new-actor": {title: "Actor", personas: {related: newPersona("Add Related Actor", {}, addEditSubmit) } },
-      "new-actor-identifier": {title: "Actor Identifier"},
-      "actor_identifier_type_add": {title: "Actor Identifier Type"},
-      "new-email-raw": {title: "Email (Raw)", personas: {related: newPersona("Add Related Email (raw)", {}, addEditSubmit) } },
-      "new-email-fields": {title: "Email", personas: {related: newPersona("Add Related Email", {}, addEditSubmit) } },
-      "new-email-yaml": {title: "Email (YAML)", personas: {related: newPersona("Add Related Email (YAML)", {open: new_email_yaml_dialog}, addEditSubmit ) }, open: new_email_yaml_dialog },
-      "new-campaign": {title: "Campaign", personas: {related: newPersona("Add Related Campaign", {}, addEditSubmit) } },
-      "new-backdoor": {title: "Backdoor", personas: {related: newPersona("Add Related Backdoor", {}, addEditSubmit) } },
-      "new-exploit": {title: "Exploit", personas: {related: newPersona("Add Related Exploit",{}, addEditSubmit) } },
-      "new-domain": {title: "Domain", personas: {related: newPersona("Add Related Domain", {open: new_domain_dialog}, addEditSubmit ) }, open: new_domain_dialog },
-      "new-indicator": {title: "Indicator",  personas: {related: newPersona("Add Related Indicator", {open: new_indicator_dialog}, addEditSubmit ) }, open: new_indicator_dialog},
+      "new-email_address": {title: "New Email Address", personas: {related: newPersona("Add Related Email Address", {}, addEditSubmit) }, open: new_email_address_dialog  },
       "action_add": {title: "Action"},
       "add-action": {title: "Action", href:"",
 		       new: {open: function(e) {
@@ -1215,29 +1228,17 @@ var stdDialogs = {
                         });
                     }
                }},
-		       update: { open: update_dialog} },
-      "indicator-blob": {title: "New Indicator Blob", personas: {related: newPersona("Add Related Indicator Blob", {open: new_indicator_dialog}, addEditSubmit ) }, open: new_indicator_dialog },
+		       update: { open: update_dialog} }, 
 
       "new-event": {title: "Event", personas: {related: newPersona("Add Related Event", {open: new_event_dialog}, addEditSubmit ) }, open: new_event_dialog },
-      "new-ip": {title: "IP Address", personas: {related: newPersona("Add Related IP", {open: new_ip_dialog}, addEditSubmit ) }, open: new_ip_dialog },
-      "new-raw-data": {title: "Raw Data", personas: {related: newPersona("Add Related Raw Data", {}, addEditSubmit) } },
-      "raw_data_type_add": {title: "Raw Data Type"},
-
-      "new-signature": {title: "Signature", personas: {related: newPersona("Add Related Signature", {}, addEditSubmit) } },
-      "signature_type_add": {title: "Signature Type"},
-      "signature_dependency_add": {title: "Signature Dependency"},
 
       "new-target": {title: "Target", personas: {related: newPersona("Add Related Target", {open: new_target_dialog}, addEditSubmit ) }, open: new_target_dialog },
+      
+      "new-username": {title: "New UserName", personas: {related: newPersona("Add Related UserName", {}, addEditSubmit) }, open: new_username_dialog  },
 
       "source_create": {title: "Source"},
       "user_role": {title: "User Role"},
 
-      "campaign-add": { title: "Assign Campaign", personas: {
-          promote: newPersona("Promote to Campaign",
-                  { title: "Promote to Campaign" },
-                  addEditSubmit)
-      }
-      },
       "location-add": {title: "Add Location"},
       "ticket": {title: "Ticket",
          update: { open: update_dialog} },
@@ -1260,7 +1261,9 @@ var stdDialogs = {
 
   var fileDialogs = {
       // File Upload Dialogs
-      "new-dataset": {title: "Dataset", personas:{related: newPersona("Upload Related Dataset",
+      "new-dataset": {title: "Upload Dataset", personas:{related: newPersona("Upload Related Dataset",
+      {open: file_upload_dialog}, defaultSubmit) }, open: file_upload_dialog },
+      "new-bulk-email": {title: "Upload Bulk Email List", personas:{related: newPersona("Bulk Upload Related Email List",
       {open: file_upload_dialog}, defaultSubmit) }, open: file_upload_dialog },
   };
 

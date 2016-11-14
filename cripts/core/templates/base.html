@@ -322,8 +322,16 @@
       <a href id="new-dataset" class="ui-icon ui-icon-plusthick add dialogClick" dialog="new-dataset" persona="new" title="New Dataset"></a>
     </li>
     <li class='nav_objects mmenu_item'>
-      <a href="{% url 'cripts.email_addresses.views.email_addresses_listing' %}">Events</a>
+      <a href="{% url 'cripts.email_addresses.views.email_addresses_listing' %}">Email Addresses</a>
       <a href id="new-email_address" class="ui-icon ui-icon-plusthick add dialogClick" dialog="new-email_address" persona="new" title="New Email Address"></a>
+      <ul class='sub-mmenu'>
+        <li class='mmenu_item'>
+          <a href="{% url 'cripts.email_addresses.views.bulk_add_email_addresses' %}" id="bulk_upload_email_address">Bulk Upload Emails (Web GUI)</a>
+        </li>
+        <li class='mmenu_item'>
+          <a href="{% url 'cripts.email_addresses.views.bulk_file_upload_email_addresses' %}" id="bulk_file_upload_email_address">Bulk Upload Emails (File Upload)</a>
+        </li>
+      </ul>
     </li>
     <li class='nav_objects mmenu_item'>
       <a href="{% url 'cripts.events.views.events_listing' %}">Events</a>
@@ -435,12 +443,6 @@
 <!-- end nav -->
 {% endif %}
 
-<span id="selectedNodeMenu">
-    <button class="selected_text_button" id="selected_to_indicator" title="Add as Indicator">I</button>
-    <button class="selected_text_button" id="selected_to_domain" title="Add as Domain">D</button>
-    <button class="selected_text_button" id="selected_to_ip" title="Add as IP">IP</button>
-</span>
-
 <script type="text/javascript" src="{{ STATIC_URL }}js/core.js"></script>
 {% if enable_toasts == True %}
     {% if not request.user.prefs.toast_notifications or request.user.prefs.toast_notifications.enabled != False %}
@@ -452,7 +454,6 @@
 
 <script type="text/javascript" src="{{ STATIC_URL }}js/objects.js"></script>
 <script type="text/javascript" src="{{ STATIC_URL }}js/relationships.js"></script>
-<script type="text/javascript" src="{{ STATIC_URL }}js/screenshots.js"></script>
 
 <script type="text/javascript" src="{{ STATIC_URL }}js/key_nav.js"></script>
 

@@ -13,8 +13,5 @@ class Command(BaseCommand):
         Script Execution.
         """
 
-        stats.generate_sources()
-        stats.generate_filetypes()
         stats.generate_counts()
-        stats.target_user_stats()
 

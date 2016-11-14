@@ -1,6 +1,4 @@
-import uuid
-
-from mongoengine import Document, StringField, UUIDField
+from mongoengine import Document, StringField
 from django.conf import settings
 
 from cripts.core.cripts_mongoengine import CriptsBaseAttributes, CriptsSourceDocument
@@ -19,20 +17,20 @@ class Dataset(CriptsBaseAttributes, CriptsSourceDocument, CriptsActionsDocument,
         "latest_schema_version": 1,
         "schema_doc": {
             'name': 'Name of the dataset',
-            'source': ('List [] of sources who provided information about this'
-                ' dataset')
         },
         "jtable_opts": {
-                         'details_url': 'cripts.datasets.views.view_dataset',
+                         'details_url': 'cripts.datasets.views.dataset_detail',
                          'details_url_key': 'id',
-                         'default_sort': "created DESC",
+                         'default_sort': "modified DESC",
                          'searchurl': 'cripts.datasets.views.datasets_listing',
-                         'fields': [ "created",
-                                     "source", "id"],
-                         'jtopts_fields': [
+                         'fields': [ "created", "modified",
+                                     "source", "id", "status"],
+                         'jtopts_fields': [ "name",
                                             "created",
+                                            "modified",
                                             "source",
                                             "favorite",
+                                            "status",
                                             "id"],
                          'hidden_fields': [],
                          'linked_fields': ["source", ],
@@ -41,5 +39,8 @@ class Dataset(CriptsBaseAttributes, CriptsSourceDocument, CriptsActionsDocument,
                        }
 
     }
+    
+    id = StringField(required=True)
+    
 
     

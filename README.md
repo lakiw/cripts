@@ -1,10 +1,10 @@
 # Welcome to CRIPTs
 
-## Important! I am currently in the process of adding basic functionality. This project currently doesn't work and I am making no effort to ensure backwards compatability once I do get it working"
+## Important! I am currently in the process of adding basic functionality. This project currently doesn't work and I am making no effort to ensure backwards compatability once I do get it working
 
 ## What Is CRIPTs?
 
-CRIPTs is a fork of the CRITS toolset specifically altered to keep track of password datasets. The target audience for this is security researchers along with professional penitration testers.
+CRIPTs is a fork of the CRITS toolset specifically altered to keep track of password datasets. The target audience for this is security researchers along with professional penetration testers.
 
 ## What Is CRITs?
 

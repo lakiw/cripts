@@ -1,0 +1,8 @@
+<div id="dialog-{{ request.GET.dialog }}" title="Add New Email Address">
+    <form id="form-{{ request.GET.dialog }}" 
+	  action='{% url "cripts.email_addresses.views.add_email_address" %}' 
+	  method='POST' enctype="multipart/form-data" 
+	  item-type="email_address">
+    <table class="form">{{ upload_email_address.as_table }}</table>
+    </form>
+</div>

@@ -62,10 +62,13 @@ class EmailAddress():
     """
     Constants for EmailAddresses
     """
-    NAME = "Name"
+    EMAIL_ADDRESS = "Email Address"
+    DESCRIPTION = "Description"
+    SECTOR = "Sector"
     SOURCE = Common.SOURCE
     SOURCE_METHOD = "Source Method"
     SOURCE_REFERENCE = Common.SOURCE_REFERENCE
+    CACHED_RESULTS = "email_cached_results"
 
 class Event():
     """
@@ -99,10 +102,13 @@ class UserName():
     """
     Constants for Usernames
     """
-    NAME = "Name"
+    NAME = "UserName"
+    DESCRIPTION = "Description"
+    SECTOR = "Sector"
     SOURCE = Common.SOURCE
     SOURCE_METHOD = "Source Method"
     SOURCE_REFERENCE = Common.SOURCE_REFERENCE
+    CACHED_RESULTS = "username_cached_results"
     
 class NotificationType():
     ALERT = 'alert'

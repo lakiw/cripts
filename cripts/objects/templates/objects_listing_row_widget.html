@@ -42,15 +42,6 @@
                         <a style="display: inline;" href="{% url 'cripts.core.views.download_file' object.value %}?type=object">
                             <div class="ui-icon ui-icon-disk download_file"></div>
                         </a>
-                    {% else %}
-                        <span class="ui-icon ui-icon-pencil edit_object_value" title="Edit Value" style="float: right;"></span>
-                        {% if object|does_field_have_indicator:relationships %}
-                            <span class="ui-icon ui-icon-circle-plus indicator_from_object" title="Add Indicator: Warning: Indicator might already exist" data-type="{{ object_type }}" style="float: right;"></span>
-                        {% elif object.type|is_indicator_type %}
-                            <span class="ui-icon ui-icon-plusthick indicator_from_object" title="Add Indicator" data-type="{{ object_type }}" style="float: right;"></span>
-                        {% else %}
-                            <span class="ui-icon ui-icon-alert" title="Cannot add Indicator: Object Type not an Indicator Type" style="float: right;"></span>
-                        {% endif %}
                     {% endif %}
                     </div>
                 </td>
