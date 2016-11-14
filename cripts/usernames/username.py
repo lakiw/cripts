@@ -1,6 +1,6 @@
 import uuid
 
-from mongoengine import Document, StringField, UUIDField
+from mongoengine import Document, StringField, ListField, UUIDField
 from django.conf import settings
 
 from cripts.core.cripts_mongoengine import CriptsBaseAttributes, CriptsSourceDocument
@@ -18,28 +18,37 @@ class UserName(CriptsBaseAttributes, CriptsSourceDocument, CriptsActionsDocument
         "cripts_type": 'UserName',
         "latest_schema_version": 1,
         "schema_doc": {
-            'username': 'The actual username',
+            'name': 'The actual username',
+            'username_id': 'An ID corresponding to the username since using the raw username as the key can run into little bobby tables issues',
+            'description': 'Description of the e-mail address',
+            'datasets': ('List [] of datasets this username'
+                ' appeared in'),
             'source': ('List [] of sources who provided information about this'
-                ' username')
+                ' username'),
         },
         "jtable_opts": {
-                         'details_url': 'cripts.usernames.views.view_username',
-                         'details_url_key': 'id',
-                         'default_sort': "created DESC",
+                         'details_url': 'cripts.usernames.views.username_detail',
+                         'details_url_key': 'username_id',
+                         'default_sort': "name",
                          'searchurl': 'cripts.usernames.views.usernames_listing',
-                         'fields': [ "created",
-                                     "source", "id"],
-                         'jtopts_fields': [
+                         'fields': [ "name", "created",
+                                     "source", "id", "username_id"],
+                         'jtopts_fields': [ "name",
                                             "created",
                                             "source",
                                             "favorite",
-                                            "id"],
-                         'hidden_fields': [],
+                                            "id", "username_id"],
+                         'hidden_fields': ["username_id", "id"],
                          'linked_fields': ["source", ],
-                         'details_link': 'details',
-                         'no_sort': ['details']
+                         'details_link': 'name',
+                         'no_sort': []
                        }
 
     }
+    
+    name = StringField(required=True)
+    description = StringField(required=True)
+    username_id = UUIDField(binary=True, required=True, default=uuid.uuid4)
+    datasets = ListField(required=False)
 
     

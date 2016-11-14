@@ -1909,11 +1909,11 @@ class CriptsBaseAttributes(CriptsDocument, CriptsBaseDocument,
         rel_dict = dict((r.rel_type,[]) for r in self.relationships)
         query_dict = {
             'Dataset': ('id'),
-            'EmailAddress': ('id'),
+            'EmailAddress': ('id','address'),
             'Event': ('id', 'title', 'event_type', 'description'),
             'Hash': ('id'),
             'Target': ('id'),
-            'UserName': ('id'),
+            'UserName': ('id','name'),
         }
         rel_dict['Other'] = 0
         rel_dict['Count'] = len(self.relationships)

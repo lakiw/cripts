@@ -4,7 +4,10 @@
 </tr>
 <tr>
     <td>
-        <b>{{ rel_type}}{% if rel_type != 'RawData' %}s{% endif %}:</b>
+        <b>{% if rel_type == 'EmailAddress' %}Email Addresses
+           {% else %}{{rel_type}}s
+           {% endif %}:
+        </b>
         <span style="float: right;" class="ui-icon ui-icon-triangle-1-e relationships_dropdown"></span>
         <b><span class="rel_type_count">{{ rel_list|length }}</span></b>
     </td>
@@ -21,7 +24,8 @@
 					{% if rel_type == 'Dataset' %}
                         <th>Value</th>       
 					{% elif rel_type == 'EmailAddress' %}
-                        <th>Value</th>       
+                        <th>Address</th>
+                        <th>Description</th>
                     {% elif rel_type == 'Event' %}
                         <th>Title</th>
                         <th>Type</th>
@@ -31,7 +35,8 @@
 					{% elif rel_type == 'Target' %}
                         <th>Value</th>       
 					{% elif rel_type == 'UserName' %}
-                        <th>Value</th>       
+                        <th>Name</th>
+                        <th>Description</th>                        
                     {% endif %}
                     <th>Analyst</th>
                     <th>Date</th>
@@ -42,12 +47,17 @@
             <tbody>
                 {% for rel in rel_list %}
                     <tr mtype="{{ relationship.type }}" mvalue="{{ relationship.value }}" rtype="{{ rel_type }}" rvalue="{{ rel.value }}" frel="{{ rel.relationship }}" rdate="{{ rel.relationship_date }}" fdate="{{ rel.date }}" rConfidence="{{ rel.rel_confidence }}" {% if rel_type == 'Indicator' %} data-value="{{rel.ind_value}}" data-type="{{rel.ind_type}}"{% endif %}>
-                        <td style="width: 16px; padding: 0px"><a href="{% url 'cripts.core.views.details' rel_type rel.value %}" style="width: 16px; padding: 0px" class="ui-icon ui-icon-document" title="View Details"></a></td>
+                        {% if rel_type == 'EmailAddress' %}
+                            <td style="width: 16px; padding: 0px"><a href="{% url 'cripts.core.views.details' rel_type rel.address %}" style="width: 16px; padding: 0px" class="ui-icon ui-icon-document" title="View Details"></a></td>
+                        {% else %}
+                            <td style="width: 16px; padding: 0px"><a href="{% url 'cripts.core.views.details' rel_type rel.value %}" style="width: 16px; padding: 0px" class="ui-icon ui-icon-document" title="View Details"></a></td>
+                        {% endif %}                       
                         <td class="relationship_type_edit tooltip_edit" action="{% url 'cripts.relationships.views.update_relationship_type' %}">{{ rel.relationship }}</td>
                         {% if rel_type == 'Dataset' %}
                             <td>{{ rel.value }}</td>
 						{% elif rel_type == 'EmailAddress' %}
-                            <td>{{ rel.value }}</td>
+                            <td>{{ rel.address }}</td>
+                            <td>{{ rel.description|truncatechars:100 }}</td>
 						{% elif rel_type == 'Event' %}
                             <td>{{ rel.title }}</td>
                             <td>{{ rel.event_type }}</td>
@@ -57,7 +67,8 @@
 						{% elif rel_type == 'Target' %}
                             <td>{{ rel.value }}</td>
 						{% elif rel_type == 'UserName' %}
-                            <td>{{ rel.value }}</td>
+                            <td>{{ rel.name }}</td>
+                            <td>{{ rel.description|truncatechars:100 }}</td>
                         {% endif %}
 
                         <td width="125px">{{rel.analyst}}</td>

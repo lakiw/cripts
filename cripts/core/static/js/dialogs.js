@@ -135,7 +135,7 @@ function populate_id(id, type) {
         if ($(this).dialog("persona") == "related") {
         $(this).find("form #id_related_id").val(id);
         $(this).find("form #id_related_type").val(type);
-        $(this).find("form").bind("addEditSubmitComplete",
+        $(this).find("form").bind("fileUploadComplete",
             function(e, response) {
                     $.ajax({
                       type: "POST",
@@ -160,6 +160,21 @@ function populate_id(id, type) {
                     })
               });
           }
+    });
+    $( "#dialog-new-bulk-email" ).on("dialogopen.add_related_email_address", function(e) {
+        if ($(this).dialog("persona") == "related") {
+        $(this).find("form #id_related_id").val(id);
+        $(this).find("form #id_related_type").val(type);
+        $(this).find("form").bind("fileUploadComplete",
+                    function(e, response) {
+                    $.ajax({
+                      type: "POST",
+                      success: function() {
+                          $('#relationship_box_container').load(location.href + " #relationship_box_container");
+                      }
+                    })
+              });
+        }
     });
     // Add a related Event (Using the related dialog persona)
     $( "#dialog-new-event" ).on("dialogopen.add_related_event", function(e) {
@@ -1108,6 +1123,10 @@ function new_email_address_dialog() {
     createPickers();
 }
 
+function new_username_dialog() {
+    createPickers();
+}
+
 function add_email_yaml_template() {
 var template = "\
 to: \n\
@@ -1214,6 +1233,8 @@ var stdDialogs = {
       "new-event": {title: "Event", personas: {related: newPersona("Add Related Event", {open: new_event_dialog}, addEditSubmit ) }, open: new_event_dialog },
 
       "new-target": {title: "Target", personas: {related: newPersona("Add Related Target", {open: new_target_dialog}, addEditSubmit ) }, open: new_target_dialog },
+      
+      "new-username": {title: "New UserName", personas: {related: newPersona("Add Related UserName", {}, addEditSubmit) }, open: new_username_dialog  },
 
       "source_create": {title: "Source"},
       "user_role": {title: "User Role"},
@@ -1240,7 +1261,9 @@ var stdDialogs = {
 
   var fileDialogs = {
       // File Upload Dialogs
-      "new-dataset": {title: "Dataset", personas:{related: newPersona("Upload Related Dataset",
+      "new-dataset": {title: "Upload Dataset", personas:{related: newPersona("Upload Related Dataset",
+      {open: file_upload_dialog}, defaultSubmit) }, open: file_upload_dialog },
+      "new-bulk-email": {title: "Upload Bulk Email List", personas:{related: newPersona("Bulk Upload Related Email List",
       {open: file_upload_dialog}, defaultSubmit) }, open: file_upload_dialog },
   };
 

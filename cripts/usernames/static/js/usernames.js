@@ -1,5 +1,5 @@
 $(document).ready(function() {
-    $('#email_address_title').editable(function(value, settings) {
+    $('#username_title').editable(function(value, settings) {
         var revert = this.revert;
         return function(value, settings, elem) {
             var data = {
@@ -8,12 +8,12 @@ $(document).ready(function() {
             $.ajax({
                 type: "POST",
                 async: false,
-                url: update_email_address_title,
+                url: update_username_title,
                 data: data,
                 success: function(data) {
                     if (!data.success) {
                         value = revert;
-                        $('#email_address_title_error').text(data.message);
+                        $('#username_title_error').text(data.message);
                     }
                 }
             });
@@ -35,8 +35,8 @@ $(document).ready(function() {
     };
 
     $.each(localDialogs, function(id,opt) { stdDialog(id, opt); });
-    populate_id(email_address_id, 'EmailAddress');
-    details_copy_id('EmailAddress');
-    toggle_favorite('EmailAddress');
+    populate_id(username_id, 'UserName');
+    details_copy_id('UserName');
+    toggle_favorite('UserName');
 }); //document.ready
 

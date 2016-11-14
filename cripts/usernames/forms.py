@@ -7,28 +7,28 @@ from cripts.core.widgets import CalWidget
 from cripts.core.handlers import get_source_names, get_item_names
 from cripts.core.user_tools import get_user_organization
 
-class EmailAddressForm(forms.Form):
+class UserNameForm(forms.Form):
     """
-    Django form for creating a new Email Address.
+    Django form for creating a new UserNames.
     """
     error_css_class = 'error'
     required_css_class = 'required'
-    address = forms.CharField(widget=forms.TextInput, required=True,
-                               label=form_consts.EmailAddress.EMAIL_ADDRESS)
+    name = forms.CharField(widget=forms.TextInput, required=True,
+                               label=form_consts.UserName.NAME)
     description = forms.CharField(widget=forms.Textarea(attrs={'cols': '30',
                                                                'rows': '3'}),
-                                  label=form_consts.EmailAddress.DESCRIPTION, required=False)
+                                  label=form_consts.UserName.DESCRIPTION, required=False)
     source = forms.ChoiceField(required=True,
                                widget=forms.Select(attrs={'class': 'no_clear'}),
-                               label=form_consts.EmailAddress.SOURCE)
+                               label=form_consts.UserName.SOURCE)
     method = forms.CharField(required=False, widget=forms.TextInput,
-                             label=form_consts.EmailAddress.SOURCE_METHOD)
+                             label=form_consts.UserName.SOURCE_METHOD)
     reference = forms.CharField(required=False, widget=forms.TextInput,
-                                label=form_consts.EmailAddress.SOURCE_REFERENCE)
+                                label=form_consts.UserName.SOURCE_REFERENCE)
                                 
 
     def __init__(self, username, *args, **kwargs):
-        super(EmailAddressForm, self).__init__(*args, **kwargs)
+        super(UserNameForm, self).__init__(*args, **kwargs)
         self.fields['source'].choices = [(c.name,
                                           c.name) for c in get_source_names(True,
                                                                                True,

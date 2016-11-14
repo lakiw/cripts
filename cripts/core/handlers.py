@@ -55,6 +55,7 @@ from cripts.targets.target import Target
 from cripts.hashes.hash import Hash
 from cripts.datasets.dataset import Dataset
 from cripts.email_addresses.email_address import EmailAddress
+from cripts.usernames.username import UserName
 
 from cripts.core.totp import valid_totp
 
@@ -320,7 +321,8 @@ def favorite_update(type_, id_, analyst):
     :type analyst: str
     :returns: dict with keys "success" (boolean) and "message" (str)
     """
-
+    print ("type = " + str(type_))
+    print ("id = " +   str(id_ ))
     user = CRIPTsUser.objects(username=analyst).first()
     if not user:
         return {'success': False, 'message': 'Could not find user.'}
@@ -850,29 +852,6 @@ def get_item_names(obj, active=None):
             c = obj.objects(active='off').order_by('+name')
     return c
 
-def promote_bucket_list(bucket, confidence, name, related, description, analyst):
-    """
-    Promote a bucket to a Campaign. Every top-level object which is tagged with
-    this specific bucket will get attributed to the provided campaign.
-
-    :param bucket: The bucket to promote.
-    :type bucket: str
-    :param confidence: The Campaign confidence.
-    :type confidence: str
-    :param name: The Campaign name.
-    :type name: str
-    :param related: If we should extend this attribution to top-level objects
-                    related to these top-level objects.
-    :type related: boolean
-    :param description: A description of this Campaign attribution.
-    :type description: str
-    :param analyst: The user promoting this bucket.
-    :type analyst: str
-    :returns: dict with keys "success" (boolean) and "message" (str)
-    """
-
-    return {'success': False,
-            'message': 'Feature not implimented in CRIPTS yet -Lakiw'}
 
 def alter_bucket_list(obj, buckets, val):
     """
@@ -957,13 +936,13 @@ def generate_bucket_jtable(request, option):
         return HttpResponse(json.dumps(response, default=json_handler),
                             content_type='application/json')
 
-    fields = ['name', 'Dataset', 'EmailAddress', 'Event', 'Hash', 'Target', 'Username', 'Promote']
+    fields = ['name', 'Dataset', 'EmailAddress', 'Event', 'Hash', 'Target', 'UserName']
     jtopts = {'title': 'Buckets',
               'fields': fields,
               'listurl': 'jtlist',
               'searchurl': reverse('cripts.core.views.global_search_listing'),
               'default_sort': 'name ASC',
-              'no_sort': ['Promote'],
+              'no_sort': [],
               'details_link': ''}
     jtable = build_jtable(jtopts, request)
     for ctype in fields:
@@ -975,11 +954,17 @@ def generate_bucket_jtable(request, option):
             url = reverse('cripts.core.views.bucket_promote')
         else:
             lower = ctype.lower()
-            if lower != "rawdata":
-                url = reverse('cripts.%ss.views.%ss_listing' % (lower, lower))
-            else:
+            if lower == "raw_data":
                 lower = "raw_data"
                 url = reverse('cripts.%s.views.%s_listing' % (lower, lower))
+            elif lower == "emailaddress":
+                lower = "email_addresses"
+                url = reverse('cripts.%s.views.%s_listing' % (lower, lower))
+            elif lower == "hash":
+                lower = "hashes"
+                url = reverse('cripts.%s.views.%s_listing' % (lower, lower))
+            else:
+                url = reverse('cripts.%ss.views.%ss_listing' % (lower, lower))
 
         for field in jtable['fields']:
             if field['fieldname'].startswith("'" + ctype):
@@ -987,17 +972,7 @@ def generate_bucket_jtable(request, option):
                     field['display'] = """ function (data) {
                     return '<a href="%s&q='+encodeURIComponent(data.record.name)+'">' + data.record.name + '</a>';
                     }
-                    """ % url
-                elif ctype == 'Promote':
-                    # This is really ugly. I don't know of a better way to
-                    # use the campaign addition form and also submit name of
-                    # the bucket. So the form is POSTed but the URL also
-                    # has a bucket parameter that is for the name of the
-                    # to operate on.
-                    field['display'] = """ function (data) {
-            return '<div class="icon-container"><span class="add_button" data-intro="Add a campaign" data-position="right"><a href="#" action="%s?name='+encodeURIComponent(data.record.name)+'" class="ui-icon ui-icon-plusthick dialogClick" dialog="campaign-add" persona="promote" title="Promote to campaign"></a></span></div>'
-                    }
-                    """ % url
+                    """ % url 
                 else:
                     field['display'] = """ function (data) {
                     return '<a href="%s?bucket_list='+encodeURIComponent(data.record.name)+'">'+data.record.%s+'</a>';
@@ -3093,11 +3068,11 @@ def generate_global_search(request):
     if ObjectId.is_valid(searchtext):
         for obj_type, url, key in [
                 ['Dataset', 'cripts.datasets.views.dataset_details', 'id'],
-                ['EmailAddress', 'cripts.email_addresses.views.email_address_details', 'id'],
+                ['EmailAddress', 'cripts.email_addresses.views.email_address_details', 'address'],
                 ['Event', 'cripts.events.views.view_event', 'id'],
                 ['Hash', 'cripts.hashes.views.hash_details', 'id'],
                 ['Target', 'cripts.targets.views.target_details', 'id'],
-                ['UserName', 'cripts.usernames.views.username_details', 'id']]:
+                ['UserName', 'cripts.usernames.views.username_details', 'username_id']]:
             obj = class_from_id(obj_type, searchtext)
             if obj:
                 return {'url': url, 'key': obj[key]}
@@ -3311,7 +3286,7 @@ def details_from_id(type_, id_):
         if type_ == 'EmailAddress':
             arg = class_from_id(type_, id_)
             if arg:
-                arg = arg.name
+                arg = arg.address
         if type_ == 'Hash':
             arg = class_from_id(type_, id_)
             if arg:
@@ -3323,7 +3298,7 @@ def details_from_id(type_, id_):
         if type_ == 'UserName':
             arg = class_from_id(type_, id_)
             if arg:
-                arg = arg.name
+                arg = arg.username_id
         else:
             arg = id_
 
