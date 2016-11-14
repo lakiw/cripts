@@ -659,7 +659,7 @@ def get_supported_services(cripts_type):
     """
 
     services = CRIPTsService.objects(enabled=True)
-    for s in services:
+    for s in sorted(services, key=lambda s: s.name.lower()):
         if s.supported_types == 'all' or cripts_type in s.supported_types:
             yield s.name
 
