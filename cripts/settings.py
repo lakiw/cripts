@@ -409,12 +409,8 @@ if old_mongoengine:
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'cripts.core.exceptions.ErrorMiddleware',
     # Only needed for mongoengine<0.10
-<<<<<<< HEAD:cripts/settings.py
     'cripts.core.user.AuthenticationMiddleware',
-=======
-    'crits.core.user.AuthenticationMiddleware',
     'debug_toolbar.middleware.DebugToolbarMiddleware',
->>>>>>> upstream/master:crits/settings.py
     )
 
     SESSION_ENGINE = 'mongoengine.django.sessions'
