@@ -97,6 +97,7 @@ MONGO_DATABASE = 'cripts'                          # database name to connect to
 MONGO_SSL = False                                 # whether MongoD has SSL enabled
 MONGO_USER = ''                                   # username used to authenticate to mongo (normally empty)
 MONGO_PASSWORD = ''                               # password for the mongo user
+MONGO_REPLICASET = None                           # Name of RS, if mongod in replicaset
 
 # File storage backends
 S3 = "S3"
@@ -160,9 +161,10 @@ COL_USER_ROLES = "user_roles"                             # main user roles coll
 # MongoDB connection pool
 if MONGO_USER:
     connect(MONGO_DATABASE, host=MONGO_HOST, port=MONGO_PORT, read_preference=MONGO_READ_PREFERENCE, ssl=MONGO_SSL,
-            username=MONGO_USER, password=MONGO_PASSWORD)
+            replicaset=MONGO_REPLICASET, username=MONGO_USER, password=MONGO_PASSWORD)
 else:
-    connect(MONGO_DATABASE, host=MONGO_HOST, port=MONGO_PORT, read_preference=MONGO_READ_PREFERENCE, ssl=MONGO_SSL)
+    connect(MONGO_DATABASE, host=MONGO_HOST, port=MONGO_PORT, read_preference=MONGO_READ_PREFERENCE, ssl=MONGO_SSL,
+            replicaset=MONGO_REPLICASET)
 
 # Get config from DB
 c = MongoClient(MONGO_HOST, MONGO_PORT, ssl=MONGO_SSL)
@@ -275,10 +277,13 @@ STATIC_ROOT = os.path.join(SITE_ROOT, '../extras/www/static')
 STATIC_URL = '/static/'
 
 # List of callables that know how to import templates from various sources.
+#https://docs.djangoproject.com/en/dev/ref/templates/api/#django.template.loaders.cached.Loader
 _TEMPLATE_LOADERS = [
+    ('django.template.loaders.cached.Loader', [
     'django.template.loaders.filesystem.Loader',
     'django.template.loaders.app_directories.Loader',
     #'django.template.loaders.eggs.load_template_source',
+    ])
 ]
 
 #CACHES = {
@@ -344,6 +349,27 @@ STATICFILES_DIRS = (
 AUTH_USER_MODEL = 'mongo_auth.MongoUser'
 MONGOENGINE_USER_DOCUMENT = 'cripts.core.user.CRIPTsUser'
 
+# http://django-debug-toolbar.readthedocs.org/en/latest/configuration.html#debug-toolbar-panels
+DEBUG_TOOLBAR_PANELS = [
+    'debug_toolbar.panels.versions.VersionsPanel',
+    'vcs_info_panel.panels.GitInfoPanel',
+    'debug_toolbar.panels.timer.TimerPanel',
+    'debug_toolbar.panels.settings.SettingsPanel',
+    'debug_toolbar.panels.headers.HeadersPanel',
+    'debug_toolbar.panels.request.RequestPanel',
+    'template_timings_panel.panels.TemplateTimings.TemplateTimings',
+    'template_profiler_panel.panels.template.TemplateProfilerPanel',
+    'debug_toolbar_mongo.panel.MongoDebugPanel',
+    'debug_toolbar.panels.staticfiles.StaticFilesPanel',
+    'debug_toolbar.panels.templates.TemplatesPanel',
+    'debug_toolbar.panels.cache.CachePanel',
+    'debug_toolbar.panels.signals.SignalsPanel',
+    'debug_toolbar.panels.logging.LoggingPanel',
+    'debug_toolbar.panels.redirects.RedirectsPanel',
+    'debug_toolbar.panels.sql.SQLPanel',
+]
+INTERNAL_IPS = '127.0.0.1'
+
 if old_mongoengine:
     INSTALLED_APPS = (
         'cripts.core',
@@ -367,6 +393,11 @@ if old_mongoengine:
         'tastypie',
         'tastypie_mongoengine',
         'mongoengine.django.mongo_auth',
+        'template_timings_panel',
+        'template_profiler_panel',
+        'debug_toolbar_mongo',
+        'vcs_info_panel',
+        'debug_toolbar',
     )
 
     MIDDLEWARE_CLASSES = (
@@ -379,6 +410,7 @@ if old_mongoengine:
     'cripts.core.exceptions.ErrorMiddleware',
     # Only needed for mongoengine<0.10
     'cripts.core.user.AuthenticationMiddleware',
+    'debug_toolbar.middleware.DebugToolbarMiddleware',
     )
 
     SESSION_ENGINE = 'mongoengine.django.sessions'
@@ -413,6 +445,11 @@ else:
         'tastypie_mongoengine',
         'django_mongoengine',
         'django_mongoengine.mongo_auth',
+        'template_timings_panel',
+        'template_profiler_panel',
+        'debug_toolbar_mongo',
+        'vcs_info_panel',
+        'debug_toolbar',
         )
 
     MIDDLEWARE_CLASSES = (
@@ -423,6 +460,7 @@ else:
         'django.contrib.messages.middleware.MessageMiddleware',
         'django.middleware.clickjacking.XFrameOptionsMiddleware',
         'cripts.core.exceptions.ErrorMiddleware',
+        'debug_toolbar.middleware.DebugToolbarMiddleware',
     )
     SESSION_ENGINE = 'django_mongoengine.sessions'
 
@@ -448,6 +486,7 @@ if REMOTE_USER:
             'cripts.core.user.AuthenticationMiddleware',
             'django.contrib.auth.middleware.RemoteUserMiddleware',
             'cripts.core.exceptions.ErrorMiddleware',
+            'debug_toolbar.middleware.DebugToolbarMiddleware',
         )
     else:
         MIDDLEWARE_CLASSES = (
@@ -459,6 +498,7 @@ if REMOTE_USER:
             'django.middleware.csrf.CsrfViewMiddleware',
             'django.contrib.auth.middleware.RemoteUserMiddleware',
             'cripts.core.exceptions.ErrorMiddleware',
+            'debug_toolbar.middleware.DebugToolbarMiddleware',
         )
 
 MONGODB_DATABASES = {

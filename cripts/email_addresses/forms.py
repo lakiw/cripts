@@ -37,3 +37,29 @@ class EmailAddressForm(forms.Form):
         
         add_bucketlist_to_form(self)
         add_ticket_to_form(self)
+  
+  
+class UploadEmailAddressForm(forms.Form):
+    """
+    Django form for uploading Email Addresses.
+    """
+    error_css_class = 'error'
+    required_css_class = 'required'
+    filedata = forms.FileField(label="Newline seperated list of email addresses")
+    source = forms.ChoiceField(required=True,
+                               widget=forms.Select(attrs={'class': 'no_clear'}),
+                               label=form_consts.EmailAddress.SOURCE)
+    method = forms.CharField(required=False, widget=forms.TextInput,
+                             label=form_consts.EmailAddress.SOURCE_METHOD)
+    reference = forms.CharField(required=False, widget=forms.TextInput,
+                                label=form_consts.EmailAddress.SOURCE_REFERENCE)
+                                
+
+    def __init__(self, username, *args, **kwargs):
+        super(UploadEmailAddressForm, self).__init__(*args, **kwargs)
+        self.fields['source'].choices = [(c.name,
+                                          c.name) for c in get_source_names(True,
+                                                                               True,
+                                                                               username)]
+        self.fields['source'].initial = get_user_organization(username)
+        

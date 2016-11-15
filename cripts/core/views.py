@@ -64,7 +64,7 @@ from cripts.core.user_tools import get_api_key_by_name, create_api_key_by_name
 from cripts.core.user_tools import revoke_api_key_by_name, make_default_api_key_by_name
 from cripts.core.class_mapper import class_from_id
 from cripts.events.forms import EventForm
-from cripts.email_addresses.forms import EmailAddressForm
+from cripts.email_addresses.forms import EmailAddressForm, UploadEmailAddressForm
 from cripts.usernames.forms import UserNameForm
 from cripts.notifications.handlers import get_user_notifications
 from cripts.notifications.handlers import remove_user_from_notification
@@ -1038,6 +1038,10 @@ def base_context(request):
         except Exception, e:
             logger.warning("Base Context EmailAddressForm Error: %s" %e)
         try:
+            base_context['bulk_upload_email_address'] = UploadEmailAddressForm(user)
+        except Exception, e:
+            logger.warning("Base Context  Bulk UploadEmailAddressForm Error: %s" %e)
+        try:
             base_context['upload_username'] = UserNameForm(user)
         except Exception, e:
             logger.warning("Base Context UserNameForm Error: %s" %e)
@@ -1049,7 +1053,6 @@ def base_context(request):
             base_context['releasability_form'] = AddReleasabilityForm(user)
         except Exception, e:
             logger.warning("Base Context AddReleasabilityForm Error: %s" % e)
-
 
         # Other info acquired from functions
         try:
@@ -2068,10 +2071,11 @@ def remove_action(request, obj_type, obj_id):
     if request.method == "POST" and request.is_ajax():
         analyst = request.user.username
         if is_admin(analyst):
-            date = datetime.datetime.strptime(request.POST['key'],
+            key = request.POST['key'].split(',')
+            date = datetime.datetime.strptime(key[0],
                                               settings.PY_DATETIME_FORMAT)
             date = date.replace(microsecond=date.microsecond/1000*1000)
-            result = action_remove(obj_type, obj_id, date, analyst)
+            result = action_remove(obj_type, obj_id, date, key[1], analyst)
             return HttpResponse(json.dumps(result),
                                 content_type="application/json")
         else:

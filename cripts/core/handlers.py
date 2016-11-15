@@ -99,13 +99,13 @@ def action_add(type_, id_, tlo_action, user=None, **kwargs):
                        tlo_action['end_date'],
                        tlo_action['performed_date'],
                        tlo_action['reason'],
-                       tlo_action['date'])
+                       date = datetime.datetime.now())
         obj.save(username=user)
         return {'success': True, 'object': tlo_action}
     except (ValidationError, TypeError, KeyError), e:
         return {'success': False, 'message': e}
 
-def action_remove(type_, id_, date, user, **kwargs):
+def action_remove(type_, id_, date, action, user, **kwargs):
     """
     Remove an action from a TLO.
 
@@ -115,6 +115,8 @@ def action_remove(type_, id_, date, user, **kwargs):
     :type id_: str
     :param date: The date of the action to remove.
     :type date: datetime.datetime
+    :param action: The name of the action to remove.
+    :type action: str
     :param analyst: The user removing the action.
     :type analyst: str
     :returns: dict with keys "success" (boolean) and "message" (str) if failed.
@@ -134,7 +136,7 @@ def action_remove(type_, id_, date, user, **kwargs):
                 'message': 'Could not find TLO'}
     try:
         date = datetime_parser(date)
-        obj.delete_action(date)
+        obj.delete_action(date, action)
         obj.save(username=user)
         return {'success': True}
     except (ValidationError, TypeError), e:
@@ -1629,7 +1631,7 @@ def gen_global_query(obj,user,term,search_type="global",force_full=False):
             ]
         elif type_ == "EmailAddress":
             search_list = [
-                    {'name': search_query},
+                    {'address': search_query},
                     {'objects.value': search_query},
                 ]
         elif type_ == "Dataset":
@@ -2857,7 +2859,7 @@ def user_login(request, user):
     SESSION_KEY = '_auth_user_id'
     BACKEND_SESSION_KEY = '_auth_user_backend'
     HASH_SESSION_KEY = '_auth_user_hash'
-    REDIRECT_FIELD_NAME = 'next'
+    #REDIRECT_FIELD_NAME = 'next'
     session_auth_hash = ''
     if user is None:
         user = request.user
