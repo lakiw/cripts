@@ -329,7 +329,7 @@
           <a href="{% url 'cripts.email_addresses.views.bulk_add_email_addresses' %}" id="bulk_upload_email_address">Bulk Upload Emails (Web GUI)</a>
         </li>
         <li class='mmenu_item'>
-          <a href="{% url 'cripts.email_addresses.views.bulk_file_upload_email_addresses' %}" id="bulk_file_upload_email_address">Bulk Upload Emails (File Upload)</a>
+          <a href="#" action="{% url 'cripts.email_addresses.views.bulk_file_upload_email_addresses' %}" class="dialogClick" dialog="new-bulk-email" persona="new" title="Upload Email List File">Upload Email List File</a>
         </li>
       </ul>
     </li>
