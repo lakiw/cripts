@@ -295,7 +295,7 @@ def add_new_email_address(data, rowData, request, errors, is_validate_only=False
     return result, errors, retVal
 
  
-def email_address_add_update(address, description, source=None, method='', reference='',
+def email_address_add_update(address, description=None, source=None, method='', reference='',
                   analyst=None, datasets=None, bucket_list=None, ticket=None,
                   is_validate_only=False, cache={}, related_id=None,
                   related_type=None, relationship_type=None):
@@ -310,6 +310,8 @@ def email_address_add_update(address, description, source=None, method='', refer
         if ' ' in address:
             raise ValueError
         local_name, domain_part = address.strip().split('@', 1)
+        if len(local_name) == 0 or len(domain_part) == 0:
+            raise ValueError
         # lowercase the domain name and recreate the e-mail address
         address = '@'.join([local_name, domain_part.lower()])
     except ValueError:
@@ -339,7 +341,8 @@ def email_address_add_update(address, description, source=None, method='', refer
     if not email_object.description:
         email_object.description = description or ''
     elif email_object.description != description:
-        email_object.description += "\n" + (description or '')
+        if description:
+            email_object.description += "\n" + (description or '')
 
     if isinstance(source, basestring):
         source = [create_embedded_source(source,
@@ -497,3 +500,39 @@ def get_email_address_details(address, analyst):
             'service_results': service_results}
 
     return template, args
+
+#################################################################################
+# Processess a file upload of email addresses
+# The email address file should be plain text and newline seperated
+#################################################################################    
+def handle_email_list_file(filename, data, source, user, method=None):
+    retVal = {}
+    retVal['success'] = False
+    retVal['message'] = 'No email addresses found in file'
+    results_count = {'Added':0, 'Modified':0, 'Invalid':0}
+    
+    for address in data.splitlines():
+        result = email_address_add_update(address, description=None, source=source, method=method, reference='',
+                  analyst=user, datasets=None, bucket_list=None, ticket=None,
+                  is_validate_only=False, cache={}, related_id=None,
+                  related_type=None, relationship_type=None)
+        
+        ##--Update the statistics of the success of adding emails to the database--##        
+        try:
+            ##--If it was an invalid e-mail address
+            if result['success'] == False:
+                results_count['Invalid'] = results_count['Invalid'] + 1
+            ##--If it was a valid e-mail address
+            else:
+                ##--If it was a duplicate
+                if 'status' in result and result['status'] == form_consts.Status.DUPLICATE:
+                    results_count['Modified'] = results_count['Modified'] + 1
+                else:
+                    results_count['Added'] = results_count['Added'] + 1
+        except Exception as e:
+            results_count['Invalid'] = results_count['Invalid'] + 1
+            
+    retVal['success'] = True
+    retVal['message'] = "New emails: " + str(results_count['Added']) + "<br>Modified emails: " + str(results_count['Modified']) + "<br>Invalid Entries: " + str(results_count['Invalid'])
+    
+    return retVal

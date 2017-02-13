@@ -57,6 +57,9 @@ class Dataset():
     SOURCE = Common.SOURCE
     SOURCE_METHOD = "Source Method"
     SOURCE_REFERENCE = Common.SOURCE_REFERENCE    
+    DESCRIPTION = "Description"
+    SECTOR = "Sector"
+    CACHED_RESULTS = "dataset_cached_results"
 
 class EmailAddress():
     """

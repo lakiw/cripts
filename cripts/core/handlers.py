@@ -1631,7 +1631,7 @@ def gen_global_query(obj,user,term,search_type="global",force_full=False):
             ]
         elif type_ == "EmailAddress":
             search_list = [
-                    {'name': search_query},
+                    {'address': search_query},
                     {'objects.value': search_query},
                 ]
         elif type_ == "Dataset":
