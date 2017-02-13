@@ -6,6 +6,7 @@ from django.http import HttpResponse
 from django.shortcuts import render_to_response
 from django.template import RequestContext
 
+from cripts.core import form_consts
 from cripts.core.handlers import csv_export
 from cripts.core.handlers import build_jtable, jtable_ajax_list
 from cripts.datasets.dataset import Dataset
@@ -183,7 +184,7 @@ def dataset_add_update(name, description=None, source=None, method='', reference
             retVal['message'] = 'Related Object not found.'
             return retVal
 
-    resp_url = reverse('cripts.datasets.views.email_address_detail', args=[dataset_object.name])
+    resp_url = reverse('cripts.datasets.views.dataset_detail', args=[dataset_object.name])
 
     if is_validate_only == False:
         dataset_object.save(username=analyst)
@@ -191,7 +192,7 @@ def dataset_add_update(name, description=None, source=None, method='', reference
         #set the URL for viewing the new data
         if is_item_new == True:
             
-            # Update the email stats
+            # Update the dataset stats
             counts = mongo_connector(settings.COL_COUNTS)
             count_stats = counts.find_one({'name': 'counts'})
             if not count_stats or ('counts' not in count_stats):
@@ -237,3 +238,79 @@ def dataset_add_update(name, description=None, source=None, method='', reference
     retVal['object'] = dataset_object
 
     return retVal
+    
+
+def get_dataset_details(name, analyst):
+    """
+    Generate the data to render the Dataset details template.
+
+    :param name: The name of the dataset to get details for.
+    :type name: str
+    :param analyst: The user requesting this information.
+    :type analyst: str
+    :returns: template (str), arguments (dict)
+    """
+
+    template = None
+    allowed_sources = user_sources(analyst)
+    dataset_object = Dataset.objects(name = name,
+                           source__name__in=allowed_sources).first()
+    if not dataset_object:
+        error = ("Either no data exists for this dataset"
+                 " or you do not have permission to view it.")
+        template = "error.html"
+        args = {'error': error}
+        return template, args
+
+    dataset_object.sanitize_sources(username="%s" % analyst,
+                           sources=allowed_sources)
+
+    # remove pending notifications for user
+    remove_user_from_notification("%s" % analyst, dataset_object.id, 'Dataset')
+
+    # subscription
+    subscription = {
+            'type': 'Dataset',
+            'id': dataset_object.id,
+            'subscribed': is_user_subscribed("%s" % analyst,
+                                             'Dataset',
+                                             dataset_object.id),
+    }
+
+    #objects
+    objects = dataset_object.sort_objects()
+
+    #relationships
+    relationships = dataset_object.sort_relationships("%s" % analyst, meta=True)
+
+    # relationship
+    relationship = {
+            'type': 'Datset',
+            'value': dataset_object.id
+    }
+
+    #comments
+    comments = {'comments': dataset_object.get_comments(),
+                'url_key':dataset_object.name}
+
+    # favorites
+    favorite = is_user_favorite("%s" % analyst, 'Dataset', dataset_object.id)
+
+    # services
+    service_list = get_supported_services('Dataset')
+
+    # analysis results
+    service_results = dataset_object.get_analysis_results()
+
+    args = {'dataset': dataset_object,
+            'objects': objects,
+            'relationships': relationships,
+            'comments': comments,
+            'favorite': favorite,
+            'relationship': relationship,
+            'subscription': subscription,
+            'name': dataset_object.name,
+            'service_list': service_list,
+            'service_results': service_results}
+
+    return template, args
