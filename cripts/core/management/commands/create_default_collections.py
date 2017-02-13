@@ -5,11 +5,15 @@ from django.core.management.base import BaseCommand
 from optparse import make_option
 
 from create_indexes import create_indexes
+from create_locations import add_location_objects
 from setconfig import create_config_if_not_exist
 from create_default_dashboard import create_dashboard
 
-from cripts.core.cripts_mongoengine import Action
-from cripts.core.user_role import UserRole
+from crits.core.crits_mongoengine import Action
+from crits.core.user_role import UserRole
+from crits.domains.domain import TLD
+from crits.raw_data.raw_data import RawDataType
+from crits.signatures.signature import SignatureType
 
 
 class Command(BaseCommand):
@@ -25,7 +29,7 @@ class Command(BaseCommand):
                     default=False,
                     help='Drop existing content before adding.'),
     )
-    help = 'Creates default CRIPTs collections in MongoDB.'
+    help = 'Creates default CRITs collections in MongoDB.'
 
     def handle(self, *args, **options):
         """
@@ -39,8 +43,13 @@ class Command(BaseCommand):
             print "Drop protection enabled. Will not drop existing content!"
         populate_user_roles(drop)
         populate_actions(drop)
-
+        populate_raw_data_types(drop)
+        populate_signature_types(drop)
         # The following will always occur with every run of this script:
+        #   - tlds are based off of a Mozilla TLD list so it should never
+        #     contain  entries outside of the ones provided.
+        populate_tlds(drop)
+        add_location_objects(drop)
         create_dashboard(drop)
         create_config_if_not_exist()
         create_indexes()
@@ -91,4 +100,67 @@ def populate_actions(drop):
         print "Actions: existing documents detected. skipping!"
 
 
+def populate_raw_data_types(drop):
+    """
+    Populate default set of raw data types into the system.
 
+    :param drop: Drop the existing collection before trying to populate.
+    :type: boolean
+    """
+
+    # define your raw data types here
+    data_types = ['Text', 'JSON']
+    if drop:
+        RawDataType.drop_collection()
+    if len(RawDataType.objects()) < 1:
+        for data_type in data_types:
+            dt = RawDataType()
+            dt.name = data_type
+            dt.save()
+        print "Raw Data Types: added %s types!" % len(data_types)
+    else:
+        print "Raw Data Types: existing documents detected. skipping!"
+
+
+def populate_signature_types(drop):
+    """
+    Populate default set of signature types into the system.
+
+    :param drop: Drop the existing collection before trying to populate.
+    :type: boolean
+    """
+
+    # define your signature types here
+    data_types = ['Bro', 'Snort', 'Yara']
+    if drop:
+        SignatureType.drop_collection()
+    if len(SignatureType.objects()) < 1:
+        for data_type in data_types:
+            dt = SignatureType()
+            dt.name = data_type
+            dt.save()
+        print "Signature Types: added %s types!" % len(data_types)
+    else:
+        print "Signature Types: existing documents detected. skipping!"
+
+
+def populate_tlds(drop):
+    """
+    Populate default set of TLDs into the system.
+
+    :param drop: Drop the existing collection before trying to populate.
+    :type: boolean
+    """
+
+    if not drop:
+        print "Drop protection does not apply to effective TLDs"
+    TLD.drop_collection()
+    f = os.path.join(settings.SITE_ROOT, '..', 'extras', 'effective_tld_names.dat')
+    count = 0
+    for line in open(f, 'r').readlines():
+        line = line.strip()
+        if line and not line.startswith('//'):
+            line = line.replace("*.", "")
+            TLD.objects(tld=line).update_one(set__tld=line, upsert=True)
+            count += 1
+    print "Effective TLDs: added %s TLDs!" % count

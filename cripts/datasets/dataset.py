@@ -20,18 +20,18 @@ class Dataset(CriptsBaseAttributes, CriptsSourceDocument, CriptsActionsDocument,
         },
         "jtable_opts": {
                          'details_url': 'cripts.datasets.views.dataset_detail',
-                         'details_url_key': 'id',
+                         'details_url_key': 'name',
                          'default_sort': "modified DESC",
                          'searchurl': 'cripts.datasets.views.datasets_listing',
-                         'fields': [ "created", "modified",
-                                     "source", "id", "status"],
+                         'fields': [ "name", "created", "modified",
+                                     "source", "status"],
                          'jtopts_fields': [ "name",
                                             "created",
                                             "modified",
                                             "source",
                                             "favorite",
                                             "status",
-                                            "id"],
+                                            ],
                          'hidden_fields': [],
                          'linked_fields': ["source", ],
                          'details_link': 'details',
@@ -41,6 +41,7 @@ class Dataset(CriptsBaseAttributes, CriptsSourceDocument, CriptsActionsDocument,
     }
     
     id = StringField(required=True)
+    name = StringField(required=True)
     
 
     
