@@ -44,7 +44,7 @@ def upload_dataset(request):
             Returns a rendered HTML form for a bulk add of IPs
         If the request is a POST and a Ajax call then:
             Returns a response that contains information about the
-            status of the bulk uploaded Email Addresses. This may include information
+            status of the bulk uploaded Datasets. This may include information
             such as Dataset Name that failed or successfully added. This may
             also contain helpful status messages about each operation.
     """
@@ -55,16 +55,24 @@ def upload_dataset(request):
             cleaned_data = form.cleaned_data
             name = cleaned_data.get('name')
             description = cleaned_data.get('description')
+            hash_type = cleaned_data.get('hash_type')
+            dataset_format = cleaned_data.get('dataset_format')
             filedata = request.FILES['filedata']
             filename = filedata.name
             hash_data = filedata.read() # XXX: Should be using chunks here.
             source = cleaned_data.get('source')
             method = cleaned_data.get('method')
             user = request.user.username
-
-            status = dataset_add_update(name, description, source, method, reference='',
+            related_id = cleaned_data['related_id']
+            related_type = cleaned_data['related_type']
+            relationship_type = cleaned_data['relationship_type']
+            
+            status = dataset_add_update(name, hash_type, dataset_format, hash_data, description, source, method, reference='',
                   analyst=request.user.username, bucket_list=cleaned_data[form_consts.Common.BUCKET_LIST_VARIABLE_NAME], 
                   ticket=cleaned_data[form_consts.Common.TICKET_VARIABLE_NAME],
+                  related_id=related_id,
+                  related_type=related_type,
+                  relationship_type=relationship_type,
                   is_validate_only=False)
                   
             if status['success']:
@@ -95,13 +103,12 @@ def dataset_detail(request, name):
     :param request: Django request.
     :type request: :class:`django.http.HttpRequest`
     :param name: The dataset to get details for.
-    :type address: str
     :returns: :class:`django.http.HttpResponse`
     """
 
     template = "dataset_detail.html"
     analyst = request.user.username
-    (new_template, args) = get_dataset_details(address,
+    (new_template, args) = get_dataset_details(name,
                                               analyst)
     if new_template:
         template = new_template

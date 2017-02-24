@@ -48,12 +48,18 @@ def add_email_address(request):
         email_address_form = EmailAddressForm(request.user, request.POST)
         if email_address_form.is_valid():
             data = email_address_form.cleaned_data
+            related_id = data['related_id']
+            related_type = data['related_type']
+            relationship_type = data['relationship_type']
             result = email_address_add_update(address=data['address'],
                                    description=data['description'],
                                    source=data['source'],
                                    method=data['method'],
                                    reference=data['reference'],
                                    datasets = None,
+                                   related_id=related_id,
+                                   related_type=related_type,
+                                   relationship_type=relationship_type,
                                    bucket_list=data[form_consts.Common.BUCKET_LIST_VARIABLE_NAME],
                                    ticket=data[form_consts.Common.TICKET_VARIABLE_NAME],
                                    analyst=request.user.username)

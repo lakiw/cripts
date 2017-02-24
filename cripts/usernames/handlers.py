@@ -22,6 +22,8 @@ from cripts.core.handsontable_tools import convert_handsontable_to_rows, parse_b
 from cripts.core.cripts_mongoengine import create_embedded_source, json_handler
 from cripts.services.handlers import run_triage, get_supported_services
 from cripts.notifications.handlers import remove_user_from_notification
+from cripts.core.class_mapper import class_from_value
+from cripts.vocabulary.relationships import RelationshipTypes
 
 from cripts.usernames.username import UserName
 from cripts.usernames.forms import UserNameForm
@@ -350,7 +352,7 @@ def username_add_update(name, description, source=None, method='', reference='',
 
     related_obj = None
     if related_id:
-        related_obj = class_from_id(related_type, related_id)
+        related_obj = class_from_value(related_type, related_id)
         if not related_obj:
             retVal['success'] = False
             retVal['message'] = 'Related Object not found.'
@@ -370,7 +372,7 @@ def username_add_update(name, description, source=None, method='', reference='',
             if not count_stats or ('counts' not in count_stats):
                 count_stats = {'counts':{}}
             if 'UserNames' not in count_stats['counts']:
-                count_stats['counts']['UserNames'] = 0
+                count_stats['counts']['UserNames'] = 1
             else:
                 count_stats['counts']['UserNames'] = count_stats['counts']['UserNames'] + 1
             
@@ -483,7 +485,8 @@ def get_username_details(username_id, analyst):
             'subscription': subscription,
             'name': username_object.name,
             'service_list': service_list,
-            'service_results': service_results}
+            'service_results': service_results,
+            'id': username_object.id}
 
     return template, args
 

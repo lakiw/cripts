@@ -5,14 +5,26 @@ from django.core.urlresolvers import reverse
 from django.http import HttpResponse
 from django.shortcuts import render_to_response
 from django.template import RequestContext
+from django.conf import settings
 
+try:
+    from mongoengine.base import ValidationError
+except ImportError:
+    from mongoengine.errors import ValidationError
+
+from cripts.core.mongo_tools import mongo_connector
 from cripts.core import form_consts
+from cripts.core.user_tools import is_admin, user_sources, is_user_favorite
+from cripts.core.user_tools import is_user_subscribed
 from cripts.core.handlers import csv_export
-from cripts.core.handlers import build_jtable, jtable_ajax_list
+from cripts.core.handlers import build_jtable, jtable_ajax_list, jtable_ajax_delete
 from cripts.datasets.dataset import Dataset
 from cripts.core.cripts_mongoengine import create_embedded_source, json_handler
-
+from cripts.notifications.handlers import remove_user_from_notification
+from cripts.services.handlers import run_triage, get_supported_services
 from cripts.datasets.forms import DatasetForm
+from cripts.core.class_mapper import class_from_value
+from cripts.vocabulary.relationships import RelationshipTypes
 
 def generate_dataset_csv(request):
     """
@@ -54,6 +66,18 @@ def generate_dataset_jtable(request, option):
     if option == "jtdelete":
         response = {"Result": "ERROR"}
         if jtable_ajax_delete(obj_type,request):
+            
+            # Update the dataset stats
+            counts = mongo_connector(settings.COL_COUNTS)
+            count_stats = counts.find_one({'name': 'counts'})
+            if not count_stats or ('counts' not in count_stats):
+                count_stats = {'counts':{}}
+            if 'Datasets' not in count_stats['counts']:
+                count_stats['counts']['Datasets'] = 0
+            else:
+                count_stats['counts']['Datasets'] = count_stats['counts']['Datasets'] - 1                                
+            counts.update({'name': "counts"}, {'$set': {'counts': count_stats['counts']}}, upsert=True) 
+            
             response = {"Result": "OK"}
         return HttpResponse(json.dumps(response,
                                        default=json_handler),
@@ -121,42 +145,30 @@ def generate_dataset_jtable(request, option):
                                   {'jtable': jtable,
                                    'jtid': '%s_listing' % type_},
                                   RequestContext(request))
-                                  
-def dataset_add_update(name, description=None, source=None, method='', reference='',
+       
+       
+def dataset_add_update(name, hash_type, dataset_format, hash_data, description=None, source=None, method='', reference='',
                   analyst=None, bucket_list=None, ticket=None,
                   is_validate_only=False, cache={}, related_id=None,
                   related_type=None, relationship_type=None):
 
-    retVal = {}
+    retVal = {}           
+
+    dataset_object = Dataset.objects(name=name).first()
     
-    if not source:
-        return {"success" : False, "message" : "Missing source information."}              
-        
-    is_item_new = False
-
-    dataset_object = None
-    cached_results = cache.get(form_consts.Dataset.CACHED_RESULTS)
-
-    if cached_results != None:
-        dataset_object = cached_results.get(name)
-    else:
-        dataset_object = Dataset.objects(name=name).first()
-    
-    if not dataset_object:
-        dataset_object = Dataset()
-        dataset_object.name = name
-        dataset_object.description = description
-
-        is_item_new = True
-
-        if cached_results != None:
-            cached_results[name] = dataset_object
-
-    if not dataset_object.description:
-        dataset_object.description = description or ''
-    elif dataset_object.description != description:
-        if description:
-            dataset_object.description += "\n" + (description or '')
+    if dataset_object:
+        resp_url = reverse('cripts.datasets.views.dataset_detail', args=[dataset_object.name])
+        message = ('Warning: Dataset already exists: '
+                                 '<a href="%s">%s</a>. Cannot add new dataset with this name.' % (resp_url, dataset_object.name))
+        retVal['message'] = message
+        retVal['success'] = False
+        retVal['object'] = dataset_object
+        return retVal
+               
+    dataset_object = Dataset()
+    dataset_object.name = name
+    dataset_object.description = description
+    resp_url = reverse('cripts.datasets.views.dataset_detail', args=[dataset_object.name])
 
     if isinstance(source, basestring):
         source = [create_embedded_source(source,
@@ -178,59 +190,46 @@ def dataset_add_update(name, description=None, source=None, method='', reference
 
     related_obj = None
     if related_id:
-        related_obj = class_from_id(related_type, related_id)
+        related_obj = class_from_value(related_type, related_id)
         if not related_obj:
             retVal['success'] = False
             retVal['message'] = 'Related Object not found.'
             return retVal
-
-    resp_url = reverse('cripts.datasets.views.dataset_detail', args=[dataset_object.name])
-
+            
     if is_validate_only == False:
         dataset_object.save(username=analyst)
-
-        #set the URL for viewing the new data
-        if is_item_new == True:
             
-            # Update the dataset stats
-            counts = mongo_connector(settings.COL_COUNTS)
-            count_stats = counts.find_one({'name': 'counts'})
-            if not count_stats or ('counts' not in count_stats):
-                count_stats = {'counts':{}}
-            if 'Datasets' not in count_stats['counts']:
-                count_stats['counts']['Datasets'] = 0
-            else:
-                count_stats['counts']['Datasets'] = count_stats['counts']['Datasets'] + 1
-            
-            counts.update({'name': "counts"}, {'$set': {'counts': count_stats['counts']}}, upsert=True)
-            
-            retVal['message'] = ('Success! Click here to view the new Dataset: '
-                                 '<a href="%s">%s</a>' % (resp_url, dataset_object.name))
+        # Update the dataset stats
+        counts = mongo_connector(settings.COL_COUNTS)
+        count_stats = counts.find_one({'name': 'counts'})
+        if not count_stats or ('counts' not in count_stats):
+            count_stats = {'counts':{}}
+        if 'Datasets' not in count_stats['counts']:
+            count_stats['counts']['Datasets'] = 1
         else:
-            message = ('Updated existing Dataset: '
-                                 '<a href="%s">%s</a>' % (resp_url, dataset_object.name))
-            retVal['message'] = message
-            retVal['status'] = form_consts.Status.DUPLICATE
-            retVal['warning'] = message
+            count_stats['counts']['Datasets'] = count_stats['counts']['Datasets'] + 1
+        
+        counts.update({'name': "counts"}, {'$set': {'counts': count_stats['counts']}}, upsert=True)
+        
+        retVal['message'] = ('Success! Click here to view the new Dataset: '
+                             '<a href="%s">%s</a>' % (resp_url, dataset_object.name))
 
-    elif is_validate_only == True:
-        if dataset_object.id != None and is_item_new == False:
-            message = ('Warning: Dataset already exists: '
-                                 '<a href="%s">%s</a>' % (resp_url, dataset_object.name))
-            retVal['message'] = message
-            retVal['status'] = form_consts.Status.DUPLICATE
-            retVal['warning'] = message
 
-    if related_obj and email_object and relationship_type:
+    if related_obj and dataset_object and relationship_type:
+        print("Adding relationship")
         relationship_type=RelationshipTypes.inverse(relationship=relationship_type)
         dataset_object.add_relationship(related_obj,
                               relationship_type,
                               analyst=analyst,
                               get_rels=False)
         dataset_object.save(username=analyst)
+        
+    ##--Now parse the hash list--##
+    print(hash_type)
+    print(dataset_format)
 
     # run dataset triage
-    if is_item_new and is_validate_only == False:
+    if is_validate_only == False:
         dataset_object.reload()
         run_triage(dataset_object, analyst)
 
@@ -265,9 +264,6 @@ def get_dataset_details(name, analyst):
     dataset_object.sanitize_sources(username="%s" % analyst,
                            sources=allowed_sources)
 
-    # remove pending notifications for user
-    remove_user_from_notification("%s" % analyst, dataset_object.id, 'Dataset')
-
     # subscription
     subscription = {
             'type': 'Dataset',
@@ -275,8 +271,8 @@ def get_dataset_details(name, analyst):
             'subscribed': is_user_subscribed("%s" % analyst,
                                              'Dataset',
                                              dataset_object.id),
-    }
-
+    }                       
+                           
     #objects
     objects = dataset_object.sort_objects()
 
@@ -285,7 +281,7 @@ def get_dataset_details(name, analyst):
 
     # relationship
     relationship = {
-            'type': 'Datset',
+            'type': 'Dataset',
             'value': dataset_object.id
     }
 
@@ -294,7 +290,7 @@ def get_dataset_details(name, analyst):
                 'url_key':dataset_object.name}
 
     # favorites
-    favorite = is_user_favorite("%s" % analyst, 'Dataset', dataset_object.id)
+    favorite = is_user_favorite("%s" % analyst, 'Dataset', dataset_object.name)
 
     # services
     service_list = get_supported_services('Dataset')
@@ -311,6 +307,7 @@ def get_dataset_details(name, analyst):
             'subscription': subscription,
             'name': dataset_object.name,
             'service_list': service_list,
-            'service_results': service_results}
+            'service_results': service_results,
+            'id': dataset_object.id}
 
     return template, args

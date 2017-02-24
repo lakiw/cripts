@@ -11,6 +11,7 @@ def generate_counts():
     """
 
     counts = mongo_connector(settings.COL_COUNTS)
+    datasets = mongo_connector(settings.COL_DATASETS)
     email_addresses = mongo_connector(settings.COL_EMAIL_ADDRESSES)
     usernames = mongo_connector(settings.COL_USERNAMES)
     
@@ -20,7 +21,7 @@ def generate_counts():
     last_thirty = start - datetime.timedelta(30)
     
     count = {}
+    count['Datasets'] = datasets.find().count()
     count['Email Addresses'] = email_addresses.find().count()
     count['UserNames'] = usernames.find().count()
-
     counts.update({'name': "counts"}, {'$set': {'counts': count}}, upsert=True)

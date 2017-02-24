@@ -24,23 +24,23 @@ class Dataset(CriptsBaseAttributes, CriptsSourceDocument, CriptsActionsDocument,
                          'default_sort': "modified DESC",
                          'searchurl': 'cripts.datasets.views.datasets_listing',
                          'fields': [ "name", "created", "modified",
-                                     "source", "status"],
+                                     "source", "status","id"],
                          'jtopts_fields': [ "name",
                                             "created",
                                             "modified",
                                             "source",
                                             "favorite",
                                             "status",
+                                            "id"
                                             ],
                          'hidden_fields': [],
                          'linked_fields': ["source", ],
-                         'details_link': 'details',
-                         'no_sort': ['details']
+                         'details_link': 'name',
+                         'no_sort': []
                        }
 
     }
     
-    id = StringField(required=True)
     name = StringField(required=True)
     
 

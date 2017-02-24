@@ -24,6 +24,8 @@ from cripts.email_addresses.forms import EmailAddressForm
 from cripts.core.cripts_mongoengine import create_embedded_source, json_handler
 from cripts.services.handlers import run_triage, get_supported_services
 from cripts.notifications.handlers import remove_user_from_notification
+from cripts.core.class_mapper import class_from_value
+from cripts.vocabulary.relationships import RelationshipTypes
 
 def generate_email_address_csv(request):
     """
@@ -363,8 +365,10 @@ def email_address_add_update(address, description=None, source=None, method='', 
         email_object.add_ticket(ticket, analyst)
 
     related_obj = None
+    print("related_id: " + str(related_id))
     if related_id:
-        related_obj = class_from_id(related_type, related_id)
+        related_obj = class_from_value(related_type, related_id)
+        print("related obj: " + str(related_obj))
         if not related_obj:
             retVal['success'] = False
             retVal['message'] = 'Related Object not found.'
@@ -384,7 +388,7 @@ def email_address_add_update(address, description=None, source=None, method='', 
             if not count_stats or ('counts' not in count_stats):
                 count_stats = {'counts':{}}
             if 'Email Addresses' not in count_stats['counts']:
-                count_stats['counts']['Email Addresses'] = 0
+                count_stats['counts']['Email Addresses'] = 1
             else:
                 count_stats['counts']['Email Addresses'] = count_stats['counts']['Email Addresses'] + 1
             
@@ -408,6 +412,7 @@ def email_address_add_update(address, description=None, source=None, method='', 
             retVal['warning'] = message
 
     if related_obj and email_object and relationship_type:
+        print("adding relationship")
         relationship_type=RelationshipTypes.inverse(relationship=relationship_type)
         email_object.add_relationship(related_obj,
                               relationship_type,
@@ -497,7 +502,8 @@ def get_email_address_details(address, analyst):
             'subscription': subscription,
             'address': address_object.address,
             'service_list': service_list,
-            'service_results': service_results}
+            'service_results': service_results,
+            'id': address_object.id}
 
     return template, args
 

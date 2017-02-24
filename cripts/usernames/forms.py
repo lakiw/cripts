@@ -6,6 +6,9 @@ from cripts.core.forms import add_bucketlist_to_form, add_ticket_to_form
 from cripts.core.widgets import CalWidget
 from cripts.core.handlers import get_source_names, get_item_names
 from cripts.core.user_tools import get_user_organization
+from cripts.vocabulary.relationships import RelationshipTypes
+
+relationship_choices = [(c, c) for c in RelationshipTypes.values(sort=True)]
 
 class UserNameForm(forms.Form):
     """
@@ -25,6 +28,11 @@ class UserNameForm(forms.Form):
                              label=form_consts.UserName.SOURCE_METHOD)
     reference = forms.CharField(required=False, widget=forms.TextInput,
                                 label=form_consts.UserName.SOURCE_REFERENCE)
+    related_id = forms.CharField(widget=forms.HiddenInput(), required=False, label=form_consts.Common.RELATED_ID)
+    related_type = forms.CharField(widget=forms.HiddenInput(), required=False, label=form_consts.Common.RELATED_TYPE)
+    relationship_type = forms.ChoiceField(required=False,
+                                          label=form_consts.Common.RELATIONSHIP_TYPE,
+                                          widget=forms.Select(attrs={'id':'relationship_type'})) 
                                 
 
     def __init__(self, username, *args, **kwargs):
@@ -34,6 +42,8 @@ class UserNameForm(forms.Form):
                                                                                True,
                                                                                username)]
         self.fields['source'].initial = get_user_organization(username)
+        self.fields['relationship_type'].choices = relationship_choices
+        self.fields['relationship_type'].initial = RelationshipTypes.RELATED_TO
         
         add_bucketlist_to_form(self)
         add_ticket_to_form(self)

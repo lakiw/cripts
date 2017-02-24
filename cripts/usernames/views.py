@@ -50,6 +50,9 @@ def add_username(request):
         username_form = UserNameForm(request.user, request.POST)
         if username_form.is_valid():
             data = username_form.cleaned_data
+            related_id = data['related_id']
+            related_type = data['related_type']
+            relationship_type = data['relationship_type']
             result = username_add_update(name=data['name'],
                                    description=data['description'],
                                    source=data['source'],
@@ -58,6 +61,9 @@ def add_username(request):
                                    datasets = None,
                                    bucket_list=data[form_consts.Common.BUCKET_LIST_VARIABLE_NAME],
                                    ticket=data[form_consts.Common.TICKET_VARIABLE_NAME],
+                                   related_id=related_id,
+                                   related_type=related_type,
+                                   relationship_type=relationship_type,
                                    analyst=request.user.username)
                                    
             if 'message' in result:

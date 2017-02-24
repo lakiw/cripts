@@ -37,11 +37,7 @@
                         {% with description=dataset.description %}
                             {% include 'description_widget.html' %}
                         {% endwith %}
-                    </tr>
-                    <tr>
-                        <td class="key">Analyst</td>
-                        <td>{{dataset.analyst}}</td>
-                    </tr>      
+                    </tr>     
                     <tr>
                         <td class="key">Status
                             <span style="float: right;" class="object_status_response"></span>
@@ -75,13 +71,8 @@
          {% include 'add_related_widget.html' %}
 
      </div>
-    <div class="content_box">
-        {% with obj=ip obj_type="IP" %}
-            {% include 'action_listing_widget.html' %}
-        {% endwith %}
-    </div>
      <div>
-	    {% with obj=ip obj_type=subscription.type %}
+	    {% with obj=dataset obj_type=subscription.type %}
                 {% include 'tickets_listing_widget.html' %}
 	    {% endwith %}
     </div>
@@ -97,7 +88,7 @@
 </div> <!-- details_section -->
 
 {% with item=dataset %}
-    {% include "services_analysis_section.html" with cripts_type="Dataset" identifier=dataset.id %}
+    {% include "services_analysis_section.html" with cripts_type="Dataset" identifier=dataset.name %}
 {% endwith %}
 
 {% include 'services_tab_tabs_widget.html' %}
@@ -106,5 +97,5 @@
 {% endblock %}
 
 {% block javascript_includes %}
-<script type="text/javascript" src="{{ STATIC_URL }}js/ips.js"></script>
+<script type="text/javascript" src="{{ STATIC_URL }}js/datasets.js"></script>
 {% endblock %}

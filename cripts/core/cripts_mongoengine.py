@@ -1914,7 +1914,7 @@ class CriptsBaseAttributes(CriptsDocument, CriptsBaseDocument,
             return {}
         rel_dict = dict((r.rel_type,[]) for r in self.relationships)
         query_dict = {
-            'Dataset': ('id'),
+            'Dataset': ('id','name'),
             'EmailAddress': ('id','address'),
             'Event': ('id', 'title', 'event_type', 'description'),
             'Hash': ('id'),
@@ -1936,7 +1936,7 @@ class CriptsBaseAttributes(CriptsDocument, CriptsBaseDocument,
                 # TODO: these should be limited to the fields above, or at
                 # least exclude larger fields that we don't need.
                 fields = query_dict.get(rd['type'])
-                if r.rel_type not in ["Campaign", "Target"]:
+                if r.rel_type not in []:
                     obj = obj_class.objects(id=rd['value'],
                             source__name__in=user_source_access).only(*fields).first()
                 else:
