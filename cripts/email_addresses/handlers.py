@@ -344,8 +344,8 @@ def email_address_add_update(address, description=None, source=None, method='', 
         email_object.description = description or ''
     elif email_object.description != description:
         if description:
-            email_object.description += "\n" + (description or '')
-
+            email_object.description += "\n" + (description or '')        
+            
     if isinstance(source, basestring):
         source = [create_embedded_source(source,
                                          reference=reference,
@@ -358,6 +358,14 @@ def email_address_add_update(address, description=None, source=None, method='', 
     else:
         return {"success" : False, "message" : "Missing source information."}
 
+    
+    ##--Create reference to the parant datasets
+    if datasets != None:
+        email_object.datasets.append(datasets)
+    
+    print("Email datasets--------")
+    print(email_object.datasets)
+    
     if bucket_list:
         email_object.add_bucket_list(bucket_list, analyst)
 
@@ -365,10 +373,8 @@ def email_address_add_update(address, description=None, source=None, method='', 
         email_object.add_ticket(ticket, analyst)
 
     related_obj = None
-    print("related_id: " + str(related_id))
     if related_id:
         related_obj = class_from_value(related_type, related_id)
-        print("related obj: " + str(related_obj))
         if not related_obj:
             retVal['success'] = False
             retVal['message'] = 'Related Object not found.'
@@ -412,7 +418,6 @@ def email_address_add_update(address, description=None, source=None, method='', 
             retVal['warning'] = message
 
     if related_obj and email_object and relationship_type:
-        print("adding relationship")
         relationship_type=RelationshipTypes.inverse(relationship=relationship_type)
         email_object.add_relationship(related_obj,
                               relationship_type,

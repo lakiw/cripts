@@ -26,6 +26,9 @@ from cripts.datasets.forms import DatasetForm
 from cripts.core.class_mapper import class_from_value
 from cripts.vocabulary.relationships import RelationshipTypes
 
+from cripts.usernames.handlers import username_add_update
+from cripts.email_addresses.handlers import email_address_add_update
+
 def generate_dataset_csv(request):
     """
     Generate a CSV file of the Dataset information
@@ -225,9 +228,51 @@ def dataset_add_update(name, hash_type, dataset_format, hash_data, description=N
         dataset_object.save(username=analyst)
         
     ##--Now parse the hash list--##
-    print(hash_type)
-    print(dataset_format)
+    num_valid_records = 0
+    num_invalid_records = 0
+    
+    for line in hash_data.splitlines():
+        hash, username, email = parse_dataset_file(line, dataset_format)
+        
+        ##--No valid records were returned
+        if not hash and not username and not email:
+            num_invalid_records = num_invalid_records + 1
+            continue
+            
+        ##--Todo: Look if adding validate only makes sense first before adding them--##
+        ##----That way we can check if the whole line is valid before adding parts of it        
+         
+        ##--Add the email address if needed --## 
+        if email:
+            add_status = email_address_add_update(address=email,
+                           description=None,
+                           source=source,
+                           method=method,
+                           reference=reference,
+                           datasets = dataset_object.name,
+                           related_id=None,
+                           related_type=None,
+                           relationship_type=None,
+                           bucket_list=None,
+                           ticket=None,
+                           analyst=analyst)
+         
+        ##--Add the username if needed --##
+        if username:
+            add_status = username_add_update(username, description=None, source=source, method=method, reference=reference,
+                  analyst=analyst, datasets=dataset_object.name, bucket_list=None, ticket=None,
+                  is_validate_only=False, cache={}, related_id=None,
+                  related_type=None, relationship_type=None )
+            if add_status['success'] != True:
+                ##--If weirdness happens exit quickly vs trying to parse garbage for other fields
+                num_invalid_records = num_invalid_records + 1
+                continue
 
+        ##--This line was parsed correctly
+        num_valid_records = num_valid_records + 1
+        
+    print("Valid records = " + str(num_valid_records))
+    print("Invalid records = " + str(num_invalid_records))    
     # run dataset triage
     if is_validate_only == False:
         dataset_object.reload()
@@ -237,6 +282,49 @@ def dataset_add_update(name, hash_type, dataset_format, hash_data, description=N
     retVal['object'] = dataset_object
 
     return retVal
+    
+    
+################################################################
+# Parses a single line of the uploaded dataset file
+# -Returns the follwing values (None if not read)
+# (hash), (username), (email) 
+##############################################################3#
+def parse_dataset_file(line, format):
+    hash = None
+    username = None
+    email = None
+    
+    values = line.split("\t")
+    ##--if it is hash only
+    if format == '1':
+        if len(values) == 1:
+            hash = values[0]
+            
+    ##--If it is hash, email address
+    elif format == '2':
+        if len(values) == 2:
+            hash = values[0]
+            email = values[1]
+            
+    ##---If it is hash, username
+    elif format == '3':
+        print(len(values))
+        print(values)
+        if len(values) == 2:
+            hash = values[0]
+            username = values[1]
+            
+    ##---If it is hash, username, email
+    elif format == '4':
+        if len(values) == 3:
+            hash = values[0]
+            username = values[1]
+            email = values[2]
+            
+    else:
+        print("Error parsing the line")
+        
+    return hash, username, email
     
 
 def get_dataset_details(name, analyst):

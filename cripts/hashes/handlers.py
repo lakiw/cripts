@@ -96,12 +96,6 @@ def generate_hash_jtable(request, option):
             'cssClass': "'jtable-toolbar-center'",
         },
         {
-            'tooltip': "'Deprecated Hashes'",
-            'text': "'Deprecated'",
-            'click': "function () {$('#hash_listing').jtable('load', {'refresh': 'yes', 'status': 'Deprecated'});}",
-            'cssClass': "'jtable-toolbar-center'",
-        },
-        {
             'tooltip': "'Add Hash'",
             'text': "'Add Hash'",
             'click': "function () {$('#new-hash').click()}",
