@@ -51,7 +51,7 @@ django_version = django.get_version()
 #Check mongoengine version (we got it from import)
 if StrictVersion(mongoengine_version) < StrictVersion('0.10.0'):
     old_mongoengine = True
-    raise Exception("Mongoengine versions prior to 0.10 are no longer supported! Please see UPDATING!")
+    #raise Exception("Mongoengine versions prior to 0.10 are no longer supported! Please see UPDATING!")
 else:
     old_mongoengine = False
 
@@ -147,6 +147,7 @@ COL_NOTIFICATIONS = "notifications"                       # notifications collec
 COL_OBJECTS = "objects"                                   # objects that are files that have been added
 COL_OBJECT_TYPES = "object_types"                         # types of objects that can be added
 COL_RELATIONSHIP_TYPES = "relationship_types"             # list of available relationship types
+COL_ROLES = "roles"                                       # main roles collection
 COL_SECTOR_LISTS = "sector_lists"                         # sector lists information
 COL_SECTORS = "sectors"                                   # available sectors
 COL_SERVICES = "services"                                 # list of services for scanning
@@ -156,7 +157,6 @@ COL_STATISTICS = "statistics"                             # list of statistics f
 COL_TARGETS = "targets"                                   # targets that campaings are going against
 COL_USERNAMES = "usernames"                               # usernames associated with hashes
 COL_USERS = "users"                                       # main users collection
-COL_USER_ROLES = "user_roles"                             # main user roles collection
 
 # MongoDB connection pool
 if MONGO_USER:
@@ -175,6 +175,9 @@ coll = db[COL_CONFIG]
 cripts_config = coll.find_one({})
 if not cripts_config:
     cripts_config = {}
+
+# UberAdmin role. Has access to everything, can do everything, etc.
+ADMIN_ROLE = "UberAdmin"
 
 # Populate settings
 # Hosts/domain names that are valid for this site; required if DEBUG is False
@@ -292,6 +295,12 @@ _TEMPLATE_LOADERS = [
 #        'LOCATION': 'unix:/data/memcached.sock',
 #    }
 #}
+
+CACHES = {
+    'default': {
+        'BACKEND': 'django.core.cache.backends.dummy.DummyCache',
+    }
+}
 
 STATICFILES_FINDERS = (
     'django.contrib.staticfiles.finders.FileSystemFinder',

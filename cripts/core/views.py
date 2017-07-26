@@ -14,15 +14,19 @@ from django.shortcuts import render_to_response, redirect
 from django.template import RequestContext
 from django.template.loader import render_to_string
 
+from cripts.events.forms import EventForm
+from cripts.email_addresses.forms import EmailAddressForm, UploadEmailAddressForm
+from cripts.datasets.forms import DatasetForm
+from cripts.usernames.forms import UserNameForm
 
 from cripts.comments.forms import AddCommentForm, InlineCommentForm
 from cripts.config.config import CRIPTsConfig
 from cripts.core.cripts_mongoengine import Action
 from cripts.core.data_tools import json_handler
+from cripts.core.forms import SourceAccessForm, AddSourceForm
 from cripts.core.forms import ActionsForm, NewActionForm
-from cripts.core.forms import SourceAccessForm, AddSourceForm, AddUserRoleForm
 from cripts.core.forms import SourceForm, DownloadFileForm, AddReleasabilityForm
-from cripts.core.forms import TicketForm
+from cripts.core.forms import TicketForm, AddRoleForm, RoleCombinePreview
 from cripts.core.handlers import add_releasability, add_releasability_instance
 from cripts.core.handlers import remove_releasability, remove_releasability_instance
 from cripts.core.handlers import add_new_source, generate_counts_jtable
@@ -39,41 +43,42 @@ from cripts.core.handlers import modify_source_access, get_bucket_autocomplete
 from cripts.core.handlers import generate_users_jtable, generate_items_jtable
 from cripts.core.handlers import toggle_item_state, download_grid_file
 from cripts.core.handlers import get_data_for_item, generate_audit_jtable
-from cripts.core.handlers import details_from_id, status_update
-from cripts.core.handlers import get_favorites, favorite_update
-from cripts.core.handlers import generate_favorites_jtable
+from cripts.core.handlers import details_from_id, status_update, set_role_value
+from cripts.core.handlers import get_favorites, favorite_update, get_role_details
+from cripts.core.handlers import generate_favorites_jtable, generate_roles_jtable
 from cripts.core.handlers import ticket_add, ticket_update, ticket_remove
-from cripts.core.handlers import description_update, data_update
+from cripts.core.handlers import add_new_role, render_role_graph
+from cripts.core.handlers import add_role_source, remove_role_source
+from cripts.core.handlers import edit_role_description, edit_role_name
+from cripts.core.handlers import modify_tlp, description_update, data_update
 from cripts.core.handlers import do_add_preferred_actions, add_new_action
 from cripts.core.handlers import action_add, action_remove, action_update
-from cripts.core.handlers import get_action_types_for_tlo
+from cripts.core.handlers import get_action_types_for_tlo, generate_audit_csv
 from cripts.core.source_access import SourceAccess
 from cripts.core.user import CRIPTsUser
-from cripts.core.user_role import UserRole
-from cripts.core.user_tools import user_can_view_data, is_admin, user_sources
-from cripts.core.user_tools import user_is_admin, get_user_list, get_nav_template
-from cripts.core.user_tools import get_user_role, get_user_email_notification
+from cripts.core.user_tools import user_can_view_data, user_sources
+from cripts.core.user_tools import get_user_list, get_nav_template
+from cripts.core.user_tools import get_acl_object
+from cripts.core.user_tools import get_user_email_notification
 from cripts.core.user_tools import get_user_info, get_user_organization
 from cripts.core.user_tools import is_user_subscribed, unsubscribe_user
 from cripts.core.user_tools import subscribe_user, subscribe_to_source
 from cripts.core.user_tools import unsubscribe_from_source, is_user_subscribed_to_source
-from cripts.core.user_tools import add_new_user_role, change_user_password, toggle_active
+from cripts.core.user_tools import change_user_password, toggle_active
 from cripts.core.user_tools import save_user_secret
 from cripts.core.user_tools import toggle_user_preference, update_user_preference
 from cripts.core.user_tools import get_api_key_by_name, create_api_key_by_name
 from cripts.core.user_tools import revoke_api_key_by_name, make_default_api_key_by_name
 from cripts.core.class_mapper import class_from_id
 from cripts.events.forms import EventForm
-from cripts.email_addresses.forms import EmailAddressForm, UploadEmailAddressForm
-from cripts.datasets.forms import DatasetForm
-from cripts.usernames.forms import UserNameForm
 from cripts.notifications.handlers import get_user_notifications
 from cripts.notifications.handlers import remove_user_from_notification
 from cripts.notifications.handlers import remove_user_notifications
 from cripts.objects.forms import AddObjectForm
 from cripts.relationships.forms import ForgeRelationshipForm
-
 from cripts.vocabulary.sectors import Sectors
+from cripts.vocabulary.acls import *
+
 
 logger = logging.getLogger(__name__)
 
@@ -88,16 +93,23 @@ def update_object_description(request):
     :returns: :class:`django.http.HttpResponse`
     """
 
+    user = request.user
+
     if request.method == "POST" and request.is_ajax():
         type_ = request.POST['type']
         id_ = request.POST['id']
         description = request.POST['description']
-        analyst = request.user.username
-        return HttpResponse(json.dumps(description_update(type_,
+        acl = get_acl_object(type_)
+        if user.has_access_to(acl.DESCRIPTION_EDIT):
+            return HttpResponse(json.dumps(description_update(type_,
                                                           id_,
                                                           description,
-                                                          analyst)),
+                                                          user.username)),
                             content_type="application/json")
+        else:
+            return HttpResponse(json.dumps({'success':False,
+                                            'message':'User does not have permission to edit description.'}),
+                                content_type="application/json")
     else:
         return render_to_response("error.html",
                                   {"error" : 'Expected AJAX POST.'},
@@ -116,11 +128,11 @@ def update_object_data(request):
         type_ = request.POST['type']
         id_ = request.POST['id']
         data = request.POST['data']
-        analyst = request.user.username
+        user = request.user
         return HttpResponse(json.dumps(data_update(type_,
                                                           id_,
                                                           data,
-                                                          analyst)),
+                                                          user)),
                             content_type="application/json")
     else:
         return render_to_response("error.html",
@@ -140,10 +152,10 @@ def toggle_favorite(request):
     if request.method == "POST" and request.is_ajax():
         type_ = request.POST['type']
         id_ = request.POST['id']
-        analyst = request.user.username
+        user = request.user
         return HttpResponse(json.dumps(favorite_update(type_,
                                                        id_,
-                                                       analyst)),
+                                                       user)),
                             content_type="application/json")
     else:
         return render_to_response("error.html",
@@ -161,8 +173,8 @@ def favorites(request):
     """
 
     if request.method == "POST" and request.is_ajax():
-        analyst = request.user.username
-        return HttpResponse(json.dumps(get_favorites(analyst)),
+        user = request.user
+        return HttpResponse(json.dumps(get_favorites(user)),
                             content_type="application/json")
     else:
         return render_to_response("error.html",
@@ -191,8 +203,8 @@ def get_dialog(request):
     :type request: :class:`django.http.HttpRequest`
     :returns: :class:`django.http.HttpResponse`
     """
+    dialog = str(request.GET.get('dialog', ''))
 
-    dialog = request.GET.get('dialog', '')
     # Regex in urls.py doesn't seem to be working, should sanity check dialog
     return render_to_response(dialog + ".html",
                               {"error" : 'Dialog not found'},
@@ -214,12 +226,18 @@ def update_status(request, type_, id_):
 
     if request.method == "POST" and request.is_ajax():
         value = request.POST['value']
-        analyst = request.user.username
-        return HttpResponse(json.dumps(status_update(type_,
+        user = request.user
+
+        if user.has_access_to(get_acl_object(type_).STATUS_EDIT):
+            return HttpResponse(json.dumps(status_update(type_,
                                                      id_,
                                                      value,
-                                                     analyst)),
+                                                     user)),
                             content_type="application/json")
+        else:
+            return HttpResponse(json.dumps({"success":False,
+                                            "message":"User does not have permission to edit status."}),
+                                content_type="application/json")
     else:
         return render_to_response("error.html",
                                   {"error" : 'Expected AJAX POST.'},
@@ -321,9 +339,10 @@ def login(request):
     remote_addr = request.META.get('REMOTE_ADDR', '')
     accept_language = request.META.get('HTTP_ACCEPT_LANGUAGE', '')
     next_url = request.GET.get('next', request.POST.get('next', None))
+    user = request.user
 
     # Is the user already authenticated?
-    if request.user.is_authenticated():
+    if request.user.is_authenticated() and user.has_access_to(GeneralACL.WEB_INTERFACE):
         resp = validate_next(next_url)
         if not resp['success']:
             return render_to_response('error.html',
@@ -384,11 +403,11 @@ If you are already setup with TOTP, please enter your PIN + Key above."""
         password = request.POST.get('password', None)
         # TOTP can still be required for Remote Users
         totp_pass = request.POST.get('totp_pass', None)
-
-        if (not username or
+        logging_in_user = get_user_info(username)
+        if (not username or not logging_in_user.has_access_to(GeneralACL.WEB_INTERFACE) or
                 (not totp_pass and cripts_config.totp_web == 'Required')):
             response['success'] = False
-            response['message'] = 'Unknown user or bad password.'
+            response['message'] = 'Unknown user, bad password, or user does not have permission to log on using the web UI.'
             return HttpResponse(json.dumps(response),
                                 content_type="application/json")
         
@@ -431,14 +450,14 @@ def reset_password(request):
         submitted_rcode = request.POST.get('reset_code', None)
         new_p = request.POST.get('new_p', None)
         new_p_c = request.POST.get('new_p_c', None)
-        analyst = request.user.username
+        user = request.user
         return reset_user_password(username=username,
                                    action=action,
                                    email=email,
                                    submitted_rcode=submitted_rcode,
                                    new_p=new_p,
                                    new_p_c=new_p_c,
-                                   analyst=analyst)
+                                   analyst=user)
 
     return render_to_response('login.html',
                               {'reset': True},
@@ -456,8 +475,8 @@ def profile(request, user=None):
     :returns: :class:`django.http.HttpResponse`
     """
 
-    if user and is_admin(request.user.username):
-        username = user
+    if user:
+        username = user.username
     else:
         username = request.user.username
     args = generate_user_profile(username,request)
@@ -513,23 +532,42 @@ def source_releasability(request):
         note = request.POST.get('note', None)
         action = request.POST.get('action', None)
         date = request.POST.get('date', datetime.datetime.now())
+        user = request.user
         if not isinstance(date, datetime.datetime):
             date = parse(date, fuzzy=True)
-        user = str(request.user.username)
+
+        acl = get_acl_object(type_)
+
         if not type_ or not id_ or not name or not action:
             error = "Modifying releasability requires a type, id, source, and action"
             return render_to_response("error.html",
                                       {"error" : error },
                                       RequestContext(request))
         if action  == "add":
-            result = add_releasability(type_, id_, name, user)
+            if user.has_access_to(acl.RELEASABILITY_ADD):
+                result = add_releasability(type_, id_, name, user.username)
+            else:
+                result = {'success':False,
+                          'message':'User does not have permission to add releasability.'}
         elif action  == "add_instance":
-            result = add_releasability_instance(type_, id_, name, user,
-                                                note=note)
+            if user.has_access_to(acl.RELEASABILITY_ADD):
+                result = add_releasability_instance(type_, id_, name, user.username,
+                                                    note=note)
+            else:
+                result = {'success':False,
+                          'message':'User does not have permission to add releasability.'}
         elif action == "remove":
-            result = remove_releasability(type_, id_, name, user)
+            if user.has_access_to(acl.RELEASABILITY_DELETE):
+                result = remove_releasability(type_, id_, name, user.username)
+            else:
+                result = {'success':False,
+                          'message':'User does not have permission to remove releasability.'}
         elif action == "remove_instance":
-            result = remove_releasability_instance(type_, id_, name, date, user)
+            if user.has_access_to(acl.RELEASABILITY_DELETE):
+                result = remove_releasability_instance(type_, id_, name, date, user.username)
+            else:
+                result = {'success':False,
+                          'message':'User does not have permission to delete releasability.'}
         else:
             error = "Unknown releasability action: %s" % action
             return render_to_response("error.html",
@@ -567,11 +605,6 @@ def source_access(request):
     :returns: :class:`django.http.HttpResponse`
     """
 
-    if not is_admin(request.user.username):
-        error = "You do not have permission to use this feature!"
-        return render_to_response("error.html",
-                                  {"error" : error },
-                                  RequestContext(request))
     if request.method == 'POST' and request.is_ajax():
         form = SourceAccessForm(request.POST)
         if form.is_valid():
@@ -592,7 +625,7 @@ def source_access(request):
                                   {"error" : error },
                                   RequestContext(request))
 
-@user_passes_test(user_is_admin)
+@user_passes_test(user_can_view_data)
 def source_add(request):
     """
     Add a source to CRIPTs. Should be an AJAX POST.
@@ -604,18 +637,21 @@ def source_add(request):
 
     if request.method == "POST" and request.is_ajax():
         source_form = AddSourceForm(request.POST)
-        analyst = request.user.username
+        user = request.user
         if source_form.is_valid():
-            result = add_new_source(source_form.cleaned_data['source'],
-                                    analyst)
-            if result:
-                msg = ('<div>Source added successfully! Add this source to '
-                       'users to utilize it.</div>')
-                message = {'message': msg,
-                           'success': True}
+            if user.has_access_to(GeneralACL.ADD_NEW_SOURCE):
+                result = add_new_source(source_form.cleaned_data['source'],
+                                        user)
+                if result:
+                    msg = ('<div>Source added successfully! Add this source to '
+                           'users to utilize it.</div>')
+                    message = {'message': msg,
+                               'success': True}
+                else:
+                    message = {'message': '<div>Source addition failed!</div>', 'success':
+                               False}
             else:
-                message = {'message': '<div>Source addition failed!</div>', 'success':
-                           False}
+                message = {'message': 'User does not have permission to add source.', 'success':False}
 
         else:
             message = {'success': False,
@@ -626,10 +662,10 @@ def source_add(request):
                               {"error" : 'Expected AJAX POST' },
                               RequestContext(request))
 
-@user_passes_test(user_is_admin)
-def user_role_add(request):
+@user_passes_test(user_can_view_data)
+def role_add(request):
     """
-    Add a user role to CRIPTs. Should be an AJAX POST.
+    Add a role to CRIPTs. Should be an AJAX POST.
 
     :param request: Django request.
     :type request: :class:`django.http.HttpRequest`
@@ -637,16 +673,27 @@ def user_role_add(request):
     """
 
     if request.method == "POST" and request.is_ajax():
-        role_form = AddUserRoleForm(request.POST)
-        analyst = request.user.username
-        if role_form.is_valid() and is_admin(request.user.username):
-            result = add_new_user_role(role_form.cleaned_data['role'],
-                                       analyst)
-            if result:
-                message = {'message': '<div>User role added successfully!</div>',
-                           'success': True}
+        role_form = AddRoleForm(request.POST)
+        user = request.user
+        if role_form.is_valid():
+            if user.has_access_to(GeneralACL.ADD_NEW_USER_ROLE):
+                name = role_form.cleaned_data['name']
+                description = role_form.cleaned_data['description']
+                copy_from = role_form.cleaned_data['copy_from']
+                result = add_new_role(name,
+                                      copy_from,
+                                      description,
+                                      user)
+                if result['success']:
+                    url = reverse('cripts.core.views.role_details',
+                                  args=[result['id']])
+                    message = {'message': '<div><a href="%s">Role</a> added successfully!</div>' % url,
+                               'success': True}
+                else:
+                    message = {'message': '<div>Role addition failed!</div>',
+                               'success': False}
             else:
-                message = {'message': '<div>User role  addition failed!</div>',
+                message = {'message': 'User does not have permission to add user role.',
                            'success': False}
         else:
             message = {'success': False,
@@ -655,6 +702,38 @@ def user_role_add(request):
                             content_type="application/json")
     return render_to_response("error.html",
                               {"error" : 'Expected AJAX POST'},
+                              RequestContext(request))
+
+@user_passes_test(user_can_view_data)
+def role_graph(request):
+    """
+    Render the role graph.
+
+    :param request: Django request.
+    :type request: :class:`django.http.HttpRequest`
+    :returns: :class:`django.http.HttpResponse`
+    """
+
+    analyst = request.user.username
+    if request.method == "GET":
+        start_type = request.GET.get('start_type', 'roles')
+        start_node = request.GET.get('start_node', None)
+        expansion_node = request.GET.get('expansion_node', None)
+    if request.method == "POST" and request.is_ajax():
+        start_type = request.POST.get('start_type', 'roles')
+        start_node = request.POST.get('start_node', None)
+        expansion_node = request.POST.get('expansion_node', None)
+        result = render_role_graph(start_type,
+                                start_node,
+                                expansion_node,
+                                analyst)
+        if result:
+            return HttpResponse(json.dumps(result),
+                                content_type="application/json")
+    return render_to_response("role_graph.html",
+                              {"start_type": start_type,
+                              "start_node": start_node,
+                              "expansion_node": expansion_node},
                               RequestContext(request))
 
 @user_passes_test(user_can_view_data)
@@ -674,25 +753,45 @@ def add_update_source(request, method, obj_type, obj_id):
     """
 
     if request.method == "POST" and request.is_ajax():
-        form = SourceForm(request.user.username, request.POST)
+        form = SourceForm(request.user, request.POST)
         if form.is_valid():
             data = form.cleaned_data
-            user = request.user.username
+            user = request.user
+            acl = get_acl_object(obj_type)
             # check to see that this user can already see the object
             if (data['name'] in user_sources(user)):
                 if method == "add":
                     date = datetime.datetime.now()
+                    if user.has_access_to(acl.SOURCES_ADD):
+                        result = source_add_update(obj_type,
+                                                   obj_id,
+                                                   method,
+                                                   data['name'],
+                                                   method=data['method'],
+                                                   reference=data['reference'],
+                                                   tlp=data['tlp'],
+                                                   date=date,
+                                                   user=user.username)
+                    else:
+                        result = {"success":False,
+                                  "message":"User does not have permission to add sources to object."}
                 else:
                     date = datetime.datetime.strptime(data['date'],
                                                       settings.PY_DATETIME_FORMAT)
-                result = source_add_update(obj_type,
-                                           obj_id,
-                                           method,
-                                           data['name'],
-                                           method=data['method'],
-                                           reference=data['reference'],
-                                           date=date,
-                                           user=user)
+                    if user.has_access_to(acl.SOURCES_EDIT):
+                        result = source_add_update(obj_type,
+                                                   obj_id,
+                                                   method,
+                                                   data['name'],
+                                                   method=data['method'],
+                                                   reference=data['reference'],
+                                                   tlp=data['tlp'],
+                                                   date=date,
+                                                   user=user.username)
+                    else:
+                        result = {"success":False,
+                                  "message":"User does not have permission to edit sources."}
+
                 if 'object' in result:
                     if method == "add":
                         result['header'] = result['object'].name
@@ -737,22 +836,24 @@ def remove_source(request, obj_type, obj_id):
     """
 
     if request.method == "POST" and request.is_ajax():
-        if is_admin(request.user.username):
-            date = datetime.datetime.strptime(request.POST['key'],
-                                              settings.PY_DATETIME_FORMAT)
-            name = request.POST['name']
+        date = datetime.datetime.strptime(request.POST['key'],
+                                            settings.PY_DATETIME_FORMAT)
+        name = request.POST['name']
+
+        user = request.user
+        acl = get_acl_object(obj_type)
+
+        if user.has_access_to(acl.SOURCES_DELETE):
             result = source_remove(obj_type,
-                                   obj_id,
-                                   name,
-                                   date,
-                                   '%s' % request.user.username)
-            return HttpResponse(json.dumps(result),
-                                content_type="application/json")
+                                    obj_id,
+                                    name,
+                                    date,
+                                    '%s' % user.username)
         else:
-            error = "You do not have permission to remove this item"
-            return render_to_response("error.html",
-                                      {'error': error},
-                                      RequestContext(request))
+            result = {"success":False,
+                      "message":"User does not have permission to remove sources."}
+        return HttpResponse(json.dumps(result),
+                            content_type="application/json")
     return HttpResponse({})
 
 @user_passes_test(user_can_view_data)
@@ -770,19 +871,13 @@ def remove_all_source(request, obj_type, obj_id):
     """
 
     if request.method == "POST" and request.is_ajax():
-        if is_admin(request.user.username):
-            name = request.POST['key']
-            result = source_remove_all(obj_type,
-                                       obj_id,
-                                       name, '%s' % request.user.username)
-            result['last'] = True
-            return HttpResponse(json.dumps(result),
-                                content_type="application/json")
-        else:
-            error = "You do not have permission to remove this item"
-            return render_to_response("error.html",
-                                      {'error': error},
-                                      RequestContext(request))
+        name = request.POST['key']
+        result = source_remove_all(obj_type,
+                                    obj_id,
+                                    name, '%s' % request.user.username)
+        result['last'] = True
+        return HttpResponse(json.dumps(result),
+                            content_type="application/json")
     return HttpResponse({})
     
 
@@ -800,7 +895,10 @@ def bucket_modify(request):
         tags = request.POST['tags'].split(",")
         oid = request.POST['oid']
         itype = request.POST['itype']
-        modify_bucket_list(itype, oid, tags, request.user.username)
+        user = request.user
+        acl = get_acl_object(itype)
+        if user.has_access_to(acl.BUCKETLIST_EDIT):
+            modify_bucket_list(itype, oid, tags, request.user.username)
     return HttpResponse({})
 
 @user_passes_test(user_can_view_data)
@@ -849,6 +947,9 @@ def download_object(request):
         total_max = getattr(cripts_config, 'total_max', settings.TOTAL_MAX)
         depth_max = getattr(cripts_config, 'depth_max', settings.DEPTH_MAX)
         rel_max = getattr(cripts_config, 'rel_max', settings.REL_MAX)
+        user = request.user
+
+        acl = get_acl_object(obj_type)
 
         try:
             total_limit = int(total_limit)
@@ -876,14 +977,19 @@ def download_object(request):
                                       {"error" : "No matching data."},
                                       RequestContext(request))
 
-        result = download_object_handler(total_limit,
-                                         depth_limit,
-                                         rel_limit,
-                                         rst_fmt,
-                                         bin_fmt,
-                                         objects,
-                                         [(obj_type, obj_id)],
-                                         sources)
+        if user.has_access_to(acl.DOWNLOAD):
+            result = download_object_handler(total_limit,
+                                             depth_limit,
+                                             rel_limit,
+                                             rst_fmt,
+                                             bin_fmt,
+                                             objects,
+                                             [(obj_type, obj_id)],
+                                             sources)
+        else:
+            return render_to_response("error.html",
+                                      {"error" : "User does not have permission to download %s" % obj_type},
+                                      RequestContext(request))
 
         if not result['success']:
             return render_to_response("error.html",
@@ -913,8 +1019,8 @@ def timeline(request, data_type="dns"):
     """
 
     format = request.GET.get("format", "none")
-    analyst = request.user.username
-    sources = user_sources(analyst)
+    user = request.user
+    sources = user_sources(user)
     query = {}
     params = {}
     query["source.name"] = {"$in": sources}
@@ -926,19 +1032,28 @@ def timeline(request, data_type="dns"):
         tline['focus_date'] = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         tline['initial_zoom'] = "20"
         tline['timezone'] = strftime("%z", gmtime())
-        events = []
+        events = []   
 
-        tline['events'] = events
-        timeglider.append(tline)
-        return HttpResponse(json.dumps(timeglider,
-                                       default=json_util.default),
-                            content_type="application/json")
+        if events:
+            tline['events'] = events
+            timeglider.append(tline)
+            return HttpResponse(json.dumps(timeglider,
+                                           default=json_util.default),
+                                content_type="application/json")
+        else:
+            return HttpResponse(json.dumps({'success': False,
+                                            'message': "User does not have permission to view timeline."}),
+                                content_type="application/json")
     else:
-        return render_to_response('timeline.html',
-                                  {'data_type': data_type,
-                                   'params': json.dumps(params),
-                                   'page_title': page_title},
-                                  RequestContext(request))
+        if False:
+            ##--Holder since we don't have any timelines yet
+            pass
+        else:
+            error = "User does not have permission to view timeline."
+            return render_to_response("error.html",
+                                      {"error" : error },
+                                      RequestContext(request))
+
 
 def base_context(request):
     """
@@ -1007,18 +1122,25 @@ def base_context(request):
     base_context['service_cp_templates'] = settings.SERVICE_CP_TEMPLATES
     base_context['service_tab_templates'] = settings.SERVICE_TAB_TEMPLATES
     if request.user.is_authenticated():
-        user = request.user.username
+        user = request.user
+        base_context['acl'] = ReadACL
+        base_context['GeneralACL'] = GeneralACL
         # Forms that don't require a user
         base_context['add_new_action'] = NewActionForm()
         base_context['comment_add'] = AddCommentForm()
         base_context['inline_comment_add'] = InlineCommentForm()
         base_context['relationship_form'] = ForgeRelationshipForm()
+        base_context['role_combine_preview'] = RoleCombinePreview()
         base_context['source_access'] = SourceAccessForm()
-        base_context['user_role_add'] = AddUserRoleForm()
+        base_context['role_add'] = AddRoleForm()
         base_context['new_ticket'] = TicketForm(initial={'date': datetime.datetime.now()})
 
         # Forms that require a user
-        
+        try:
+            base_context['add_target'] = TargetInfoForm(user)
+        except Exception, e:
+            logger.warning("Base Context TargetInfoForm Error: %s" %e)
+
         try:
             base_context['new_action'] = ActionsForm(initial={'analyst': user,
                 'active': "off",
@@ -1065,11 +1187,11 @@ def base_context(request):
         except Exception, e:
             logger.warning("Base Context get_user_list Error: %s" % e)
         try:
-            base_context['email_notifications'] = get_user_email_notification(user)
+            base_context['email_notifications'] = get_user_email_notification(user.username)
         except Exception, e:
             logger.warning("Base Context get_user_email_notification Error: %s" % e)
         try:
-            base_context['user_notifications'] = get_user_notifications(user,
+            base_context['user_notifications'] = get_user_notifications(user.username,
                                                                         count=True)
         except Exception, e:
             logger.warning("Base Context get_user_notifications Error: %s" % e)
@@ -1077,10 +1199,6 @@ def base_context(request):
             base_context['user_organization'] = get_user_organization(user)
         except Exception, e:
             logger.warning("Base Context get_user_organization Error: %s" % e)
-        try:
-            base_context['user_role'] = get_user_role(user)
-        except Exception, e:
-            logger.warning("Base Context get_user_role Error: %s" % e)
         try:
             base_context['user_source_list'] = user_sources(user)
         except Exception, e:
@@ -1100,12 +1218,11 @@ def base_context(request):
                                       'hover_text_color': request.user.prefs.nav.get('hover_text_color'),
                                       'hover_background_color': request.user.prefs.nav.get('hover_background_color')}
 
-    if is_admin(request.user.username):
-        try:
-            base_context['source_create'] = AddSourceForm()
-        except Exception, e:
-            logger.warning("Base Context AddSourceForm Error: %s" % e)
-        base_context['category_list'] = [
+    try:
+        base_context['source_create'] = AddSourceForm()
+    except Exception, e:
+        logger.warning("Base Context AddSourceForm Error: %s" % e)
+    base_context['category_list'] = [
                                         {'collection': '', 'name': ''},    
                                         {'collection': settings.COL_EVENT_TYPES,
                                             'name': 'Event Types'},
@@ -1117,12 +1234,12 @@ def base_context(request):
                                             'name': 'Relationship Types'},
                                         {'collection': settings.COL_SOURCE_ACCESS,
                                             'name': 'Sources'},
-                                        {'collection': settings.COL_USER_ROLES,
-                                            'name': 'User Roles'}
-                                        ]
+                                    ]
+
 
     return base_context
 
+    
 def user_context(request):
     """
     Set of common content about the user to include in the Response so it is
@@ -1135,10 +1252,6 @@ def user_context(request):
     """
 
     context = {}
-    try:
-        context['admin'] = is_admin(request.user.username)
-    except:
-        context['admin'] = False
     # Get user theme
     user = CRIPTsUser.objects(username=request.user.username).first()
     if user:
@@ -1173,7 +1286,7 @@ def get_user_source_list(request):
                                   {"error" : error },
                                   RequestContext(request))
 
-@user_passes_test(user_is_admin)
+@user_passes_test(user_can_view_data)
 def user_source_access(request, username=None):
     """
     Get a user's source access list. Should be an AJAX POST.
@@ -1191,11 +1304,11 @@ def user_source_access(request, username=None):
         user = get_user_info(username)
         if user:
             user = user.to_dict()
-            if 'sources' not in user:
-                user['sources'] = ''
+            if 'roles' not in user:
+                user['roles'] = ''
         else:
             user = {'username': '',
-                    'sources': '',
+                    'roles': '',
                     'organization': settings.COMPANY_NAME}
         form = SourceAccessForm(initial=user)
         message = {'success': True,
@@ -1498,7 +1611,7 @@ def change_totp_pin(request):
                                   {"error" : error },
                                   RequestContext(request))
 
-@user_passes_test(user_is_admin)
+@user_passes_test(user_can_view_data)
 def control_panel(request):
     """
     Render the control panel.
@@ -1512,7 +1625,21 @@ def control_panel(request):
                                 {},
                                 RequestContext(request))
 
-@user_passes_test(user_is_admin)
+@user_passes_test(user_can_view_data)
+def roles_listing(request, option=None):
+    """
+    Generate the jtable data for rendering in the list template.
+
+    :param request: Django request.
+    :type request: :class:`django.http.HttpRequest`
+    :param option: Action to take.
+    :type option: str of either 'jtlist', 'jtdelete', or 'inline'.
+    :returns: :class:`django.http.HttpResponse`
+    """
+
+    return generate_roles_jtable(request, option)
+
+@user_passes_test(user_can_view_data)
 def users_listing(request, option=None):
     """
     Generate the jtable data for rendering in the list template.
@@ -1526,7 +1653,7 @@ def users_listing(request, option=None):
 
     return generate_users_jtable(request, option)
 
-@user_passes_test(user_is_admin)
+@user_passes_test(user_can_view_data)
 def toggle_user_active(request):
     """
     Toggle a user active/inactive. Should be an AJAX POST.
@@ -1552,7 +1679,7 @@ def toggle_user_active(request):
                                   {"error" : error },
                                   RequestContext(request))
 
-@user_passes_test(user_is_admin)
+@user_passes_test(user_can_view_data)
 def item_editor(request):
     """
     Render the item editor control panel page.
@@ -1563,17 +1690,18 @@ def item_editor(request):
     """
 
     counts = {}
+
     obj_list = [
-                Action, 
-                SourceAccess,
-                UserRole]
+                Action,
+                SourceAccess]
+
     for col_obj in obj_list:
         counts[col_obj._meta['cripts_type']] = col_obj.objects().count()
     return render_to_response("item_editor.html",
                               {'counts': counts},
                               RequestContext(request))
 
-@user_passes_test(user_is_admin)
+@user_passes_test(user_can_view_data)
 def items_listing(request, itype, option=None):
     """
     Generate the jtable data for rendering in the list template.
@@ -1589,7 +1717,7 @@ def items_listing(request, itype, option=None):
 
     return generate_items_jtable(request, itype, option)
 
-@user_passes_test(user_is_admin)
+@user_passes_test(user_can_view_data)
 def audit_listing(request, option=None):
     """
     Generate the jtable data for rendering in the list template.
@@ -1597,11 +1725,20 @@ def audit_listing(request, option=None):
     :param request: Django request.
     :type request: :class:`django.http.HttpRequest`
     :param option: Action to take.
-    :type option: str of either 'jtlist', 'jtdelete', or 'inline'.
+    :type option: str of either 'csv', 'jtlist', 'jtdelete', or 'inline'.
     :returns: :class:`django.http.HttpResponse`
     """
 
-    return generate_audit_jtable(request, option)
+    user = request.user
+    if user.has_access_to(GeneralACL.CONTROL_PANEL_AUDIT_LOG_READ):
+        if option == "csv":
+            return generate_audit_csv(request)
+        return generate_audit_jtable(request, option)
+    else:
+        error = "User does not have permission to view audit listing."
+        return render_to_response("error.html",
+                                  {"error" : error },
+                                  RequestContext(request))
 
 @user_passes_test(user_can_view_data)
 def toggle_item_active(request):
@@ -1629,36 +1766,157 @@ def toggle_item_active(request):
                                   RequestContext(request))
 
 @user_passes_test(user_can_view_data)
-def add_preferred_actions(request):
+def role_details(request, rid=None):
     """
-    Add preferred actions to an indicator. Should be an AJAX POST.
+    Generate Role details template.
 
-    :param request: Django request object (Required)
+    :param request: Django request.
+    :type request: :class:`django.http.HttpRequest`
+    :param rid: The ObjectId of the Role to get details for.
+    :type rid: str
+    :returns: :class:`django.http.HttpResponse`
+    """
+
+    # Silly Django :(
+    try:
+        roles = request.POST.getlist('roles', None)
+    except:
+        roles = None
+    analyst = request.user.username
+    template = "role_detail.html"
+    (new_template, args) = get_role_details(rid, roles, analyst)
+    if new_template:
+        template = new_template
+    return render_to_response(template,
+                              args,
+                              RequestContext(request))
+
+@user_passes_test(user_can_view_data)
+def role_value_change(request):
+    """
+    Change the value of a Role item. Should be an AJAX POST.
+
+    :param request: Django request.
     :type request: :class:`django.http.HttpRequest`
     :returns: :class:`django.http.HttpResponse`
     """
 
-    if request.method == "POST" and request.is_ajax():
-        if 'obj_type' not in request.POST and 'obj_id' not in request.POST:
-            result = {'success': False, 'message': "Invalid parameters."}
+    if request.method == 'POST' and request.is_ajax():
+        rid = request.POST.get('rid', None)
+        name = request.POST.get('name', None)
+        value = request.POST.get('value', None)
+        analyst = request.user.username
+        if not rid or not name:
+            result = {'success': False}
         else:
-            username = request.user.username
-            obj_type = request.POST['obj_type']
-            obj_id = request.POST['obj_id']
-            result = do_add_preferred_actions(obj_type, obj_id, username)
-            if 'object' in result:
-                result['html'] = ''
-                for obj in result['object']:
-                    result['html'] += render_to_string('action_row_widget.html',
-                                                       {'action': obj,
-                                                        'admin': is_admin(username),
-                                                        'obj_type':obj_type,
-                                                        'obj_id':obj_id})
+            result = set_role_value(rid, name, value, analyst)
+        return HttpResponse(json.dumps(result), content_type="application/json")
     else:
-        result = {'success': False, 'message': "Expected AJAX POST"}
-    return HttpResponse(json.dumps(result, default=json_handler),
-                        content_type="application/json")
+        error = "Expected AJAX POST"
+        return render_to_response("error.html",
+                                  {"error" : error },
+                                  RequestContext(request))
 
+@user_passes_test(user_can_view_data)
+def role_add_source(request):
+    """
+    Add a source to a Role. Should be an AJAX POST.
+
+    :param request: Django request.
+    :type request: :class:`django.http.HttpRequest`
+    :returns: :class:`django.http.HttpResponse`
+    """
+
+    if request.method == 'POST' and request.is_ajax():
+        rid = request.POST.get('rid', None)
+        name = request.POST.get('name', None)
+        analyst = request.user.username
+        if not rid or not name:
+            result = {'success': False}
+        else:
+            result = add_role_source(rid, name, analyst)
+        return HttpResponse(json.dumps(result), content_type="application/json")
+    else:
+        error = "Expected AJAX POST"
+        return render_to_response("error.html",
+                                  {"error" : error },
+                                  RequestContext(request))
+
+@user_passes_test(user_can_view_data)
+def update_role_name(request):
+    """
+    Update a Role name. Should be an AJAX POST.
+
+    :param request: Django request.
+    :type request: :class:`django.http.HttpRequest`
+    :returns: :class:`django.http.HttpResponse`
+    """
+
+    if request.method == 'POST' and request.is_ajax():
+        rid = request.POST.get('rid', None)
+        name = request.POST.get('name', None)
+        old_name = request.POST.get('old_name', None)
+        analyst = request.user.username
+        if not rid or not name:
+            result = {'success': False}
+        else:
+            result = edit_role_name(rid, old_name, name, analyst)
+        return HttpResponse(json.dumps(result), content_type="application/json")
+    else:
+        error = "Expected AJAX POST"
+        return render_to_response("error.html",
+                                  {"error" : error },
+                                  RequestContext(request))
+
+@user_passes_test(user_can_view_data)
+def update_role_description(request):
+    """
+    Update a Role description. Should be an AJAX POST.
+
+    :param request: Django request.
+    :type request: :class:`django.http.HttpRequest`
+    :returns: :class:`django.http.HttpResponse`
+    """
+
+    if request.method == 'POST' and request.is_ajax():
+        rid = request.POST.get('rid', None)
+        description = request.POST.get('description', None)
+        analyst = request.user.username
+        if not rid or not description:
+            result = {'success': False}
+        else:
+            result = edit_role_description(rid, description, analyst)
+        return HttpResponse(json.dumps(result), content_type="application/json")
+    else:
+        error = "Expected AJAX POST"
+        return render_to_response("error.html",
+                                  {"error" : error },
+                                  RequestContext(request))
+
+@user_passes_test(user_can_view_data)
+def role_remove_source(request):
+    """
+    Remove a source from a Role. Should be an AJAX POST.
+
+    :param request: Django request.
+    :type request: :class:`django.http.HttpRequest`
+    :returns: :class:`django.http.HttpResponse`
+    """
+
+    if request.method == 'POST' and request.is_ajax():
+        rid = request.POST.get('rid', None)
+        name = request.POST.get('name', None)
+        analyst = request.user.username
+        if not rid or not name:
+            result = {'success': False}
+        else:
+            result = remove_role_source(rid, name, analyst)
+        return HttpResponse(json.dumps(result), content_type="application/json")
+    else:
+        error = "Expected AJAX POST"
+        return render_to_response("error.html",
+                                  {"error" : error },
+                                  RequestContext(request))
 
 @user_passes_test(user_can_view_data)
 def download_file(request, sample_md5):
@@ -1674,12 +1932,27 @@ def download_file(request, sample_md5):
     """
 
     dtype = request.GET.get("type", "sample")
-    if dtype in ('object'):
-        return download_grid_file(request, dtype, sample_md5)
+    
+    if dtype=='cert':
+        tlo_type = 'Certificate'
+    else:
+        tlo_type = dtype
+
+    user = request.user
+    acl = get_acl_object(tlo_type)
+    if user.has_access_to(acl.DOWNLOAD):
+        if dtype in ('object', 'pcap', 'cert'):
+            return download_grid_file(request, dtype, sample_md5)
+        else:
+            return render_to_response('error.html',
+                                      {'data': request,
+                                       'error': "Unknown Type: %s" % dtype},
+                                      RequestContext(request))
+
     else:
         return render_to_response('error.html',
                                   {'data': request,
-                                   'error': "Unknown Type: %s" % dtype},
+                                   'error': "User does not have permission to download %s" % dtype},
                                   RequestContext(request))
 
 @user_passes_test(user_can_view_data)
@@ -1726,45 +1999,51 @@ def add_update_ticket(request, method, type_=None, id_=None):
     :type id_: str
     :returns: :class:`django.http.HttpResponseRedirect`
     """
+    user = request.user
 
-    if method == "remove" and request.method == "POST" and request.is_ajax():
-        analyst = request.user.username
-        if is_admin(analyst):
-            date = datetime.datetime.strptime(request.POST['key'],
-                                              settings.PY_DATETIME_FORMAT)
-            date = date.replace(microsecond=date.microsecond/1000*1000)
-            result = ticket_remove(type_, id_, date, analyst)
-            return HttpResponse(json.dumps(result),
-                                content_type="application/json")
+    acl = get_acl_object(type_)
+
+    if method =="remove" and request.method == "POST" and request.is_ajax():
+        date = datetime.datetime.strptime(request.POST['key'],
+                                            settings.PY_DATETIME_FORMAT)
+        date = date.replace(microsecond=date.microsecond/1000*1000)
+        if user.has_access_to(acl.TICKETS_DELETE):
+            result = ticket_remove(type_, id_, date, user)
         else:
-            error = "You do not have permission to remove this item."
-            return render_to_response("error.html",
-                                      {'error': error},
-                                      RequestContext(request))
+            result = {"success":False,
+                      "message":"User does not have permission to delete tickets."}
+        return HttpResponse(json.dumps(result),
+                            content_type="application/json")
 
     if request.method == "POST" and request.is_ajax():
         form = TicketForm(request.POST)
         if form.is_valid():
             data = form.cleaned_data
-            user = request.user.username
             add = {
                     'ticket_number': data['ticket_number'],
             }
             if method == "add":
                 add['date'] = datetime.datetime.now()
-                result = ticket_add(type_, id_, add, user)
+                if user.has_access_to(acl.TICKETS_ADD):
+                    result = ticket_add(type_, id_, add, user)
+                else:
+                    result = {"success":False,
+                              "message":"User does not have permission to add tickets."}
             else:
                 date = datetime.datetime.strptime(data['date'],
                                                          settings.PY_DATETIME_FORMAT)
                 date = date.replace(microsecond=date.microsecond/1000*1000)
                 add['date'] = date
-                result = ticket_update(type_, id_, add, user)
+                if user.has_access_to(acl.TICKETS_EDIT):
+                    result = ticket_update(type_, id_, add, user.username)
+                else:
+                    result = {"success":False,
+                              "message":"User does not have permission to modify tickets."}
 
             cripts_config = CRIPTsConfig.objects().first()
             if 'object' in result:
                 result['html'] = render_to_string('tickets_row_widget.html',
                                                   {'ticket': result['object'],
-                                                   'admin': is_admin(request.user),
                                                    'cripts_config': cripts_config,
                                                    'obj_type': type_,
                                                    'obj': class_from_id(type_, id_)})
@@ -1775,6 +2054,12 @@ def add_update_ticket(request, method, type_=None, id_=None):
             return HttpResponse(json.dumps({'success':False,
                                             'form': form.as_table()}),
                                 content_type="application/json")
+    else:
+        result = {"success":False,
+                  "message":"User does not have permission to delete tickets."}
+        return HttpResponse(json.dumps(result),
+                            content_type="application/json")
+
     #default. Should we do anything else here?
     return HttpResponse({})
 
@@ -1913,10 +2198,14 @@ def sector_modify(request):
     """
 
     if request.method == "POST" and request.is_ajax():
-        sectors = request.POST['sectors'].split(",")
-        oid = request.POST['oid']
-        itype = request.POST['itype']
-        modify_sector_list(itype, oid, sectors, request.user.username)
+        user = request.user
+        acl = get_acl_object(request.POST['itype'])
+        if user.has_access_to(acl.SECTORS_EDIT):
+            sectors = request.POST['sectors'].split(",")
+            oid = request.POST['oid']
+            itype = request.POST['itype']
+            modify_sector_list(itype, oid, sectors, request.user.username)
+
     return HttpResponse({})
 
 @user_passes_test(user_can_view_data)
@@ -1969,6 +2258,56 @@ def bucket_autocomplete(request):
     return HttpResponse({})
 
 @user_passes_test(user_can_view_data)
+def tlp_modify(request):
+    """
+    Modify the TLP for a top-level object. Should be an AJAX POST.
+
+    :param request: Django request.
+    :type request: :class:`django.http.HttpRequest`
+    :returns: :class:`django.http.HttpResponse`
+    """
+
+    if request.method == "POST" and request.is_ajax():
+        tlp = request.POST['tlp']
+        oid = request.POST['oid']
+        itype = request.POST['itype']
+        results = modify_tlp(itype, oid, tlp, request.user.username)
+        return HttpResponse(json.dumps(results), content_type="application/json")
+    else:
+        return render_to_response("error.html",
+                                  {"error" : 'Expected AJAX POST.'},
+                                  RequestContext(request))
+
+@user_passes_test(user_can_view_data)
+def add_preferred_actions(request):
+    """
+    Add preferred actions to an indicator. Should be an AJAX POST.
+
+    :param request: Django request object (Required)
+    :type request: :class:`django.http.HttpRequest`
+    :returns: :class:`django.http.HttpResponse`
+    """
+
+    if request.method == "POST" and request.is_ajax():
+        if 'obj_type' not in request.POST and 'obj_id' not in request.POST:
+            result = {'success': False, 'message': "Invalid parameters."}
+        else:
+            username = request.user.username
+            obj_type = request.POST['obj_type']
+            obj_id = request.POST['obj_id']
+            result = do_add_preferred_actions(obj_type, obj_id, username)
+            if 'object' in result:
+                result['html'] = ''
+                for obj in result['object']:
+                    result['html'] += render_to_string('indicators_action_row_widget.html',
+                                                       {'action': obj,
+                                                        'indicator_id': obj_id})
+    else:
+        result = {'success': False, 'message': "Expected AJAX POST"}
+    return HttpResponse(json.dumps(result, default=json_handler),
+                        content_type='application/json')
+
+@user_passes_test(user_can_view_data)
 def new_action(request):
     """
     Add a new action. Should be an AJAX POST.
@@ -1980,17 +2319,21 @@ def new_action(request):
 
     if request.method == 'POST' and request.is_ajax():
         form = NewActionForm(request.POST)
-        analyst = request.user.username
+        user = request.user
         if form.is_valid():
-            result = add_new_action(form.cleaned_data['action'],
-                                    form.cleaned_data['object_types'],
-                                    form.cleaned_data['preferred'],
-                                    analyst)
-            if result:
-                message = {'message': '<div>Action added successfully!</div>',
-                           'success': True}
+            if user.has_access_to(GeneralACL.ADD_NEW_INDICATOR_ACTION):
+                result = add_new_action(form.cleaned_data['action'],
+                                        form.cleaned_data['object_types'],
+                                        form.cleaned_data['preferred'],
+                                        user)
+                if result:
+                    message = {'message': '<div>Action added successfully!</div>',
+                               'success': True}
+                else:
+                    message = {'message': '<div>Action addition failed!</div>',
+                               'success': False}
             else:
-                message = {'message': '<div>Action addition failed!</div>',
+                message = {'message': '<div>User does not have permission to add indicator action.</div>',
                            'success': False}
         else:
             message = {'form': form.as_table()}
@@ -2016,48 +2359,50 @@ def add_update_action(request, method, obj_type, obj_id):
     """
 
     if request.method == "POST" and request.is_ajax():
-        username = request.user.username
+        user = request.user
+        acl = get_acl_object(obj_type)
         form = ActionsForm(request.POST)
-
-        action_types = get_action_types_for_tlo(obj_type)
-
-        form.fields['action_type'].choices = [
-            (c, c) for c in action_types
-        ]
-
-        if form.is_valid():
-            data = form.cleaned_data
-            add = {
-                    'action_type': data['action_type'],
-                    'begin_date': data.get('begin_date', ''),
-                    'end_date': data.get('end_date', ''),
-                    'performed_date': data.get('performed_date', ''),
-                    'active': data['active'],
-                    'reason': data['reason'],
-                    }
-            if method == "add":
-                add['date'] = datetime.datetime.now()
-                result = action_add(obj_type, obj_id, add, user=username)
+        form.is_valid()
+        data = form.cleaned_data
+        data['action_type'] = request.POST.get('action_type')
+        add = {
+            'action_type': data['action_type'],
+            'begin_date': data['begin_date'] if data['begin_date'] else '',
+            'end_date': data['end_date'] if data['end_date'] else '',
+            'performed_date': data['performed_date'] if data['performed_date'] else '',
+            'active': data['active'],
+            'reason': data['reason'],
+        }
+        if method == "add":
+            add['date'] = datetime.datetime.now()
+            if user.has_access_to(acl.ACTIONS_ADD):
+                result = action_add(obj_type, obj_id, add, user)
             else:
-                date = datetime.datetime.strptime(data['date'],
-                                                         settings.PY_DATETIME_FORMAT)
-                date = date.replace(microsecond=date.microsecond/1000*1000)
-                add['date'] = date
-                result = action_update(obj_type, obj_id, add, user=username)
-            if 'object' in result:
-                result['html'] = render_to_string('action_row_widget.html',
-                                                  {'action': result['object'],
-                                                   'admin': is_admin(username),
-                                                   'obj_type':obj_type,
-                                                   'obj_id':obj_id})
-            return HttpResponse(json.dumps(result,
-                                           default=json_handler),
-                                content_type="application/json")
-        else: #invalid form
-            return HttpResponse(json.dumps({'success':False,
-                                            'form':form.as_table()}),
-                                content_type="application/json")
-    return HttpResponse({})
+                result = {"success":False,
+                          "message":"User does not have permission to add action."}
+        else:
+            date = datetime.datetime.strptime(data['date'],
+                                                settings.PY_DATETIME_FORMAT)
+            date = date.replace(microsecond=date.microsecond/1000*1000)
+            add['date'] = date
+            if user.has_access_to(acl.ACTIONS_EDIT):
+                result = action_update(obj_type, obj_id, add, user.username)
+            else:
+                result = {"success":False,
+                          "message":"User does not have permission to edit action."}
+        if 'object' in result:
+            result['html'] = render_to_string('action_row_widget.html',
+                                                {'action': result['object'],
+                                                'obj_type':obj_type,
+                                                'obj_id':obj_id})
+
+        return HttpResponse(json.dumps(result,
+                                       default=json_handler),
+                            content_type='application/json')
+
+    return render_to_response("error.html",
+                              {'error': 'Expected AJAX/POST'},
+                              RequestContext(request))
 
 @user_passes_test(user_can_view_data)
 def remove_action(request, obj_type, obj_id):
@@ -2074,21 +2419,25 @@ def remove_action(request, obj_type, obj_id):
     """
 
     if request.method == "POST" and request.is_ajax():
-        analyst = request.user.username
-        if is_admin(analyst):
+        user = request.user
+        if user.has_access_to(acl.ACTIONS_DELETE):
             key = request.POST['key'].split(',')
             date = datetime.datetime.strptime(key[0],
                                               settings.PY_DATETIME_FORMAT)
             date = date.replace(microsecond=date.microsecond/1000*1000)
-            result = action_remove(obj_type, obj_id, date, key[1], analyst)
+            result = action_remove(obj_type, obj_id, date, key[1], user)
+
             return HttpResponse(json.dumps(result),
                                 content_type="application/json")
         else:
-            error = "You do not have permission to remove this item."
-            return render_to_response("error.html",
-                                      {'error': error},
-                                      RequestContext(request))
-    return HttpResponse({})
+            result = {"success":False,
+                      "message":"User does not have permission to delete action."}
+        return HttpResponse(json.dumps(result),
+                            content_type="application/json")
+
+    return render_to_response("error.html",
+                              {'error': 'Expected AJAX/POST'},
+                              RequestContext(request))
 
 @user_passes_test(user_can_view_data)
 def get_actions_for_tlo(request):

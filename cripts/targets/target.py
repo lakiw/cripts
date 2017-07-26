@@ -1,11 +1,15 @@
 import uuid
 
 from mongoengine import Document, StringField, UUIDField
+from mongoengine import BooleanField, EmbeddedDocument
 from django.conf import settings
 
 from cripts.core.cripts_mongoengine import CriptsBaseAttributes, CriptsSourceDocument
+from cripts.core.cripts_mongoengine import CriptsDocumentFormatter
+from cripts.core.cripts_mongoengine import CommonAccess
 from cripts.core.cripts_mongoengine import CriptsActionsDocument
-
+from cripts.core.user_tools import user_sources
+from cripts.targets.migrate import migrate_target
 
 class Target(CriptsBaseAttributes, CriptsSourceDocument, CriptsActionsDocument,
             Document):
@@ -42,4 +46,13 @@ class Target(CriptsBaseAttributes, CriptsSourceDocument, CriptsActionsDocument,
 
     }
 
-    
+    def migrate(self):
+        migrate_target(self)
+        
+        
+class TargetAccess(EmbeddedDocument, CriptsDocumentFormatter, CommonAccess):
+    """
+    ACL for Targets
+    """
+
+    edit_details = BooleanField(default=False)   

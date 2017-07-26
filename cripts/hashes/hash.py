@@ -1,10 +1,14 @@
 import uuid
 
 from mongoengine import Document, StringField, UUIDField
+from mongoengine import BooleanField, EmbeddedDocument
 from django.conf import settings
 
 from cripts.core.cripts_mongoengine import CriptsBaseAttributes, CriptsSourceDocument
+from cripts.core.cripts_mongoengine import CriptsDocumentFormatter
+from cripts.core.cripts_mongoengine import CommonAccess
 from cripts.core.cripts_mongoengine import CriptsActionsDocument
+from cripts.hashes.migrate import migrate_hash
 
 
 class Hash(CriptsBaseAttributes, CriptsSourceDocument, CriptsActionsDocument,
@@ -43,3 +47,9 @@ class Hash(CriptsBaseAttributes, CriptsSourceDocument, CriptsActionsDocument,
     }
 
     
+class HashAccess(EmbeddedDocument, CriptsDocumentFormatter, CommonAccess):
+    """
+    ACL for Hashes
+    """
+
+    edit_details = BooleanField(default=False)    

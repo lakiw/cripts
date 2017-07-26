@@ -55,6 +55,7 @@
     {% if nav_template %}
         {% include nav_template %}
     {% endif %}
+    {% load filters %}
 
     <script>
     var favorite_count = 0;
@@ -143,7 +144,6 @@
       <div id="show_username" class='top_item'>
         <p data-intro="Your Profile" data-position="bottom">
           <a href="{% url 'cripts.core.views.profile' %}">{{ user.first_name }} {{ user.last_name }}</a>
-          {% if user_role %}&nbsp;({{ user_role }}){% endif %}
         </p>
       </div>
       {% if user_notifications and user_notifications > 0 %}
@@ -156,7 +156,6 @@
 
       {% include "subscription_widget.html" %}
 
-      {% if user_role %}
       <div class='top_item' id="clipboard_container">
         <span id="clipboard_icon" class="ui-icon ui-icon-clipboard clipboard_icon_empty clipboard_qtip" data-intro="Clipboard" data-position="right"></span>
         <div id="selected_item_topbar" class="clipboard_qtip_body" style="display: none;">Your clipboard is empty.</div>
@@ -173,7 +172,7 @@
       <div class='top_item' id="help_overlay_container">
         <span id="help_overlay" class="help_overlay_icon" data-intro="Press ? for Shortcut Keys." data-position='bottom' title="Overlay Help"></span>
       </div>
-      {% endif %}
+
 
       <!-- search section -->
       <div id="show_search" class='search'>
@@ -215,14 +214,12 @@
       <span class="left" data-intro="Instance Information" data-position="top">
         <b>{{ instance_name }} Instance</b> (DB: {{mongo_database }})
       </span>
-      {% if user_role %}
       <span class='left'>
         <b>Last login:</b> {{ user.last_login|date }}
       </span>
       <span class='left'>
         <div id="pageLoadTiming"></div>
       </span>
-      {% endif %}
       {% endif %}
     </div>
     <!-- end footer -->
@@ -307,11 +304,9 @@
           </li>
       </ul>
     </li>
-    {% if user_role %}
     <li class='nav_main mmenu_item'>
       <a href="{% url 'cripts.core.views.profile' %}">My CRIPTs</a>
     </li>
-    {% endif %}
     <li class='nav_main mmenu_item'>
       <a href="{% url 'cripts.core.views.bucket_list' %}">Bucket Lists</a>
     </li>
@@ -320,15 +315,21 @@
     </li>
     <li class='nav_objects mmenu_item'>
       <a href="{% url 'cripts.datasets.views.datasets_listing' %}">Datasets</a>
-      <a href id="new-dataset" class="ui-icon ui-icon-plusthick add dialogClick" dialog="new-dataset" persona="new" title="New Dataset"></a>
+      {% if acl.DATASET_WRITE|has_access_to:user %}
+        <a href id="new-dataset" class="ui-icon ui-icon-plusthick add dialogClick" dialog="new-dataset" persona="new" title="New Dataset"></a>
+      {% endif %}
     </li>
     <li class='nav_objects mmenu_item'>
       <a href="{% url 'cripts.email_addresses.views.email_addresses_listing' %}">Email Addresses</a>
-      <a href id="new-email_address" class="ui-icon ui-icon-plusthick add dialogClick" dialog="new-email_address" persona="new" title="New Email Address"></a>
+      {% if acl.EMAIL_ADDRESS_WRITE|has_access_to:user %}
+        <a href id="new-email_address" class="ui-icon ui-icon-plusthick add dialogClick" dialog="new-email_address" persona="new" title="New Email Address"></a>
+      {% endif %}
       <ul class='sub-mmenu'>
+        {% if acl.EMAIL_ADDRESS_WRITE|has_access_to:user %}
         <li class='mmenu_item'>
           <a href="{% url 'cripts.email_addresses.views.bulk_add_email_addresses' %}" id="bulk_upload_email_address">Bulk Upload Emails (Web GUI)</a>
         </li>
+        {% endif %}
         <li class='mmenu_item'>
           <a href="#" action="{% url 'cripts.email_addresses.views.bulk_file_upload_email_addresses' %}" class="dialogClick" dialog="new-bulk-email" persona="new" title="Upload Email List File">Upload Email List File</a>
         </li>
@@ -336,19 +337,27 @@
     </li>
     <li class='nav_objects mmenu_item'>
       <a href="{% url 'cripts.events.views.events_listing' %}">Events</a>
-      <a href id="new-event" class="ui-icon ui-icon-plusthick add dialogClick" dialog="new-event" persona="new" title="New Event"></a>
+      {% if acl.EVENT_WRITE|has_access_to:user %}
+        <a href id="new-event" class="ui-icon ui-icon-plusthick add dialogClick" dialog="new-event" persona="new" title="New Event"></a>
+      {% endif %}
     </li>
     <li class='nav_objects mmenu_item'>
       <a href="{% url 'cripts.hashes.views.hashes_listing' %}">Hashes</a>
-      <a href id="new-hash" class="ui-icon ui-icon-plusthick add dialogClick" dialog="new-hash" persona="new" title="New Hash"></a>
+      {% if acl.HASH_WRITE|has_access_to:user %}
+        <a href id="new-hash" class="ui-icon ui-icon-plusthick add dialogClick" dialog="new-hash" persona="new" title="New Hash"></a>
+      {% endif %}
     </li>
     <li class='nav_objects mmenu_item'>
       <a href="{% url 'cripts.targets.views.targets_listing' %}">Targets</a>
-      <a href id="new-target" class="ui-icon ui-icon-plusthick add dialogClick" dialog="new-target" persona="new" title="New Target"></a>
-    </li>
+      {% if acl.TARGET_WRITE|has_access_to:user %}
+        <a href id="new-target" class="ui-icon ui-icon-plusthick add dialogClick" dialog="new-target" persona="new" title="New Target"></a>
+      {% endif %}
+      </li>
     <li class='nav_objects mmenu_item'>
       <a href="{% url 'cripts.usernames.views.usernames_listing' %}">Usernames</a>
-      <a href id="new-username" class="ui-icon ui-icon-plusthick add dialogClick" dialog="new-username" persona="new" title="New Username"></a>
+      {% if acl.USERNAME_WRITE|has_access_to:user %}
+        <a href id="new-username" class="ui-icon ui-icon-plusthick add dialogClick" dialog="new-username" persona="new" title="New Username"></a>
+      {% endif %}
     </li>
     <li class='nav_services mmenu_item'>
       <a href class="noclick">Services</a>
@@ -364,63 +373,70 @@
     <li class='nav_main mmenu_item'>
       <a href="{% url 'cripts.comments.views.activity' %}">Recent Activity</a>
     </li>
-    {% if user_role != "Read Only" %}
     <li class='nav_admin mmenu_item'>
       <a href class="noclick">Add New Item</a>
       <ul class='sub-mmenu'>
         <li class='mmenu_item'>
           <a href class="dialogClick" persona="new" dialog="action_add" id="action_add">Action</a>
         </li>
-        {% if user_role == 'Administrator' %}
         <li class='mmenu_item'>
           <a href class="dialogClick" persona="new" dialog="source_create" id="source_create">Source</a>
         </li>
         <li class='mmenu_item'>
           <a href class="dialogClick" persona="new" dialog="user_role" id="user_role">User Role</a>
         </li>
-        {% endif %}
       </ul>
     </li>
-    {% endif %}
-    {% if user_role == 'Administrator' %}
-        <li class='nav_admin mmenu_item'>
-            <a href="{% url 'cripts.config.views.cripts_config' %}">CRIPTs Control Panel</a>
-            <ul class='sub-mmenu'>
-                <li class='mmenu_item'>
-                    <a href="{% url 'cripts.config.views.cripts_config' %}">System</a>
-                    <ul class='sub-mmenu'>
-                        <li class='mmenu_item'>
-                            <a node='node_system' sub_node='CRIPTsTab' class='controlPanelNav' href="{% url 'cripts.config.views.cripts_config' %}#CRIPTsTab">CRIPTs Configuration</a>
-                        </li>
-                        <li class='mmenu_item'>
-                            <a node='node_system' sub_node='generalTab' class='controlPanelNav' href="{% url 'cripts.config.views.cripts_config' %}#generalTab">General</a>
-                        </li>
-                        <li class='mmenu_item'>
-                            <a node='node_system' sub_node='LDAP' class='controlPanelNav' href="{% url 'cripts.config.views.cripts_config' %}#LDAP">LDAP Settings</a>
-                        </li>
-                        <li class='mmenu_item'>
-                            <a node='node_system' sub_node='downloadTab' class='controlPanelNav' href="{% url 'cripts.config.views.cripts_config' %}#downloadTab">Downloading</a>
-                        </li>
-                        <li class='mmenu_item'>
-                            <a node='node_system' sub_node='securityTab' class='controlPanelNav' href="{% url 'cripts.config.views.cripts_config' %}#securityTab">Security</a>
-                        </li>
-                        <li class='mmenu_item'>
-                            <a node='node_system' sub_node='servicesTab' class='controlPanelNav' href="{% url 'cripts.config.views.cripts_config' %}#servicesTab">Services</a>
-                        </li>
-                        <li class='mmenu_item'>
-                            <a node='node_system' sub_node='loggingTab' class='controlPanelNav' href="{% url 'cripts.config.views.cripts_config' %}#loggingTab">Logging</a>
-                        </li>
-                    </ul>
-                </li>
+
+    <li class='nav_admin mmenu_item'>
+        <a href="{% url 'cripts.config.views.cripts_config' %}">CRIPTs Control Panel</a>
+        <ul class='sub-mmenu'>
+            {% if GeneralACL.CONTROL_PANEL_SYSTEM_READ|has_access_to:user %}
+            <li class='mmenu_item'>
+                <a href="{% url 'cripts.config.views.cripts_config' %}">System</a>
+                <ul class='sub-mmenu'>
+                    <li class='mmenu_item'>
+                        <a node='node_system' sub_node='CRIPTsTab' class='controlPanelNav' href="{% url 'cripts.config.views.cripts_config' %}#CRIPTsTab">CRIPTs Configuration</a>
+                    </li>
+                    <li class='mmenu_item'>
+                        <a node='node_system' sub_node='generalTab' class='controlPanelNav' href="{% url 'cripts.config.views.cripts_config' %}#generalTab">General</a>
+                    </li>
+                    <li class='mmenu_item'>
+                        <a node='node_system' sub_node='LDAP' class='controlPanelNav' href="{% url 'cripts.config.views.cripts_config' %}#LDAP">LDAP Settings</a>
+                    </li>
+                    <li class='mmenu_item'>
+                        <a node='node_system' sub_node='downloadTab' class='controlPanelNav' href="{% url 'cripts.config.views.cripts_config' %}#downloadTab">Downloading</a>
+                    </li>
+                    <li class='mmenu_item'>
+                        <a node='node_system' sub_node='securityTab' class='controlPanelNav' href="{% url 'cripts.config.views.cripts_config' %}#securityTab">Security</a>
+                    </li>
+                    <li class='mmenu_item'>
+                        <a node='node_system' sub_node='servicesTab' class='controlPanelNav' href="{% url 'cripts.config.views.cripts_config' %}#servicesTab">Services</a>
+                    </li>
+                    <li class='mmenu_item'>
+                        <a node='node_system' sub_node='loggingTab' class='controlPanelNav' href="{% url 'cripts.config.views.cripts_config' %}#loggingTab">Logging</a>
+                    </li>
+                </ul>
+            </li>
+           {% endif %}
+           {% if GeneralACL.CONTROL_PANEL_USERS_READ|has_access_to:user %}
+            <li class='mmenu_item'>
+            {% if GeneralACL.CONTROL_PANEL_USERS_READ|has_access_to:user %}
+            <li class='mmenu_item'>
                 <li class='mmenu_item'>
                     <a class='controlPanelNav' node='node_users' href="{% url 'cripts.config.views.cripts_config' %}#users">Users</a>
                 </li>
+                {% endif %}
+                {% if GeneralACL.CONTROL_PANEL_SERVICES_READ|has_access_to:user %}
                 <li class='mmenu_item'>
                     <a class='controlPanelNav' node='node_services' href="{% url 'cripts.config.views.cripts_config' %}#services">Services</a>
                 </li>
+                 {% endif %}
+                {% if GeneralACL.CONTROL_PANEL_AUDIT_LOG_READ|has_access_to:user %}
                 <li class='mmenu_item'>
                     <a class='controlPanelNav' node='node_audit_log' href="{% url 'cripts.config.views.cripts_config' %}#auditLog">Audit Log</a>
                 </li>
+                {% endif %}
             </ul>
         </li>
     {% endif %}

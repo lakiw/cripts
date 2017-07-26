@@ -14,10 +14,12 @@ from tastypie.authentication import SessionAuthentication, ApiKeyAuthentication
 from tastypie.utils.mime import build_content_type
 from tastypie_mongoengine.resources import MongoEngineResource
 
+
 from cripts.core.data_tools import format_file, create_zip
 from cripts.core.handlers import remove_quotes, generate_regex
-from critps.core.user_tools import user_sources
+from cripts.core.user_tools import get_acl_object
 
+from cripts.vocabulary.acls import GeneralACL
 
 # The following leverages code from the Tastypie library.
 class CRIPTsApiKeyAuthentication(ApiKeyAuthentication):
@@ -53,6 +55,9 @@ class CRIPTsApiKeyAuthentication(ApiKeyAuthentication):
             return self._unauthorized()
 
         if not user.is_active:
+            return self._unauthorized()
+
+        if not user.has_access_to(GeneralACL.API_INTERFACE):
             return self._unauthorized()
 
         key_auth_check = self.get_key(user, api_key)
@@ -402,12 +407,14 @@ class CRIPTsAPIResource(MongoEngineResource):
         """
 
         querydict = {}
+        user = request.user
         get_params = request.GET.copy()
         regex = request.GET.get('regex', False)
         only = request.GET.get('only', None)
         exclude = request.GET.get('exclude', None)
-        source_list = user_sources(request.user.username)
+        source_list = user.get_sources_list()
         no_sources = True
+
         # Chop off trailing slash and split on remaining slashes.
         # If last part of path is not the resource name, assume it is an
         # object ID.
@@ -506,6 +513,7 @@ class CRIPTsAPIResource(MongoEngineResource):
             querydict = tmp
         if no_sources and sources:
             querydict['source.name'] = {'$in': source_list}
+
         if only or exclude:
             required = [k for k,f in klass._fields.iteritems() if f.required]
         if only:
@@ -525,14 +533,35 @@ class CRIPTsAPIResource(MongoEngineResource):
             results = klass.objects(__raw__=querydict).exclude(*fields)
         else:
             results = klass.objects(__raw__=querydict)
+
+        # There has to be a better way to do this...
+        # Final scrub to remove results the user does not have access to
+        id_list = []
+
+        if not klass._meta['cripts_type']:
+            return results
+
+        for result in results:
+            if user.check_source_tlp(result):
+                id_list.append(result.id)
+
+        results = klass.objects(id__in=id_list)
+
         return results
 
     def obj_get_list(self, bundle, **kwargs):
         """
         Placeholder for overriding the default tastypie function in the future.
         """
+        user = bundle.request.user
 
-        return super(CRIPTsAPIResource, self).obj_get_list(bundle=bundle, **kwargs)
+        acl = get_acl_object(bundle.obj._meta['cripts_type'])
+
+        if not acl or (bundle.obj._meta['cripts_type'] == 'Screenshot' or user.has_access_to(acl.READ)):
+            return super(CRIPTsAPIResource, self).obj_get_list(bundle=bundle, **kwargs)
+        else:
+            raise NotImplementedError('You do not have access to this object.')
+
 
     def obj_get(self, bundle, **kwargs):
         """
@@ -653,6 +682,7 @@ class CRIPTsAPIResource(MongoEngineResource):
             content['message'] = "'%s' is not a valid action." % action
         self.cripts_response(content)
 
+        
     def obj_delete_list(self, bundle, **kwargs):
         """
         Delete list of objects in CRIPTs. Should be overridden by each
@@ -663,6 +693,7 @@ class CRIPTsAPIResource(MongoEngineResource):
 
         raise NotImplementedError('You cannot currently delete objects through the API.')
 
+        
     def obj_delete(self, bundle, **kwargs):
         """
         Delete an object in CRIPTs. Should be overridden by each
@@ -673,6 +704,7 @@ class CRIPTsAPIResource(MongoEngineResource):
 
         raise NotImplementedError('You cannot currently delete this object through the API.')
 
+        
     def resource_name_from_type(self, cripts_type):
         """
         Take a CRIPTs type and convert it to the appropriate API resource name.

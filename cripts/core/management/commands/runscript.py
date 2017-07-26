@@ -8,6 +8,8 @@ from cripts.core.user import CRIPTsUser
 from optparse import make_option
 
 from cripts.core.handlers import login_user
+from cripts.vocabulary.acls import GeneralACL
+
 
 class Command(BaseCommand):
     """
@@ -86,8 +88,12 @@ class Command(BaseCommand):
                   remote_addr=remote_addr, accept_language=accept_language,
                   totp_pass=totp_pass)
 
-        script = script_class(username=username)
-        script.run(arg_list)
+        if u.has_access_to(GeneralACL.SCRIPT_INTERFACE):
+            script = script_class(user=u)
+            script.run(arg_list)
+        else:
+            raise CommandError(('User does not have permission to run CRIPTs Scripts.'))
+
 
 def try_login(username, password, user_agent, remote_addr, accept_language,
               totp_pass=None):

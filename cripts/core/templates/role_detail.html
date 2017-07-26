@@ -1,0 +1,173 @@
+{% extends "base.html" %}
+{% load url from future %}
+{% load filters %}
+
+{% block title %} Role Detail {% endblock %}
+
+{% block content %}
+
+<script>
+    var role_value_change = "{% url 'cripts.core.views.role_value_change' %}";
+    var role_add_source = "{% url 'cripts.core.views.role_add_source' %}";
+    var role_remove_source = "{% url 'cripts.core.views.role_remove_source' %}";
+    var toggle_item_active = "{% url 'cripts.core.views.toggle_item_active' %}";
+    var update_role_name = "{% url 'cripts.core.views.update_role_name' %}";
+    var update_role_description = "{% url 'cripts.core.views.update_role_description' %}";
+    var rid = "{{ rid }}";
+    var do_copy = false;
+    {% if show_roles %}
+        var no_submit = true;
+    {% else %}
+        var no_submit = false;
+    {% endif %}
+</script>
+<style>
+    table.vertical tr td {
+        min-width: 250px;
+    }
+    table.form tr th {
+        max-width: 300px;
+    }
+    div.ui-multiselect {
+        min-width: 297px;
+    }
+    div.selected {
+        min-width: 148px;
+    }
+    div.available {
+        min-width: 148px;
+    }
+    table.form tr th label {
+        float: left;
+    }
+    #copy_role {
+        float: right;
+    }
+</style>
+
+<div id="tabnav" class="tabnav" style="font-size:90%">
+    <ul style="font-size: 125%">
+    <li><a href="#general_section" id="general_button"><span>General</span></a></li>
+    <li><a href="#dataset_section" id="dataset_button"><span>Dataset</span></a></li>
+    <li><a href="#emailaddress_section" id="emailaddress_button"><span>Email Address</span></a></li>
+    <li><a href="#event_section" id="event_button"><span>Event</span></a></li>
+    <li><a href="#hash_section" id="hash_button"><span>Hash</span></a></li>
+    <li><a href="#target_section" id="target_button"><span>Target</span></a></li>
+    <li><a href="#username_section" id="username_button"><span>UserName</span></a></li>
+
+
+    </ul>
+<div id="general_section">
+    {% if show_roles %}
+    <div>
+        <h3>Role Combination Preview for:
+            {% for r in show_roles %}
+                {% if forloop.last %}
+                    {{ r }}
+                {% else %}
+                    {{ r }},
+                {% endif %}
+            {% endfor %}
+        </h3>
+        <span>Note: This view is read-only and meant as an informative
+            representation of what combining these rules would grant access to
+            for any users assigned to the combination of these roles.
+        </span>
+        <br /><br />
+    </div>
+    {% endif %}
+    <div style="float: right;">
+        <table class="form" id="role_source_table">
+            {{ source_form.as_table }}
+            {% for source in role.sources %}
+                {% include 'role_source_item.html' %}
+            {% endfor %}
+        </table>
+    </div>
+    <table class="vertical">
+        <tbody>
+            {% with tlo=None %}
+                {% for k,v in role.items %}
+                    {% if not k|is_tlo and k != "sources" %}
+                        {% include 'role_item.html' %}
+                    {% endif %}
+                {% endfor %}
+            {% endwith %}
+        </tbody>
+    </table>
+    </div>
+    <div id="dataset_section">
+        <table class="vertical">
+            <tbody>
+                {% with tlo="Dataset" %}
+                    {% for k,v in role.Dataset.items %}
+                        {% include 'role_item.html' %}
+                    {% endfor %}
+                {% endwith %}
+            </tbody>
+        </table>
+    </div>
+    <div id="emailadderess_section">
+        <table class="vertical">
+            <tbody>
+                {% with tlo="EmailAddress" %}
+                    {% for k,v in role.EmailAddress.items %}
+                        {% include 'role_item.html' %}
+                    {% endfor %}
+                {% endwith %}
+            </tbody>
+        </table>
+    </div>
+    <div id="event_section">
+        <table class="vertical">
+            <tbody>
+                {% with tlo="Event" %}
+                    {% for k,v in role.Event.items %}
+                        {% include 'role_item.html' %}
+                    {% endfor %}
+                {% endwith %}
+            </tbody>
+        </table>
+    </div>
+    <div id="hash_section">
+    <table class="vertical">
+        <tbody>
+            {% with tlo="Hash" %}
+                {% for k,v in role.Hash.items %}
+                    {% include 'role_item.html' %}
+                {% endfor %}
+            {% endwith %}
+        </tbody>
+    </table>
+    </div>
+    <div id="target_section">
+        <table class="vertical">
+            <tbody>
+                {% with tlo="Target" %}
+                    {% for k,v in role.Target.items %}
+                        {% include 'role_item.html' %}
+                    {% endfor %}
+                {% endwith %}
+            </tbody>
+        </table>
+    </div>
+    <div id="username_section">
+    <table class="vertical">
+        <tbody>
+            {% with tlo="UserName" %}
+                {% for k,v in role.UserName.items %}
+                    {% include 'role_item.html' %}
+                {% endfor %}
+            {% endwith %}
+        </tbody>
+    </table>
+    </div>
+
+</div>
+
+
+{% endblock %}
+
+{% block javascript_includes %}
+ <script type="text/javascript" src="{{ STATIC_URL }}js/roles.js"></script>
+{% endblock %}

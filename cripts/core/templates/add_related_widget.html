@@ -1,3 +1,4 @@
+{% load filters %}
 <div class="content_box" id="add_related_box">
     <div id="add_related" hidden></div>
     <h3 class='titleheader'>
@@ -7,12 +8,24 @@
         <form id="add_related_form" method="post"> {% csrf_token %}
             <select id="add_related_options" onchange="populateList()">
                 <option>Choose TLO</option>
-				<option value='new-dataset'>Dataset</option>
-				<option value='new-email_address'>Email Address</option>
-                <option value='new-event'>Event</option>
-				<option value='new-hash'>Hash</option>
-				<option value='new-target'>Target</option>
-				<option value='new-username'>UserName</option>
+                {% if acl.DATASET_WRITE|has_access_to:user %}
+				  <option value='new-dataset'>Dataset</option>
+                {% endif %}
+                {% if acl.EMAILADDRESS_WRITE|has_access_to:user %}
+				  <option value='new-email_address'>Email Address</option>
+                {% endif %}
+                {% if acl.EVENT_WRITE|has_access_to:user %}
+                  <option value='new-event'>Event</option>
+                {% endif %}
+                {% if acl.HASH_WRITE|has_access_to:user %}
+				  <option value='new-hash'>Hash</option>
+                {% endif %}
+                {% if acl.TARGET_WRITE|has_access_to:user %}
+				  <option value='new-target'>Target</option>
+                {% endif %}
+                {% if acl.USERNAME_WRITE|has_access_to:user %}
+				  <option value='new-username'>UserName</option>
+                {% endif %}
             </select>
         </form>
     </div>

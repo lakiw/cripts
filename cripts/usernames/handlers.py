@@ -14,7 +14,7 @@ except ImportError:
 
 from cripts.core.mongo_tools import mongo_connector
 from cripts.core import form_consts
-from cripts.core.user_tools import is_admin, user_sources, is_user_favorite
+from cripts.core.user_tools import user_sources, is_user_favorite
 from cripts.core.user_tools import is_user_subscribed
 from cripts.core.handlers import csv_export
 from cripts.core.handlers import build_jtable, jtable_ajax_list, jtable_ajax_delete

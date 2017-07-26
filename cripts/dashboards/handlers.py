@@ -1,11 +1,14 @@
 """
 This File will often refer to 'default dashboard tables.' They currently are:
-Counts, <nothing els at this time> in that order. The user has the ability to change they're 
-positioning, size, columns, and sort order but they are always there and their 
+Counts, Top Campaigns, Recent Indicators, Recent Emails, and
+Recent Samples in that order. The user has the ability to change they're
+positioning, size, columns, and sort order but they are always there and their
 names cannot be changed.
 """
 from cripts.dashboards.dashboard import SavedSearch, Dashboard
 from cripts.core.cripts_mongoengine import json_handler
+from cripts.core.user_tools import get_acl_object
+
 from mongoengine import Q
 from django.core.urlresolvers import reverse
 from django.http import HttpResponse
@@ -15,14 +18,15 @@ import cgi
 import datetime
 from django.http import HttpRequest
 from cripts.dashboards.utilities import getHREFLink, get_obj_name_from_title, get_obj_type_from_string
+
 import HTMLParser
 
 def get_dashboard(user,dashId=None):
     """
     Gets a specific dashbaord for the user. If dashId is provided it looks it up.
     If dashId is not provided or the dashboard does not exist, it gets the user's
-    default dashboard. If that dashboard does not exist, it first looks for a 
-    user-modified child of the public Default dashboard. Finally it will retrieve 
+    default dashboard. If that dashboard does not exist, it first looks for a
+    user-modified child of the public Default dashboard. Finally it will retrieve
     the public default dashboard if no others exist.
     """
     dashboard = None
@@ -72,17 +76,17 @@ def get_dashboard(user,dashId=None):
             'dashTheme':dashboard.theme,
             "otherSearches":otherSearches,
             "userId": dashboard.analystId}
-    
+
 def createTableObject(user, title="", table=None):
     """
-    Parent method in creating the table object, called by get_dashboard 
+    Parent method in creating the table object, called by get_dashboard
     for each table
     """
     if table.isDefaultOnDashboard:
-        records = getRecordsForDefaultDashboardTable(user.username, table.name)
+        records = getRecordsForDefaultDashboardTable(user, table.name)
     else:  #the only time table does not exist is if its a default table
-        response = get_table_data(obj=table.objType, user=user, 
-                                  searchTerm=table.searchTerm, search_type="global", 
+        response = get_table_data(obj=table.objType, user=user,
+                                  searchTerm=table.searchTerm, search_type="global",
                                   maxRows=table.maxRows, sort=table.sortBy)
         #records to be inserted in the table
         records = response["Records"]
@@ -90,19 +94,19 @@ def createTableObject(user, title="", table=None):
             if "thumb" in record:
                 record["thumb"] = "<img class='screenshotImg' src='"+record["url"]+"thumb/' />"
     return constructSavedTable(table, records)
-    
-def getRecordsForDefaultDashboardTable(username, tableName):
+
+def getRecordsForDefaultDashboardTable(user, tableName):
     """
     Called by createTableObject to retrieve the proper records from the
-    database for the default dashboard tables. These queries are different then 
+    database for the default dashboard tables. These queries are different then
     the saved searches which is why it is needed.
-    
-    This is also called via ajax on the saved_search.html page by 
-    get_dashboard_table_data in Views.py. This is to get the records when 
+
+    This is also called via ajax on the saved_search.html page by
+    get_dashboard_table_data in Views.py. This is to get the records when
     editing the default tables.
     """
+
     from cripts.core.handlers import data_query, generate_counts_jtable
-    
     if tableName == "Counts":
         response = generate_counts_jtable(None, "jtlist")
         records = json.loads(response.content)["Records"]
@@ -162,11 +166,11 @@ def constructTable(table, records, columns, colNames):
         tableObject["url"] = reverse("cripts.dashboards.views.load_data",
                                           kwargs={"obj":table.objType})
     return tableObject
-    
+
 def parseDocumentsForW2ui(response, obj_type):
     """
-    called by getRecordsForDeafultDashboardTable in order to turn the BSON objects 
-    into dictionaries and relpaces the _id field with recid - which is a 
+    called by getRecordsForDeafultDashboardTable in order to turn the BSON objects
+    into dictionaries and relpaces the _id field with recid - which is a
     necessary thing for w2ui.
     """
     records = []
@@ -177,7 +181,7 @@ def parseDocumentsForW2ui(response, obj_type):
 
 def parseDocObjectsToStrings(records, obj_type):
     """
-    called by parseDocumentsForW2ui and get_table_data to convert some of 
+    called by parseDocumentsForW2ui and get_table_data to convert some of
     the objects in the record dictionaries into strings.
     For example converts the sources into their names instead of returning the
     entire object
@@ -185,6 +189,7 @@ def parseDocObjectsToStrings(records, obj_type):
     for doc in records:
         for key, value in doc.items():
             # all dates should look the same
+
             if isinstance(value, datetime.datetime):
                 doc[key] = datetime.datetime.strftime(value,
                                                       "%Y-%m-%d %H:%M:%S")
@@ -245,7 +250,7 @@ def parseDocObjectsToStrings(records, obj_type):
                 doc[key] = val
     return records
 
-def save_data(userId, columns, tableName, searchTerm="", objType="", sortBy=None, 
+def save_data(userId, columns, tableName, searchTerm="", objType="", sortBy=None,
               tableId=None, isDefaultOnDashboard=False, maxRows=0,
               dashboard=None, clone=False, row=0, grid_col=0, sizex=0,
               sizey=0):
@@ -342,9 +347,9 @@ def clear_dashboard(dashId):
                 search.update(unset__col=1,unset__row=1,unset__sizex=1)
     except Exception as e:
         print e
-        return {'success': False, 
+        return {'success': False,
                 'message': "An unexpected error occurred while resetting dash. Please refresh and try again"}
-    return {'success': True, 
+    return {'success': True,
             'message': "Dashboard Reset"}
 
 def delete_table(userId, id):
@@ -378,23 +383,34 @@ def delete_table(userId, id):
     return {'success': True,'message': message, 'wasDeleted': doDelete}
 
 def get_table_data(request=None,obj=None,user=None,searchTerm="",
-                   search_type=None, includes=[], excludes=[], maxRows=25, 
+                   search_type=None, includes=[], excludes=[], maxRows=25,
                    sort={}, pageNumber=1):
     """
-    gets the records needed for the table, can be called via ajax on the 
+    gets the records needed for the table, can be called via ajax on the
     saved_search.html or the above ConstructTable function
     """
     from cripts.core.handlers import get_query, data_query
     response = {"Result": "ERROR"}
     obj_type = get_obj_type_from_string(obj)
+
+    acl = get_acl_object(obj)
+
+    if not user:
+        user = request.user
+
     # Build the query
     term = ""
     #if its being called from saved_search.html
-    if request and request.is_ajax():
+    if not user.has_access_to(acl.READ):
+        resp = {}
+        resp['Result'] = "ERROR"
+        resp['msg'] = "User does not have permission to view object."
+        resp['Records'] = ""
+    elif request and request.is_ajax():
         resp = get_query(obj_type, request)
     #if its calling to get data for the dashbaord
     elif user and search_type:
-        resp = get_query_without_request(obj_type, user.username, searchTerm, search_type)
+        resp = get_query_without_request(obj_type, user, searchTerm, search_type)
     else:
         return HttpResponse(json.dumps(response, default=json_handler),
                              content_type="application/json")
@@ -410,10 +426,10 @@ def get_table_data(request=None,obj=None,user=None,searchTerm="",
             sortBy.append("-"+sort['field'])
     skip = (int(pageNumber)-1)*25
     if request:
-        response = data_query(obj_type, user=request.user.username, query=query,
+        response = data_query(obj_type, user=request.user, query=query,
                           projection=includes, limit=int(maxRows), sort=sortBy, skip=skip)
     else:
-        response = data_query(obj_type, user=user.username, query=query,
+        response = data_query(obj_type, user=user, query=query,
                           projection=includes, limit=maxRows, sort=sortBy,skip=skip)
     if response['result'] == "ERROR":
         return {'Result': "ERROR", 'Message': response['msg']}
@@ -432,11 +448,11 @@ def get_table_data(request=None,obj=None,user=None,searchTerm="",
 
 def get_query_without_request(obj_type, username, searchTerm, search_type="global"):
     """
-    Builds the query without the request, very similar to the 
+    Builds the query without the request, very similar to the
     get_query method in the core of cripts
     """
     from cripts.core.handlers import gen_global_query
-    
+
     query = {}
     response = {}
     qdict = gen_global_query(obj_type, username, searchTerm, search_type, force_full=False)
@@ -453,7 +469,7 @@ def get_query_without_request(obj_type, username, searchTerm, search_type="globa
     results['query'] = query
     results['term'] = searchTerm
     return results
-    
+
 def generate_search_for_saved_table(user, id=None,request=None):
     """
     Called by edit_save_search in views.py. This is for editing a previously
@@ -479,20 +495,20 @@ def generate_search_for_saved_table(user, id=None,request=None):
     url = ""
     if not savedSearch.isDefaultOnDashboard:
         objType = get_obj_type_from_string(savedSearch.objType)
-        resp = get_query_without_request(objType, user.username, savedSearch.searchTerm, "global")
+        resp = get_query_without_request(objType, user, savedSearch.searchTerm, "global")
         if resp['Result'] == "ERROR":
             return resp
         formatted_query = resp['query']
         term = resp['term']
-        resp = data_query(objType, user.username, query=formatted_query, count=True)
+        resp = data_query(objType, user, query=formatted_query, count=True)
         results.append({'count': resp['count'],
-                                      'name': savedSearch.objType}) 
+                                      'name': savedSearch.objType})
     else:
         results = {"name":savedSearch.name,
                    "count":str(len(records)),
                    "type":get_obj_name_from_title(savedSearch.name)}
-        #special url to get the records of a default dashboard since their queries are different 
-        url = reverse("cripts.dashboards.views.get_dashboard_table_data", 
+        #special url to get the records of a default dashboard since their queries are different
+        url = reverse("cripts.dashboards.views.get_dashboard_table_data",
                       kwargs={"tableName":str(savedSearch.name.replace(" ", "_"))})
     args = {'term': term,
             'results': results,
@@ -512,7 +528,7 @@ def generate_search_for_saved_table(user, id=None,request=None):
             args["currentDash"] = str(savedSearch.dashboard)
             args["dashtheme"] = Dashboard.objects(id=savedSearch.dashboard).first().theme
     return args
-    
+
 def toggleTableVisibility(id, isVisible):
     """
     Changes the tables visibility to either pinned or hidden.
@@ -529,7 +545,7 @@ def toggleTableVisibility(id, isVisible):
     table.isPinned = isVisible
     table.save()
     return {'success': True,'message': message}
-    
+
 def get_saved_searches_list(user):
     """
     Returns all user dashboards and their affiliated saved searches.
@@ -552,18 +568,18 @@ def get_saved_searches_list(user):
         if dash.parent:
             tempDash['isModified'] = True
         dashboards.append(tempDash)
-            
-    return {"dashboards": dashboards}
-    
 
-    
+    return {"dashboards": dashboards}
+
+
+
 def deleteDashboardIfEmpty(dashId):
     """
     Checks if a dashboard has saved searches. Deletes it if it doesn't.
     """
     if not SavedSearch.objects(dashboard=dashId):
         Dashboard.objects(id=dashId).delete()
-    
+
 def createNewDashboard(userId, name):
     """
     Creates a new dashboard for the user
@@ -587,7 +603,7 @@ def setDefaultDashboard(user, dashId):
         return name
     except:
         return False
-    
+
 def cloneDashboard(userId, dashboard, cloneSearches=False, skip=None):
     """
     Clones a public dashboard to a user-modified version of if.
@@ -620,7 +636,7 @@ def cloneSavedSearch(savedSearch, dashId):
 
 def getDashboardsForUser(user):
     """
-    Gets all the users dashboards and public dashboards. It will then remove 
+    Gets all the users dashboards and public dashboards. It will then remove
     all public dashboards that have been cloned by the user
     """
     dashboards = Dashboard.objects(Q(analystId=user.id) | Q(isPublic=True))
@@ -659,7 +675,7 @@ def setPublic(id, makePublic):
 
 def updateChildren(parentId, deletingParent=False):
     """
-    Sets field 'hasParentChanged' to true on all dashboards that are clones of 
+    Sets field 'hasParentChanged' to true on all dashboards that are clones of
     the changing dashboard.
     If the dashboard is being deleted(or private) then it unsets the parent field.
     """
@@ -697,7 +713,7 @@ def renameDashboard(id, name, userId):
 
 def changeTheme(id, theme):
     """
-    Changes theme of the dashboard. 
+    Changes theme of the dashboard.
     CURRENTLY UNUSED.
     """
     try:
@@ -706,7 +722,7 @@ def changeTheme(id, theme):
         print e
         return False
     return "Dashboard updated successfully."
-    
+
 def add_existing_search_to_dashboard(id, dashboard, user):
     search = SavedSearch.objects(id = id).first()
     if not search:

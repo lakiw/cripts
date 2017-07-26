@@ -1,13 +1,17 @@
 import uuid
 
-from mongoengine import Document, StringField, UUIDField
+from mongoengine import Document, StringField, UUIDField, BooleanField
+from mongoengine import EmbeddedDocument
 from django.conf import settings
 
-from cripts.core.cripts_mongoengine import CriptsBaseAttributes, CriptsSourceDocument
+from cripts.core.cripts_mongoengine import CriptsBaseAttributes
+from cripts.core.cripts_mongoengine import CriptsSourceDocument
+from cripts.core.cripts_mongoengine import CommonAccess, CriptsDocumentFormatter
 from cripts.core.cripts_mongoengine import CriptsActionsDocument
 from cripts.events.migrate import migrate_event
 
 from cripts.vocabulary.events import EventTypes
+
 
 class UnreleasableEventError(Exception):
     """
@@ -87,3 +91,14 @@ class Event(CriptsBaseAttributes, CriptsSourceDocument, CriptsActionsDocument,
         """
 
         migrate_event(self)
+
+
+class EventAccess(EmbeddedDocument, CriptsDocumentFormatter, CommonAccess):
+    """
+    ACL for Events.
+    """
+
+    add_sample = BooleanField(default=False)
+
+    title_edit = BooleanField(default=False)
+    type_edit = BooleanField(default=False)

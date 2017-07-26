@@ -2,6 +2,7 @@ from django.conf import settings
 
 from cripts.config.config import CRIPTsConfig
 
+
 def modify_configuration(forms, analyst):
     """
     Modify the configuration with the submitted changes.
@@ -18,13 +19,13 @@ def modify_configuration(forms, analyst):
         config = CRIPTsConfig()
 
     data = None
+
     for form in forms:
         if not data:
             data = form.cleaned_data
         else:
             data.update(form.cleaned_data)
 
-   # data = config_form.cleaned_data
     allowed_hosts_list = data['allowed_hosts'].split(',')
     allowed_hosts = ()
     for allowed_host in allowed_hosts_list:

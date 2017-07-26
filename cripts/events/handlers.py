@@ -15,19 +15,20 @@ except ImportError:
 from cripts.core import form_consts
 from cripts.core.class_mapper import class_from_id
 from cripts.core.cripts_mongoengine import create_embedded_source, json_handler
+
 from cripts.core.exceptions import ZipFileError
 from cripts.core.forms import DownloadFileForm
 from cripts.core.handlers import build_jtable, jtable_ajax_list
 from cripts.core.handlers import jtable_ajax_delete
 from cripts.core.handlers import csv_export
-from cripts.core.user_tools import is_admin, user_sources, is_user_favorite
+from cripts.core.user_tools import user_sources, is_user_favorite
 from cripts.core.user_tools import is_user_subscribed
 from cripts.events.event import Event
 from cripts.notifications.handlers import remove_user_from_notification
 from cripts.services.handlers import run_triage, get_supported_services
 
 from cripts.vocabulary.relationships import RelationshipTypes
-
+from cripts.vocabulary.acls import EventACL
 
 
 def generate_event_csv(request):
@@ -42,38 +43,42 @@ def generate_event_csv(request):
     response = csv_export(request,Event)
     return response
 
-def get_event_details(event_id, analyst):
+def get_event_details(event_id, user):
     """
     Generate the data to render the Event details template.
 
     :param event_id: The ObjectId of the Event to get details for.
     :type event_id: str
-    :param analyst: The user requesting this information.
-    :type analyst: str
+    :param user: The user requesting this information.
+    :type user: str
     :returns: template (str), arguments (dict)
     """
 
     template = None
-    sources = user_sources(analyst)
+    sources = user_sources(user)
     event = Event.objects(id=event_id, source__name__in=sources).first()
+
+    if not user.check_source_tlp(event):
+        event = None
+
     if not event:
         template = "error.html"
         args = {'error': "ID does not exist or insufficient privs for source"}
         return template, args
 
-    event.sanitize("%s" % analyst)
+    event.sanitize("%s" % user)
 
     download_form = DownloadFileForm(initial={"obj_type": 'Event',
                                               "obj_id": event_id})
 
     # remove pending notifications for user
-    remove_user_from_notification("%s" % analyst, event.id, 'Event')
+    remove_user_from_notification("%s" % user, event.id, 'Event')
 
     # subscription
     subscription = {
             'type': 'Event',
             'id': event.id,
-            'subscribed': is_user_subscribed("%s" % analyst,
+            'subscribed': is_user_subscribed("%s" % user,
                                              'Event', event.id),
     }
 
@@ -81,7 +86,7 @@ def get_event_details(event_id, analyst):
     objects = event.sort_objects()
 
     #relationships
-    relationships = event.sort_relationships("%s" % analyst, meta=True)
+    relationships = event.sort_relationships("%s" % user, meta=True)
 
     # Get count of related Events for each related Sample
     for smp in relationships.get('Sample', []):
@@ -99,7 +104,7 @@ def get_event_details(event_id, analyst):
     comments = {'comments': event.get_comments(), 'url_key': event.id}
 
     # favorites
-    favorite = is_user_favorite("%s" % analyst, 'Event', event.id)
+    favorite = is_user_favorite("%s" % user, 'Event', event.id)
 
     # services
     service_list = get_supported_services('Event')
@@ -116,7 +121,8 @@ def get_event_details(event_id, analyst):
             'subscription': subscription,
             'event': event,
             'service_results': service_results,
-            'download_form': download_form}
+            'download_form': download_form,
+            'EventACL': EventACL}
 
     return template, args
 
@@ -243,10 +249,11 @@ def generate_event_id(event):
 
     return uuid.uuid4()
 
-def add_new_event(title, description, event_type, source, method, reference,
-                  date, analyst, bucket_list=None, ticket=None,
-                  related_id=None,
-                  related_type=None, relationship_type=None):
+def add_new_event(title, description, event_type, source_name, source_method,
+                  source_reference, source_tlp, date, user,
+                  bucket_list=None, ticket=None, 
+                  related_id=None, related_type=None, relationship_type=None):
+
     """
     Add a new Event to CRIPTs.
 
@@ -264,8 +271,8 @@ def add_new_event(title, description, event_type, source, method, reference,
     :type reference: str
     :param date: Date of acquiring this data.
     :type date: datetime.datetime
-    :param analyst: The user adding this Event.
-    :type analyst: str
+    :param user: The user adding this Event.
+    :type user: str
     :param bucket_list: The bucket(s) to associate with this Event.
     :type: str
     :param ticket: Ticket to associate with this event.
@@ -278,27 +285,34 @@ def add_new_event(title, description, event_type, source, method, reference,
     :type relationship_type: str
     :returns: dict with keys "success" (boolean) and "message" (str)
     """
-    result = dict()
-    if not source:
+
+    if not source_name:
         return {'success': False, 'message': "Missing source information."}
 
+    result = dict()
     event = Event()
     event.title = title
     event.description = description
     event.set_event_type(event_type)
 
-    s = create_embedded_source(name=source,
-                               reference=reference,
-                               method=method,
-                               analyst=analyst,
-                               date=date)
+    if user.check_source_write(source_name):
+        s = create_embedded_source(source_name,
+                                   reference=source_reference,
+                                   method=source_method,
+                                   tlp=source_tlp,
+                                   analyst=user.username,
+                                   date=date)
+    else:
+        return {"success": False,
+                "message": "User does not have permission to add object \
+                            using source %s." % source_name}
     event.add_source(s)
 
     if bucket_list:
-        event.add_bucket_list(bucket_list, analyst)
+        event.add_bucket_list(bucket_list, user.username)
 
     if ticket:
-        event.add_ticket(ticket, analyst)
+        event.add_ticket(ticket, user.username)
 
     related_obj = None
     if related_id:
@@ -309,19 +323,19 @@ def add_new_event(title, description, event_type, source, method, reference,
             return retVal
 
     try:
-        event.save(username=analyst)
+        event.save(username=user.username)
 
         if related_obj and event and relationship_type:
             relationship_type=RelationshipTypes.inverse(relationship=relationship_type)
             event.add_relationship(related_obj,
                                   relationship_type,
-                                  analyst=analyst,
+                                  analyst=user.username,
                                   get_rels=False)
-            event.save(username=analyst)
+            event.save(username=user.username)
 
         # run event triage
         event.reload()
-        run_triage(event, analyst)
+        run_triage(event, user.username)
 
         message = ('<div>Success! Click here to view the new event: <a href='
                    '"%s">%s</a></div>' % (reverse('cripts.events.views.view_event',
@@ -348,13 +362,10 @@ def event_remove(_id, username):
     :returns: dict with keys "success" (boolean) and "message" (str)
     """
 
-    if is_admin(username):
-        event = Event.objects(id=_id).first()
-        if event:
-            event.delete(username=username)
-        return {'success':True}
-    else:
-        return {'success':False,'message': 'Need to be admin'}
+    event = Event.objects(id=_id).first()
+    if event:
+        event.delete(username=username)
+    return {'success':True}
 
 def update_event_title(event_id, title, analyst):
     """

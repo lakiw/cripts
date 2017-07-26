@@ -1,9 +1,12 @@
 import uuid
 
 from mongoengine import Document, StringField, ListField, UUIDField
+from mongoengine import BooleanField, EmbeddedDocument
 from django.conf import settings
 
 from cripts.core.cripts_mongoengine import CriptsBaseAttributes, CriptsSourceDocument
+from cripts.core.cripts_mongoengine import CriptsDocumentFormatter
+from cripts.core.cripts_mongoengine import CommonAccess
 from cripts.core.cripts_mongoengine import CriptsActionsDocument
 
 
@@ -52,3 +55,9 @@ class UserName(CriptsBaseAttributes, CriptsSourceDocument, CriptsActionsDocument
     datasets = ListField(required=False)
 
     
+class UserNameAccess(EmbeddedDocument, CriptsDocumentFormatter, CommonAccess):
+    """
+    ACL for UserNames
+    """
+
+    edit_details = BooleanField(default=False)    

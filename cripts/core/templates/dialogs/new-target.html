@@ -1,0 +1,9 @@
+
+<div id="dialog-{{ request.GET.dialog }}" title="Add New Target">
+    <form id="form-{{ request.GET.dialog }}"
+	  action="{% url 'cripts.targets.views.add_update_target' %}"
+	  method="POST" enctype="multipart/form-data"
+	  item-type="target">
+    <table class="form">{{ add_target.as_table }}</table>
+    </form>
+</div>

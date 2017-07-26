@@ -1,8 +1,13 @@
 from mongoengine import Document, StringField
+from mongoengine import BooleanField, EmbeddedDocument
 from django.conf import settings
 
 from cripts.core.cripts_mongoengine import CriptsBaseAttributes, CriptsSourceDocument
+from cripts.core.cripts_mongoengine import CriptsDocumentFormatter
+from cripts.core.cripts_mongoengine import CommonAccess
 from cripts.core.cripts_mongoengine import CriptsActionsDocument
+from cripts.datasets.migrate import migrate_dataset
+
 
 
 class Dataset(CriptsBaseAttributes, CriptsSourceDocument, CriptsActionsDocument,
@@ -44,4 +49,9 @@ class Dataset(CriptsBaseAttributes, CriptsSourceDocument, CriptsActionsDocument,
     name = StringField(required=True)
     
 
-    
+class DatasetAccess(EmbeddedDocument, CriptsDocumentFormatter, CommonAccess):
+    """
+    ACL for Datasets
+    """
+
+    edit_details = BooleanField(default=False)       

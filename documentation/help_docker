@@ -1,0 +1,5 @@
+# Build the docker image:
+docker build -t cripts/cripts .
+
+# Run the docker image, exposing port 8080 for cripts
+docker run --publish=8080:8080 cripts/cripts:latest

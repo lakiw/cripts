@@ -187,7 +187,7 @@ def add_new_handler_object(data, rowData, request, is_validate_only=False,
 
     return result, retVal
 
-def add_object(type_, id_, object_type, source, method, reference, user,
+def add_object(type_, id_, object_type, source, method, reference, tlp, user,
                value=None, file_=None, add_indicator=False, get_objects=True,
                tlo=None, is_sort_relationships=False, is_validate_only=False,
                is_validate_locally=False, cache={}, **kwargs):
@@ -268,14 +268,13 @@ def add_object(type_, id_, object_type, source, method, reference, user,
             results['message'] = "Object added successfully"
 
         if file_:
-            
             #XXX: MongoEngine provides no direct GridFS access so we
             #     need to use pymongo directly.
             col = settings.COL_OBJECTS
             grid = mongo_connector("%s.files" % col)
             if grid.find({'md5': md5sum}).count() == 0:
-                put_file(filename, data, collection=col) 
-
+                put_file(filename, data, collection=col)
+                
         if is_sort_relationships == True:
             results['relationships'] = tlo.sort_relationships(user, meta=True)
 
@@ -447,7 +446,7 @@ def update_object_source(type_, oid, object_type, value, new_source,
         return {'success': False, 'message': e}
 
 def create_indicator_from_object(rel_type, rel_id, ind_type, value,
-                                 source_name, method, reference, analyst, request):
+                                 source_name, method, reference, tlp, analyst, request):
     """
     Create an indicator out of this object.
 
@@ -473,6 +472,7 @@ def create_indicator_from_object(rel_type, rel_id, ind_type, value,
 
     result = None
     me = class_from_id(rel_type, rel_id)
+
     if not me:
         result = {'success': False,
                   'message': "Could not find %s" % rel_type}
@@ -571,4 +571,3 @@ def parse_row_to_bound_object_form(request, rowData, cache):
     bound_form.full_clean()
 
     return bound_form
-

@@ -1,12 +1,13 @@
 from django import forms
 from django.forms.widgets import HiddenInput
 from cripts.core import form_consts
+from cripts.core.forms import SourceInForm
 from cripts.core.handlers import get_source_names
 from cripts.core.user_tools import get_user_organization
 
 from cripts.vocabulary.objects import ObjectTypes
 
-class AddObjectForm(forms.Form):
+class AddObjectForm(SourceInForm):
     """
     Django form for adding an Object.
     """
@@ -21,17 +22,6 @@ class AddObjectForm(forms.Form):
         widget=forms.Textarea(attrs={'rows': '5', 'cols': '28'}),
         label=form_consts.Object.VALUE,
         required=True)
-    source = forms.ChoiceField(
-        required=True,
-        label=form_consts.Object.SOURCE,
-        widget=forms.Select(attrs={'class': 'no_clear bulknoinitial'}))
-    method = forms.CharField(
-        required=False,
-        label=form_consts.Object.METHOD)
-    reference = forms.CharField(
-        widget=forms.TextInput(attrs={'size':'90'}),
-        required=False,
-        label=form_consts.Object.REFERENCE)
     otype = forms.CharField(
         required=False,
         widget=HiddenInput(attrs={'class':'bulkskip'}),
@@ -43,13 +33,8 @@ class AddObjectForm(forms.Form):
 
 
     def __init__(self, username, *args, **kwargs):
-        super(AddObjectForm, self).__init__(*args, **kwargs)
+        super(AddObjectForm, self).__init__(username, *args, **kwargs)
         self.fields['object_type'].choices = [
             (c,c) for c in ObjectTypes.values(sort=True)
         ]
         self.fields['object_type'].widget.attrs = {'class':'object-types'}
-        self.fields['source'].choices = [(c.name,
-                                          c.name) for c in get_source_names(True,
-                                                                            True,
-                                                                            username)]
-        self.fields['source'].initial = get_user_organization(username)

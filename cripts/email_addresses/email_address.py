@@ -1,10 +1,14 @@
 import uuid
 
 from mongoengine import Document, StringField, UUIDField, ListField
+from mongoengine import BooleanField, EmbeddedDocument
 from django.conf import settings
 
 from cripts.core.cripts_mongoengine import CriptsBaseAttributes, CriptsSourceDocument
+from cripts.core.cripts_mongoengine import CriptsDocumentFormatter
+from cripts.core.cripts_mongoengine import CommonAccess
 from cripts.core.cripts_mongoengine import CriptsActionsDocument
+from cripts.email_addresses.migrate import migrate_email_address
 
 
 class EmailAddress(CriptsBaseAttributes, CriptsSourceDocument, CriptsActionsDocument,
@@ -54,3 +58,10 @@ class EmailAddress(CriptsBaseAttributes, CriptsSourceDocument, CriptsActionsDocu
     local_name = StringField(required=True)
     datasets = ListField(required=False)
   
+
+class EmailAddressAccess(EmbeddedDocument, CriptsDocumentFormatter, CommonAccess):
+    """
+    ACL for EmailAddresses
+    """
+
+    edit_details = BooleanField(default=False)    

@@ -1010,7 +1010,6 @@ $(document).ready(function() {
 // Some dialog specific callacks below
 //
 
-
 function releasability_add_submit(e) {
     var widget = $(e.currentTarget);
     var dialog;
@@ -1136,6 +1135,17 @@ function new_domain_dialog(e) {
 
 }
 
+function new_role_dialog(e) {
+    if (do_copy) {
+        var dialog = $(this).find("form");
+        var copy_from = dialog.find('#id_copy_from');
+        if (typeof(rid) === "undefined") {
+            rid = '';
+        }
+        copy_from.val(rid);
+    }
+}
+
 function new_event_dialog() {
     createPickers();
 }
@@ -1258,7 +1268,8 @@ var stdDialogs = {
       "new-username": {title: "New UserName", personas: {related: newPersona("Add Related UserName", {}, addEditSubmit) }, open: new_username_dialog  },
 
       "source_create": {title: "Source"},
-      "user_role": {title: "User Role"},
+      "role_combine_preview": {title: "Role Combinator", submit: defaultSubmit},
+      "new-role": {title: "Role", open: new_role_dialog},
 
       "location-add": {title: "Add Location"},
       "ticket": {title: "Ticket",
@@ -1311,7 +1322,7 @@ var stdDialogs = {
   // to make that sort of global change before 3.0.
   var singleInputDialogs = "#dialog-actor-identifier-type,#dialog-ticket,"+
       "#dialog-source_create,#dialog-user_role," +
-      "#dialog-action_add,#dialog-raw_data_type_add,#dialog-signature_type_add,#dialog-signature_dependency_add";
+      "#dialog-action_add,#dialog-raw_data_type_add,#dialog-signature_type_add,#dialog-signature_dependency_add,#dialog-role";
   $(singleInputDialogs).on("dialogopen", fix_form_submit(addEditSubmit));
 
 

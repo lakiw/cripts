@@ -30,7 +30,7 @@ urlpatterns = [
     url(r'^get_actions_for_tlo/$', 'cripts.core.views.get_actions_for_tlo'),
 
 
-    # cripts Configuration
+    # CRIPTs Configuration
     url(r'^config/$', 'cripts.config.views.cripts_config'),
     url(r'^modify_config/$', 'cripts.config.views.modify_config'),
     url(r'^audit/list/$', 'cripts.core.views.audit_listing'),
@@ -40,11 +40,23 @@ urlpatterns = [
     url(r'^items/list/(?P<itype>\S+)/(?P<option>\S+)/$', 'cripts.core.views.items_listing'),
     url(r'^items/toggle_active/$', 'cripts.core.views.toggle_item_active'),
     url(r'^users/toggle_active/$', 'cripts.core.views.toggle_user_active'),
-    url(r'^users/list/$', 'cripts.core.views.users_listing'),
     url(r'^users/list/(?P<option>\S+)/$', 'cripts.core.views.users_listing'),
+    url(r'^users/list/$', 'cripts.core.views.users_listing'),
+    url(r'^roles/list/(?P<option>\S+)/$', 'cripts.core.views.roles_listing'),
+    url(r'^roles/list/$', 'cripts.core.views.roles_listing'),
+    url(r'^roles/add/$', 'cripts.core.views.role_add'),
+    url(r'^roles/details/(?P<rid>\S+)/$', 'cripts.core.views.role_details'),
+    url(r'^roles/details/$', 'cripts.core.views.role_details'),
+    url(r'^roles/update/$', 'cripts.core.views.role_value_change'),
+    url(r'^roles/graph/$', 'cripts.core.views.role_graph'),
+    url(r'^roles/add_source/$', 'cripts.core.views.role_add_source'),
+    url(r'^roles/remove_source/$', 'cripts.core.views.role_remove_source'),
+    url(r'^roles/update_name/$', 'cripts.core.views.update_role_name'),
+    url(r'^roles/update_description/$', 'cripts.core.views.update_role_description'),
     url(r'^get_item_data/$', 'cripts.core.views.get_item_data'),
     url(r'^add_action/$', 'cripts.core.views.new_action'),
 
+    
     # Default landing page
     url(r'^$', 'cripts.dashboards.views.dashboard'),
     url(r'^counts/list/$', 'cripts.core.views.counts_listing'),
@@ -75,13 +87,15 @@ urlpatterns = [
     url(r'^timeline/(?P<data_type>\S+)/(?P<extra_data>\S+)/$', 'cripts.core.views.timeline'),
     url(r'^timeline/$', 'cripts.core.views.timeline'),
 
+    # TLP
+    url(r'^tlp/mod/$', 'cripts.core.views.tlp_modify'),
+    
     # User Stuff
     url(r'^profile/(?P<user>\S+)/$', 'cripts.core.views.profile'),
     url(r'^profile/$', 'cripts.core.views.profile'),
     url(r'^source_access/$', 'cripts.core.views.source_access'),
     url(r'^source_add/$', 'cripts.core.views.source_add'),
     url(r'^get_user_source_list/$', 'cripts.core.views.get_user_source_list'),
-    url(r'^user_role_add/$', 'cripts.core.views.user_role_add'),
     url(r'^user_source_access/$', 'cripts.core.views.user_source_access'),
     url(r'^user_source_access/(?P<username>\S+)/$', 'cripts.core.views.user_source_access'),
     url(r'^preference_toggle/(?P<section>\S+)/(?P<setting>\S+)/$', 'cripts.core.views.user_preference_toggle'),
@@ -97,6 +111,7 @@ urlpatterns = [
     url(r'^favorites/view/$', 'cripts.core.views.favorites'),
     url(r'^favorites/list/(?P<ctype>\S+)/(?P<option>\S+)/$', 'cripts.core.views.favorites_list'),
 
+    
     # User API Authentication
     url(r'^get_api_key/$', 'cripts.core.views.get_api_key'),
     url(r'^create_api_key/$', 'cripts.core.views.create_api_key'),

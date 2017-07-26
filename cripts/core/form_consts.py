@@ -16,7 +16,9 @@ class Common():
     SOURCE = "Source"
     SOURCE_REFERENCE = "Source Reference"
     SOURCE_METHOD = "Source Method"
+    SOURCE_TLP = "Source TLP"
     TICKET = "Ticket"
+    TLP = "Sharing TLP"
 
     CLASS_ATTRIBUTE = "class"
 
@@ -91,7 +93,18 @@ class Hash():
     SOURCE = Common.SOURCE
     SOURCE_METHOD = "Source Method"
     SOURCE_REFERENCE = Common.SOURCE_REFERENCE
+    
 
+class Indicator():
+    """
+    Constants for Indicators.
+    """
+
+    SOURCE = Common.SOURCE
+    SOURCE_METHOD = Common.SOURCE_METHOD
+    SOURCE_REFERENCE = Common.SOURCE_REFERENCE
+
+    
 class Target():
     """
     Constants for Targets
@@ -134,7 +147,6 @@ class Object():
     SOURCE_INDEX = 2
     METHOD_INDEX = 3
     REFERENCE_INDEX = 4
-    ADD_INDICATOR_INDEX = 5
 
     OBJECT_TYPE = "Object Type"
     VALUE = "Value"

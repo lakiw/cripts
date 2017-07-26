@@ -1,11 +1,11 @@
-class CRIPTsBaseScript():
+class CRIPTsBaseScript(object):
     """
     Base class for all CRIPTs scripts to inherit.
     """
 
-    username = None
+    user = None
 
-    def __init__(self, username=None):
+    def __init__(self, user=None):
         """
         Initialization of class. Set the username.
 
@@ -13,4 +13,4 @@ class CRIPTsBaseScript():
         :type username: str
         """
 
-        self.username = username
+        self.user = user
