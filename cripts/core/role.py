@@ -90,6 +90,7 @@ class Role(CriptsDocument, CriptsSchemaDocument, Document):
     web_interface = BooleanField(default=False)
 
     # Add New
+    add_new_indicator_action = BooleanField(default=False)
     add_new_source = BooleanField(default=False)
     add_new_user_role = BooleanField(default=False)
     add_new_tlds = BooleanField(default=False)

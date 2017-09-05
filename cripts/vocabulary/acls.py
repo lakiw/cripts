@@ -72,6 +72,7 @@ class GeneralACL(vocab):
     SCRIPT_INTERFACE = "script_interface"
     WEB_INTERFACE = "web_interface"
 
+    ADD_NEW_INDICATOR_ACTION = "add_new_indicator_action"
     ADD_NEW_SOURCE = "add_new_source"
     ADD_NEW_USER_ROLE = "add_new_user_role"
     ADD_NEW_TLDS = "add_new_tlds"
@@ -323,6 +324,7 @@ class ReadACL(vocab):
     This is to pass into base.html to see the current status of all of the
     TLOs that we want to read
     """
+    ADD_NEW_INDICATOR_ACTION = GeneralACL.ADD_NEW_INDICATOR_ACTION
     ADD_NEW_SOURCE = GeneralACL.ADD_NEW_SOURCE
     ADD_NEW_USER_ROLE = GeneralACL.ADD_NEW_USER_ROLE
     ADD_NEW_TLDS = GeneralACL.ADD_NEW_TLDS

@@ -237,7 +237,6 @@
         <select name="search_type" class='selectbox'>
           <option value="bucket_list">Bucket List</option>
           <option value="ticket">Ticket</option>
-          <option value="campaign">Campaign</option>
           <option value="event_type">Type</option>
           <option value="description">Description</option>
           <option value="object_value">Object Value</option>
@@ -376,18 +375,24 @@
     <li class='nav_admin mmenu_item'>
       <a href class="noclick">Add New Item</a>
       <ul class='sub-mmenu'>
-        <li class='mmenu_item'>
-          <a href class="dialogClick" persona="new" dialog="action_add" id="action_add">Action</a>
-        </li>
-        <li class='mmenu_item'>
-          <a href class="dialogClick" persona="new" dialog="source_create" id="source_create">Source</a>
-        </li>
-        <li class='mmenu_item'>
-          <a href class="dialogClick" persona="new" dialog="user_role" id="user_role">User Role</a>
-        </li>
+        {% if acl.ADD_NEW_INDICATOR_ACTION|has_access_to:user %}
+          <li class='mmenu_item'>
+            <a href class="dialogClick" persona="new" dialog="action_add" id="action_add">Action</a>
+          </li>
+        {% endif %}
+        {% if acl.ADD_NEW_USER_ROLE|has_access_to:user %}
+          <li class='mmenu_item'>
+            <a href id="new-role" class="dialogClick" dialog="new-role" persona="new" title="Add Role">Role</a>
+          </li>
+        {% endif %}
+        {% if acl.ADD_NEW_SOURCE|has_access_to:user %}
+          <li class='mmenu_item'>
+            <a href class="dialogClick" persona="new" dialog="source_create" id="source_create">Source</a>
+          </li>
+        {% endif %}
       </ul>
     </li>
-
+    {% if GeneralACL.CONTROL_PANEL_READ|has_access_to:user %}
     <li class='nav_admin mmenu_item'>
         <a href="{% url 'cripts.config.views.cripts_config' %}">CRIPTs Control Panel</a>
         <ul class='sub-mmenu'>
@@ -418,11 +423,19 @@
                     </li>
                 </ul>
             </li>
-           {% endif %}
-           {% if GeneralACL.CONTROL_PANEL_USERS_READ|has_access_to:user %}
-            <li class='mmenu_item'>
-            {% if GeneralACL.CONTROL_PANEL_USERS_READ|has_access_to:user %}
-            <li class='mmenu_item'>
+            {% endif %}
+            {% if GeneralACL.CONTROL_PANEL_USERS_READ|has_access_to:user %}          
+                <li class='mmenu_item'>
+                    <a class='controlPanelNav' node='node_roles' href="{% url 'cripts.config.views.cripts_config' %}#roles">Roles</a>
+                </li>
+                <li class='mmenu_item'>
+                    <a href="{% url 'cripts.core.views.role_graph' %}">Roles Graph</a>
+                </li>
+                <li class='mmenu_item'>
+                  <a href class="dialogClick" persona="new" dialog="role_combine_preview" id="role_combine_preview">Role Combinator</a>
+                </li>
+                {% endif %}
+                {% if GeneralACL.CONTROL_PANEL_USERS_READ|has_access_to:user %}
                 <li class='mmenu_item'>
                     <a class='controlPanelNav' node='node_users' href="{% url 'cripts.config.views.cripts_config' %}#users">Users</a>
                 </li>
@@ -431,13 +444,12 @@
                 <li class='mmenu_item'>
                     <a class='controlPanelNav' node='node_services' href="{% url 'cripts.config.views.cripts_config' %}#services">Services</a>
                 </li>
-                 {% endif %}
+                {% endif %}
                 {% if GeneralACL.CONTROL_PANEL_AUDIT_LOG_READ|has_access_to:user %}
                 <li class='mmenu_item'>
                     <a class='controlPanelNav' node='node_audit_log' href="{% url 'cripts.config.views.cripts_config' %}#auditLog">Audit Log</a>
                 </li>
-                {% endif %}
-            </ul>
+            {% endif %}
         </li>
     {% endif %}
     <li class='nav_help mmenu_item'>

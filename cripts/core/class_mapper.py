@@ -31,7 +31,7 @@ def class_from_id(type_, _id):
     from cripts.comments.comment import Comment
     from cripts.core.cripts_mongoengine import Action
     from cripts.core.source_access import SourceAccess
-    from cripts.core.user_role import UserRole
+    from cripts.core.role import Role
     from cripts.events.event import Event
     from cripts.usernames.username import UserName
     from cripts.targets.target import Target
@@ -55,8 +55,6 @@ def class_from_id(type_, _id):
         return Action.objects(id=_id).first()
     elif type_ == 'SourceAccess':
         return SourceAccess.objects(id=_id).first()
-    elif type_ == 'UserRole':
-        return UserRole.objects(id=_id).first()
     elif type_ == 'UserName':
         return UserName.objects(id=_id).first()
     elif type_ == 'Target':
@@ -143,7 +141,7 @@ def class_from_type(type_):
     from cripts.events.event import Event
     from cripts.core.cripts_mongoengine import Action
     from cripts.core.source_access import SourceAccess
-    from cripts.core.user_role import UserRole
+    from cripts.core.role import Role
     from cripts.usernames.username import UserName
     from cripts.targets.target import Target
     from cripts.hashes.hash import Hash
@@ -158,8 +156,6 @@ def class_from_type(type_):
         return Event
     elif type_ == 'SourceAccess':
         return SourceAccess
-    elif type_ == 'UserRole':
-        return UserRole
     elif type_ == 'UserName':
         return UserName
     elif type_ == 'Target':
